@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<error>
+  <title>Bad Request</title>
+  <code>400</code>
+  <description>
+    <p>The request "<uri />" could not be handled.</p>
+  </description>
+</error>

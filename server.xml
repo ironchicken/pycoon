@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<server>
+  <logging> <!--Put this first so that debugging info for server startup is shown-->
+    <log-debug-info use="yes" />
+    <log-up-down use="yes" />
+    <log-errors use="yes" />
+    <log-requests use="yes" />
+  </logging>
+  <details>
+    <name>localhost</name>
+    <admin-email>www@localhost</admin-email>
+  </details>
+  <files-cache use="yes">
+    <max-files-cache>15</max-files-cache>
+    <max-file-size>512 * 1024</max-file-size>
+  </files-cache>
+  <requests-cache use="yes">
+    <max-requests-cache>30</max-requests-cache>
+    <max-request-size>1024 * 1024</max-request-size>
+  </requests-cache>
+  <components>
+    <built-in>
+      <component name="parameter" module="pycoon.parameter" class="parameter" />
+      <component name="read" module="pycoon.read" class="read" />
+    </built-in>
+    <selectors>
+
+    </selectors>
+    <sources>
+      <source name="file" module="pycoon.sources.xml_source" class="xml_source" />
+      <source name="xpath" module="pycoon.sources.xpath_source" class="xpath_source" />
+      <source name="xquery" module="pycoon.sources.xquery_source" class="xquery_source" backend="dbxml" />
+      <source name="swishe" module="pycoon.sources.swishe_source" class="swishe_source" />
+      <source name="aggregate" module="pycoon.sources.aggregate_source" class="aggregate_source" />
+      <source name="command" module="pycoon.sources.command_source" class="command_source" />
+      <source name="sql" module="pycoon.sources.sql_source" class="sql_source" backend="mysql" />
+      <source name="directory-list" module="pycoon.sources.directory_source" class="directory_source" />
+    </sources>
+    <transformers>
+      <transformer name="xslt" module="pycoon.transformers.xslt_transformer" class="xslt_transformer" />
+      <transformer name="command" module="pycoon.transformers.command_transformer" class="command_transformer" />
+      <transformer name="sax-handler" module="pycoon.transformers.sax_handler_transformer" class="sax_handler_transformer" />
+    </transformers>
+    <serializers>
+      <serializer name="xml" module="pycoon.serializers.xml_serializer" class="xml_serializer" />
+      <serializer name="html" module="pycoon.serializers.html_serializer" class="html_serializer" />
+      <serializer name="xhtml" module="pycoon.serializers.xhtml_serializer" class="xhtml_serializer" />
+      <serializer name="svg" module="pycoon.serializers.svg_serializer" class="svg_serializer" />
+      <serializer name="pdf" module="pycoon.serializers.pdf_serializer" class="pdf_serializer" />
+    </serializers>
+  </components>
+  <pipelines>
+    <pipeline name="not-found" on-error-code="404" mime="text/xhtml">
+      <source type="file" src="resources/not-found.xml" />
+      <transform type="xslt" src="resources/error2html.xslt">
+	<parameter name="uri" value="'{uri}'" />
+      </transform>
+      <serialize type="xhtml" />
+    </pipeline>
+    <pipeline name="bad-request" on-error-code="400" mime="text/xhtml">
+      <source type="file" src="resources/bad-request.xml" />
+      <transform type="xslt" src="resources/error2html.xslt">
+	<parameter name="uri" value="'{uri}'" />
+      </transform>
+      <serialize type="xhtml" />
+    </pipeline>
+    <pipeline name="internal-error" on-error-code="500" mime="text/xhtml">
+      <source type="file" src="resources/internal-error.xml" />
+      <transform type="xslt" src="resources/error2html.xslt">
+	<parameter name="uri" value="'{uri}'" />
+	<parameter name="traceback" value="'{traceback}'" />
+      </transform>
+      <serialize type="xhtml" />
+    </pipeline>
+  </pipelines>
+</server>
