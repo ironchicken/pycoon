@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<error>
+  <title>Internal Server Error</title>
+  <code>500</code>
+  <description>
+    <p>The request "<uri />" caused an error.</p>
+    <pre><traceback /></pre>
+  </description>
+</error>
