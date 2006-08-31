@@ -84,7 +84,7 @@ class directory_source(pycoon.sources.source):
         Generate the directory list and return the result as an Element object.
         """
 
-        path = interpolate(self.sitemap, self.path, uri_pattern, as_filename=True, root_path=self.root_path)
+        path = interpolate(self.context, self.path, uri_pattern, as_filename=True, root_path=self.root_path)
         
         if os.stat(path):
             self.list_path(path)

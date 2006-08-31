@@ -59,7 +59,7 @@ class read(stream_component):
         # However, this is going to to be *bad* for binary files. Could we make this some sort of exception?
 
         try:
-            fn = interpolate(self.sitemap, self.file_name, uri_pattern)
+            fn = interpolate(self.context, self.file_name, uri_pattern)
             #os.stat(fn)
 
             return (True, file(fn, 'r').read())

@@ -78,7 +78,7 @@ class sql_source(pycoon.sources.source):
         return True
 
     def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
-        sql_file = open(interpolate(self.sitemap, self.sql_filename, uri_pattern, as_filename=True, root_path=self.root_path), "r")
+        sql_file = open(interpolate(self.context, self.sql_filename, uri_pattern, as_filename=True, root_path=self.root_path), "r")
         sql_str = sql_file.read()
         sql_file.close()
         

@@ -132,6 +132,13 @@ class component(object):
                 p = None
                 break
 
+        # create an additional alias called 'context' which is either the parent sitemap or,
+        # if there is no sitemap, the parent server
+        if self.sitemap is not None:
+            self.context = self.sitemap
+        elif self.server is not None:
+            self.context = self.server
+
         # set the root_path property
         if root_path == "":
             if self.sitemap is not None:

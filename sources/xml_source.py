@@ -52,6 +52,6 @@ class xml_source(pycoon.sources.source):
         """
 
         try:
-            return (True, lxml.etree.parse(open(interpolate(self.sitemap, self.src, uri_pattern, as_filename=True, root_path=self.root_path), "r")).getroot())
+            return (True, lxml.etree.parse(open(interpolate(self.context, self.src, uri_pattern, as_filename=True, root_path=self.root_path), "r")).getroot())
         except:
             return (False, apache.HTTP_NOT_FOUND)

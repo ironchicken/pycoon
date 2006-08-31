@@ -38,24 +38,42 @@ class interpolation_syntax(object):
         self.statement = statement
         return self.pattern.match(statement) != None
 
-    def __call__(self, statement, uri_pattern, sitemap):
+    def __call__(self, statement, uri_pattern, context):
         """
         implements the 'action' of this interpolation syntax. Should a tuple: first member is result
         of self._match, second is either interpolated string or None.
+
+        @statement: is the syntax to be interpolated
+        @uri_pattern: the uri_pattern instance of the request that is being processed
+        @context: a sitemap_config or server_config instance
         """
 
         raise NotImplemented()
 
 def register_interpolation_syntax(server, syntax, name):
+    """
+    Used to add an interpolation_syntax object to the server's interpolation_syntax
+    dictionary.
+
+    @server: the server_config instance
+    @syntax: the interpolation_syntax instance
+    @name: a unique name for the interpolation syntax
+    """
+    
     if name not in server.interpolation_syntaxes.keys():
         server.interpolation_syntaxes[name] = syntax
 
 # define the basic interpolation syntax elements:
 class interpolate_pattern_match_number(interpolation_syntax):
+    """
+    interpolate_pattern_match_number interprets the '{$n}' syntax, where the number
+    'n' is the n'th '*' denoted portion of the URI.
+    """
+    
     def __init__(self):
         interpolation_syntax.__init__(self, "^\$[0-9]+$")
     
-    def __call__(self, statement, uri_pattern, sitemap):
+    def __call__(self, statement, uri_pattern, context):
         if self._match(statement):
             try:
                 return (True, uri_pattern.match_obj.group(int(statement.replace("$", ""))))
@@ -65,10 +83,22 @@ class interpolate_pattern_match_number(interpolation_syntax):
             return (False, None)
 
 class interpolate_uri(interpolation_syntax):
+    """
+    interpolate_uri interprets the '{uri:...}' syntax. This syntax has the following possible forms:
+
+    {uri} : returns the whole URI
+    {uri:filename} : returns the filename portion of the URI
+    {uri:path} : returns the whole path portion of the URI
+    {uri:path:n} : returns the n'th part of the path portion of the URI (where 0 is the leftmost part)
+    {uri:query} : returns the whole query string
+    {uri:query:name} : returns the value of the query string parameter named 'name'
+    {uri:fragment} : returns the fragment portion of the URI
+    """
+    
     def __init__(self):
         interpolation_syntax.__init__(self, "^uri:?.*$")
 
-    def __call__(self, statement, uri_pattern, sitemap):
+    def __call__(self, statement, uri_pattern, context):
         if self._match(statement):
             try:
                 # first, split the instruction up on ':'s
@@ -115,10 +145,16 @@ class interpolate_uri(interpolation_syntax):
             return (False, None)
                 
 class interpolate_pipeline(interpolation_syntax):
+    """
+    interpolate_pipeline interprets the '{|name}' syntax, where 'name' is the name of a pipeline whose result
+    is returned. A URI argument may be passed to the named pipeline using this syntax '{|name:uri}' (however,
+    note that 'nested' interpolation is not supported).
+    """
+    
     def __init__(self):
         interpolation_syntax.__init__(self, "^|\w+:?.*$")
 
-    def __call__(self, statement, uri_pattern, sitemap):
+    def __call__(self, statement, uri_pattern, context):
         if self._match(statement):
             try:
                 # split the instruction on :'s
@@ -137,40 +173,44 @@ class interpolate_pipeline(interpolation_syntax):
                 result = StringIO()
                 # force the named pipeline to execute, using a buffer for the result and uri from
                 # the interpolation instruction (if there was one)
-                sitemap.pipelines[pl_name].force_execute(result, given_uri)
+                context.pipelines[pl_name].force_execute(result, given_uri)
 
                 result_string += result.getvalue()
                 result.close()
 
                 return (True, result_string)
-            except KeyError:
+            except (KeyError, AttributeError):
                 # this means that the named pipeline does not exist. 
                 return (False, None)
         else:
             return (False, None)
 
 class interpolate_traceback(interpolation_syntax):
+    """
+    interpolate_traceback interprets the '{traceback}' syntax and returns the current traceback as a string.
+    """
+    
     def __init__(self):
         interpolation_syntax.__init__(self, "^traceback$")
 
-    def __call__(self, statement, uri_pattern, sitemap):
+    def __call__(self, statement, uri_pattern, context):
         if self._match(statement):
             try:
-                exc = sitemap.server.EXCEPTION
+                exc = context.server.EXCEPTION
             except AttributeError:
-                exc = sitemap.EXCEPTION
+                exc = context.EXCEPTION
                 
             tb = strip_amps(string.join(traceback.format_exception(*exc)))
             return (True, tb.replace("'", "\""))
         else:
             return (False, None)
 
-def interpolate(sitemap, string_arg, uri_pattern, as_filename=False, root_path=""):
+def interpolate(context, string_arg, uri_pattern, as_filename=False, root_path=""):
     """
     parses the string_arg argument using the given uri_pattern to interpolate the special {} delimited
     parts of string_arg with values from the uri_pattern. Returns a string.
 
-    @sitemap: a sitemap instance
+    @context: a sitemap_config or server_config instance
     @string_arg: the attribute value to be processed (should contain {} delimited syntax)
     @uri_pattern: the uri_pattern object of the current request
     @as_filename: if True, the result will be an absolute path name. Optional
@@ -178,7 +218,7 @@ def interpolate(sitemap, string_arg, uri_pattern, as_filename=False, root_path="
     """
 
     if as_filename:
-        if root_path == "": root_path = sitemap.document_root
+        if root_path == "": root_path = context.document_root
         # if its supposed to be a filename, then start the return string with the given root_path
         return_string = root_path + os.sep
     else:
@@ -207,8 +247,15 @@ def interpolate(sitemap, string_arg, uri_pattern, as_filename=False, root_path="
             # then we've got to the end of the interpolation instruction string,
             # so interpolate it:
 
-            for i in sitemap.server.interpolation_syntaxes.values():
-                (success, result) = i(statement, uri_pattern, sitemap)
+            # first retrieve the available interpolation syntax objects from the server_config
+            if context.__class__.__name__ == "sitemap_config":
+                i_syntaxes = context.server.interpolation_syntaxes.values()
+            elif context.__class__.__name__ == "server_config":
+                i_syntaxes = context.interpolation_syntaxes.values()
+
+            # then iterate over them until one matches
+            for i in i_syntaxes:
+                (success, result) = i(statement, uri_pattern, context)
                 if success:
                     return_string += result
                     break

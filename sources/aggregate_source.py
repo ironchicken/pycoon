@@ -29,8 +29,7 @@ def register_invokation_syntax(server):
 
 class aggregate_source(pycoon.sources.source):
     """
-    aggregate_source encapsulates a container XML document which can have the return values of other
-    pipelines interpolated into it using named Python formatting strings and implements the source interface.
+    aggregate_source encapsulates other source components into one source ElementTree.
     """
 
     function = "aggregate"
