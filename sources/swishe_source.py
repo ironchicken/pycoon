@@ -122,12 +122,13 @@ class swishe_source(pycoon.sources.source):
                 try:
                     e_name = properties[p_name]
                     value = r.getproperty(p_name)
-                    p = lxml.etree.Element("p")
-                    p.attrib["id"] = str(properties[p_name])
-                    p.text = value
+                    if value is None: break
+
+                    p = lxml.etree.Element(str(properties[p_name]))
+                    p.text = str(value)
                     hit.append(p)
                 except:
-                    # property didn't exist, doesn't matter
+                    # this is a Swish-e error; property didn't exist, doesn't matter
                     pass
 
             hits.append(hit)

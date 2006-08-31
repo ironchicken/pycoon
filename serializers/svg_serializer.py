@@ -6,7 +6,6 @@ This software is licensed under the terms of the GNU GPL.
 
 import pycoon.serializers
 from pycoon.components import invokation_syntax
-from pycoon.interpolation import interpolate
 from lxml.etree import tounicode
 import os
 

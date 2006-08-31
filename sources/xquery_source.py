@@ -83,7 +83,7 @@ class xquery_source(pycoon.sources.source):
         Perform the xquery filling in any parameters using the given uri_pattern object.
         """
 
-        xq_file = open(interpolate(self.sitemap, self.xq_filename, uri_pattern, as_filename=True, root_path=self.root_path), "r")
+        xq_file = open(interpolate(self.context, self.xq_filename, uri_pattern, as_filename=True, root_path=self.root_path), "r")
         xq_str = xq_file.read()
         xq_file.close()
 

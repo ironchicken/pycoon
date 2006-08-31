@@ -51,21 +51,21 @@
     </serializers>
   </components>
   <pipelines>
-    <pipeline name="not-found" on-error-code="404" mime="text/xhtml">
+    <pipeline name="not-found" on-error-code="404" mime="text/html">
       <source type="file" src="resources/not-found.xml" />
       <transform type="xslt" src="resources/error2html.xslt">
 	<parameter name="uri" value="'{uri}'" />
       </transform>
       <serialize type="xhtml" />
     </pipeline>
-    <pipeline name="bad-request" on-error-code="400" mime="text/xhtml">
+    <pipeline name="bad-request" on-error-code="400" mime="text/html">
       <source type="file" src="resources/bad-request.xml" />
       <transform type="xslt" src="resources/error2html.xslt">
 	<parameter name="uri" value="'{uri}'" />
       </transform>
       <serialize type="xhtml" />
     </pipeline>
-    <pipeline name="internal-error" on-error-code="500" mime="text/xhtml">
+    <pipeline name="internal-error" on-error-code="500" mime="text/html">
       <source type="file" src="resources/internal-error.xml" />
       <transform type="xslt" src="resources/error2html.xslt">
 	<parameter name="uri" value="'{uri}'" />

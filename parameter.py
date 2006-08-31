@@ -58,4 +58,4 @@ class parameter(syntax_component):
         interpolated value.
         """
 
-        return (True, {self.param_name: interpolate(self.sitemap, self.param_value, uri_pattern)})
+        return (True, {self.param_name: interpolate(self.context, self.param_value, uri_pattern)})

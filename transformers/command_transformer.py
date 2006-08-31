@@ -7,7 +7,6 @@ This software is licensed under the terms of the GNU GPL.
 import pycoon.transformers
 from pycoon import apache
 from pycoon.components import invokation_syntax
-from pycoon.interpolation import interpolate
 import lxml.etree
 import os
 from StringIO import StringIO

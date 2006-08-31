@@ -56,13 +56,13 @@ class xpath_source(pycoon.sources.source):
         """
 
         try:
-            source_tree = lxml.etree.parse(open(interpolate(self.sitemap, self.source_file, uri_pattern,\
+            source_tree = lxml.etree.parse(open(interpolate(self.context, self.source_file, uri_pattern,\
                                                             as_filename=True, root_path=self.root_path), 'r'))
         except OSError:
             return (False, apache.HTTP_NOT_FOUND)
 
         if uri_pattern is not None:
-            xpath = interpolate(self.sitemap, self.xpath_expr, uri_pattern)
+            xpath = interpolate(self.context, self.xpath_expr, uri_pattern)
         else:
             xpath = self.xpath_expr
 
