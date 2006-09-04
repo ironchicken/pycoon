@@ -7,7 +7,7 @@ The sitemap module contains the sitemap_config class and its configuration file
 parser class.
 """
 
-import string, os
+import string, os, time
 from xml.sax import parse, SAXException
 from xml.sax.handler import ContentHandler
 from pycoon import apache
@@ -34,11 +34,15 @@ class sitemap_config(object):
         self.error_pipelines = {}      # a dictionary of pipeline objects indexed by error code, used as error handlers
         self.pipeline_iter = []        # a list of pipeline names in the order that they should be evalulated
 
-        self.requests_cache = {}       # a dictionary of request reponses; indexed by uri
-        self.requests_cache_queue = [] # a list of cached request uris in order of when they were cached
+        self.cache = {}                # a dictionary of cached component results; indexed by 'cache_as'
+        self.prev_requests = []        # a list of previously handled requests; contains tuples: (time, request uri)
+        self.MAX_LOGGED_REQUESTS = 50  # the maximum size of the prev_requests list
 
-        self.files_cache = {}          # a dictionary of ordinary files cached in memory; indexed by file name
-        self.files_cache_queue = []    # a list of cached file names in order of when they were cached
+        #self.requests_cache = {}       # a dictionary of request reponses; indexed by uri
+        #self.requests_cache_queue = [] # a list of cached request uris in order of when they were cached
+
+        #self.files_cache = {}          # a dictionary of ordinary files cached in memory; indexed by file name
+        #self.files_cache_queue = []    # a list of cached file names in order of when they were cached
 
     def handle(self, req):
         """
@@ -64,6 +68,11 @@ class sitemap_config(object):
 
                     if self.server.log_requests:
                         self.server.access_log.write("Pipeline \"%s\" handled request: \"%s\"" % (p.name, req.unparsed_uri))
+
+                    # store the time and request uri of the request (used by the caching mechanism)
+                    self.prev_requests.append((time.time(), req.unparsed_uri))
+                    if len(self.prev_requests) > self.MAX_LOGGED_REQUESTS:
+                        self.prev_requests.pop(0)
 
                     return (True, apache.OK)
                 else:

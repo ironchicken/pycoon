@@ -70,6 +70,15 @@ class swishe_source(pycoon.sources.source):
 
         self.description = "swishe_source(\"%s\", \"%s\")" % (self.datasource_name, self.query_pattern)
 
+    def is_modified(self, req, uri_pattern):
+        try:
+            parsed_src = interpolate(self.context, self.sitemap.data_sources[self.datasource_name + "_source"],\
+                                     uri_pattern, as_filename=True, root_path=self.root_path)
+            src_modified = os.stat(parsed_src)[stat.ST_MTIME]
+            return src_modified > req.request_time
+        except OSError:
+            return True
+
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True
 

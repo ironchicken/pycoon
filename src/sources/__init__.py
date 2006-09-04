@@ -40,7 +40,7 @@ class source(stream_component):
     role = "stream"
     function = "source"
     
-    def __init__(self, parent, root_path=""):
-        stream_component.__init__(self, parent, root_path="")
+    def __init__(self, parent, cache_as="", root_path=""):
+        stream_component.__init__(self, parent, cache_as, root_path="")
 
         self.description = "Source base class"

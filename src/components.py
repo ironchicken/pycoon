@@ -226,23 +226,19 @@ class stream_component(component):
     role = "stream"
     function = "none"
 
-    def __init__(self, parent, root_path=""):
+    def __init__(self, parent, cache_as="", root_path=""):
         component.__init__(self, parent, root_path)
         self.description = "Streamed component base class"
 
-    def _tap(self):
+        self.cache_as = cache_as
+
+    def is_modified(self, req, uri_pattern):
         """
-        Returns a stream of the current state of the pipeline of which this component is a member after
-        applying this component's action.
+        Stream components should implement this function to return True if the source has
+        been modified since req.request_time, or False otherwise.
         """
 
-        pass
-    
-    def reload_source(self):
-        pass
-    
-    def cache(self):
-        pass
+        return True
 
 class syntax_component(component):
     """

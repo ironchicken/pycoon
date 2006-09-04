@@ -6,12 +6,13 @@ This software is licensed under the terms of the GNU GPL.
 The pipeline module contains the pipeline class.
 """
 
-import sys, string, traceback
+import sys, string, traceback, time
 import lxml.etree
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.uri_pattern import uri_pattern
 from pycoon.components import component, invokation_syntax
+from pycoon.resources import resource
 
 def register_invokation_syntax(server):
     """
@@ -124,6 +125,8 @@ class pipeline(component):
         self.mime = mime
         self.cache_as = cache_as
 
+        self.resource = resource(self, "modified")
+
     def match(self, uri):
         """
         Returns a match object if the pipeline's uri_pattern matches the given uri,
@@ -150,6 +153,7 @@ class pipeline(component):
                 self.write = ostream.write
                 self.unparsed_uri = uri
                 self.content_type = None
+                self.request_time = long(time.time())
 
             def set_content_length(self, l): pass
             def sendfile(self, fn): pass
@@ -159,6 +163,17 @@ class pipeline(component):
         self.pattern.uri = uri
         
         return self.execute(fake_request(output, uri))
+
+    def is_modified(self, req, uri_pattern):
+        def descend(comp):
+            for c in comp.children:
+                if c.__dict__.has_key("resource") and c.resource.requires_reload(req, uri_pattern):
+                    return True
+                if len(c.children) > 0:
+                    descend(c)
+            return False
+
+        return descend(self)
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True
@@ -176,9 +191,19 @@ class pipeline(component):
         # when execution is forced, its likely that self.pattern hasn't been executed and that,
         # therefore, its .uri property is empty:
         self.pattern.uri = req.unparsed_uri
+        if self.cache_as == "":
+            self.cache_as = req.unparsed_uri
 
         try:
-            return self.__call__(req, self.pattern)
+            (cached, res) = self.resource(req, self.pattern)
+            if cached:
+                return (True, res)
+
+            (success, res) = self.__call__(req, self.pattern)
+
+            if self.pipeline_type == "public":
+                self.resource.store(req, res)
+            return (True, res)
         except Exception:
             # if there was an error during execution, return error 500
             # store the exception in case there is a 500 handler pipeline

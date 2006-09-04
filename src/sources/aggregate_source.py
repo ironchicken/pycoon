@@ -45,6 +45,9 @@ class aggregate_source(pycoon.sources.source):
         pycoon.sources.source.__init__(self, parent, root_path)
         self.description = "aggregate_source(\"%s\")" % self.root_node
 
+    def is_modified(self, req, uri_pattern):
+        return False
+    
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True
 
