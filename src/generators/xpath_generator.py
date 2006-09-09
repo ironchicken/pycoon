@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon import apache
 from pycoon.components import invokation_syntax
 from pycoon.interpolation import interpolate
@@ -18,34 +18,38 @@ def register_invokation_syntax(server):
     """
         
     invk_syn = invokation_syntax()
-    invk_syn.element_name = "source"
+    invk_syn.element_name = "generate"
     invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "xpath"}
     invk_syn.optional_attribs = []
     invk_syn.allowed_child_components = []
 
-    server.component_syntaxes[("source", "xpath")] = invk_syn
+    server.component_syntaxes[("generate", "xpath")] = invk_syn
     return invk_syn
 
-class xpath_source(pycoon.sources.source):
+class xpath_generator(pycoon.generators.generator):
     """
-    xpath_source encapsulates an XPath expression to be executed against the given XML document and
-    implements the source interface.
+    xpath_generator encapsulates an XPath expression to be executed against the given XML document and
+    implements the generator interface.
     """
 
     def __init__(self, parent, src, query, root_path=""):
 
         """
-        xpath_source constructor. Requires source XML file name and an XPath expression. Both the XPath expression
-        and the source file name may use Python formatting string elements and be interpolated with values from
-        the request URI.
+        xpath_generator constructor.
+
+        @src: source XML file
+        @query: an XPath expression.
+
+        Both the XPath expression and the source file name may use Python formatting string elements and
+        be interpolated with values from the request URI.
         """
 
         self.source_file = src
         self.xpath_expr = query
-        pycoon.sources.source.__init__(self, parent, root_path)
-        self.description = "xpath_source(\"%s\", \"%s\")" % (self.source_file, self.xpath_expr)
+        pycoon.generators.generator.__init__(self, parent, root_path)
+        self.description = "xpath_generator(\"%s\", \"%s\")" % (self.source_file, self.xpath_expr)
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return False

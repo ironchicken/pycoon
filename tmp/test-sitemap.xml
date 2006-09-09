@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
-<site-map document-root="/home/richard/Documents/python">
+<site-map document-root="/home/richard/Documents/python/pycoon/tmp">
 
 <pipelines>
   <pipeline name="dir-list" uri-pattern="/" mime="text/xml">
-    <source type="directory-list" src="." />
+    <generate type="directory-list" src="." />
     <serialize type="xml" />
   </pipeline>
 
   <pipeline name="list" uri-pattern="/list/*-*" mime="text/xml">
-    <source type="xpath" src="data.xml" query="//item[position()&gt;={$1} and position()&lt;={$2}]" />
+    <generate type="xpath" src="data.xml" query="//item[position()&gt;={$1} and position()&lt;={$2}]" />
     <serialize type="xml" />
   </pipeline>
 
   <pipeline name="aggers" uri-pattern="/bigitup" mime="text/xml">
     <aggregate>
-      <source type="directory-list" src="." />
-      <source type="xpath" src="data.xml" query="//item[position()&gt;=1 and position()&lt;=5]" />
+      <generate type="directory-list" src="." />
+      <generate type="xpath" src="data.xml" query="//item[position()&gt;=1 and position()&lt;=5]" />
     </aggregate>
     <serialize type="xml" />
   </pipeline>
 
   <pipeline name="file" uri-pattern="/*" mime="text/html">
-    <source type="file" src="data.xml" />
+    <generate type="file" src="data.xml" />
     <transform type="xslt" src="data2html.xslt">
       <parameter name="uri" value="'{$1}'" />
     </transform>
@@ -30,13 +30,13 @@
   </pipeline>
 
   <pipeline name="file-by-command" uri-pattern="/cmd/*" mime="text/html">
-    <source type="command" src="cat data.xml" />
+    <generate type="command" src="cat data.xml" />
     <transform type="command" src="sabcmd data2html.xslt" />
     <serialize type="html" />
   </pipeline>
 
   <pipeline name="not-found" on-error-code="404" mime="text/xml">
-    <source type="file" src="not-found.xml" />
+    <generate type="file" src="not-found.xml" />
     <serialize type="xml" />
   </pipeline>
 

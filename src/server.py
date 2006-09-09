@@ -40,7 +40,7 @@ class server_config(object):
         self.MAX_FILES_CACHE = 10      # the maximum number of cached files
         self.MAX_CACHE_FILE_SIZE = 512 * 1024 # the maximum size (in bytes) of files that can be cached
 
-        self.component_types = ["component", "selector", "source", "transformer", "serializer"]
+        self.component_types = ["component", "selector", "generator", "transformer", "serializer"]
         self.components = {}           # dictionary of available components (indexed by tuple: (function, type value))
         self.component_enames = []     # a list of available element names used by components
 
@@ -49,7 +49,7 @@ class server_config(object):
 
         self.interpolation_syntaxes = {} # dictionary of available interpolation_syntax object (indexed by name)
 
-        self.ds_initialisers = {}      # dictionary of available source component data-source initialisation methods
+        self.ds_initialisers = {}      # dictionary of available generator component data-source initialisation methods
                                        # (indexed by source name)
 
         self.error_pipelines = {}      # a dictionary of pipeline objects indexed by error code, used as error handlers

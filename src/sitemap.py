@@ -147,6 +147,15 @@ class sitemap_config_parse(ContentHandler):
             self.proc_comp_stack.append(self.proc_comp_stack[-1].add_component(\
                 self.server.get_new_component(name, self.proc_comp_stack[-1], attrs, self.sitemap.document_root)))
 
+            if self.server.log_debug:
+                if len(self.proc_comp_stack) > 2:
+                    self.server.error_log.write("Pipeline: %s: %s appended to %s" %\
+                                                (self.proc_comp_stack[0].name, self.proc_comp_stack[-1].description, self.proc_comp_stack[-2].description))
+                else:
+                    self.server.error_log.write("Pipeline: %s: %s appended" %\
+                                                (self.proc_comp_stack[0].name, self.proc_comp_stack[-1].description))
+                                                
+
     def endElement(self, name):
         if name == "pipeline":
             if self.sitemap.parent.log_debug:

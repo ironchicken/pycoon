@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon.components import invokation_syntax
 from pycoon.helpers import unescape_url
 import os, string
@@ -17,14 +17,14 @@ def register_invokation_syntax(server):
     """
         
     invk_syn = invokation_syntax()
-    invk_syn.element_name = "source"
+    invk_syn.element_name = "generate"
     invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "swishe"}
     invk_syn.optional_attribs = ["custom-properties"]
     invk_syn.allowed_child_components = ["parameter"]
 
-    server.component_syntaxes[("source", "swishe")] = invk_syn
+    server.component_syntaxes[("generate", "swishe")] = invk_syn
     return invk_syn
 
 def init_datasource(sitemap, attrs):
@@ -46,15 +46,15 @@ def init_datasource(sitemap, attrs):
     sitemap.data_sources[index_name + "_source"] = index_files
     if sitemap.parent.log_debug: sitemap.parent.error_log.write("Added data-source: \"%s\"" % index_name)
 
-class swishe_source(pycoon.sources.source):
+class swishe_generator(pycoon.generators.generator):
     """
-    swishe_source encapsulates a swish-e index, allowing searches to be made against it. It implements
-    the source interface.
+    swishe_generator encapsulates a swish-e index, allowing searches to be made against it. It implements
+    the generator interface.
     """
 
     def __init__(self, parent, src, query, custom_properties, root_path=""):
         """
-        swishe_source constructor. Requires the name of a swish-e index which has been specified as a swishe-index element
+        swishe_generator constructor. Requires the name of a swish-e index which has been specified as a swishe-index element
         in the sitemap configuration and a query_pattern string which will be interpolated with the request uri.
         """
 
@@ -66,9 +66,9 @@ class swishe_source(pycoon.sources.source):
         self.auto_properties = ["swishreccount", "swishtitle", "swishrank", "swishdocpath", "swishdocsize",\
                                 "swishlastmodified", "swishdescription", "swishdbfile"]
 
-        pycoon.sources.source.__init__(self, parent, root_path)
+        pycoon.generators.generator.__init__(self, parent, root_path)
 
-        self.description = "swishe_source(\"%s\", \"%s\")" % (self.datasource_name, self.query_pattern)
+        self.description = "swishe_generator(\"%s\", \"%s\")" % (self.datasource_name, self.query_pattern)
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True

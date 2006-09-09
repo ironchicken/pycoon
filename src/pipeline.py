@@ -124,6 +124,8 @@ class pipeline(component):
         self.mime = mime
         self.cache_as = cache_as
 
+        self.description = "Pipeline: \"%s\"" % self.name
+
     def match(self, uri):
         """
         Returns a match object if the pipeline's uri_pattern matches the given uri,

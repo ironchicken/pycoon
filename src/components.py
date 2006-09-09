@@ -10,7 +10,7 @@ used in the Pycoon system.
 import os
 from pycoon.interpolation import interpolate
 
-COMPONENT_TYPES = {"stream": {"source": {"module": "pycoon.sources", "super_class": "source"},\
+COMPONENT_TYPES = {"stream": {"generator": {"module": "pycoon.generators", "super_class": "generator"},\
                               "transformer": {"module": "pycoon.transformers", "super_class": "transformer"},\
                               "serializer": {"module": "pycoon.serializers", "super_class": "serializer"}},\
                    "syntax": {"selector": {"module": "pycoon.selectors", "super_class": "selector"},\
@@ -105,7 +105,7 @@ class component(object):
     # role class property is: [stream|syntax]; corresponds to stream_component and syntax_component
     role = "none"
 
-    # function class property is: [source|transform|serialize|select|...];
+    # function class property is: [generate|transform|serialize|select|...];
     # corresponds to classes immediately derived from stream_component and syntax_component
     # and to component's invokation element name
     function = "none"
@@ -155,8 +155,8 @@ class component(object):
 
     def __call__(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
         """
-        Calling a component causes it to activate its function by calling its _execute method. It also
-        attempts to call its child components.
+        Calling a component causes it to activate its function by calling its _descend and _result methods.
+        Depending on the return value of its _descend method, it also attempts to call its child components.
 
         __call__ returns a tuple whose first member is a flag indicating whether execution was 'successful'
         and whose second is the 'result'.
@@ -168,9 +168,11 @@ class component(object):
         @child_result: is the result of the child pipelines of this component (optional)
         """
 
+        if self.server.log_debug:
+            self.server.error_log.write("%s called with previous sibling: %s; child results: %s" % (self.description, p_sibling_result, child_results))
+        
         c_tree = []
         if self._descend(req, uri_pattern, p_sibling_result):
-            #c_tree = []
             for comp in self.children:
                 if len(c_tree) > 0:
                     (success, result) = comp(req, uri_pattern, c_tree[-1])
@@ -215,7 +217,7 @@ class component(object):
 
 class stream_component(component):
     """
-    Super class for all components which handle XML data in pipelines (e.g. sources,
+    Super class for all components which handle XML data in pipelines (e.g. generators,
     transformers and serializers)
 
     @parent: the parent component of this component.
