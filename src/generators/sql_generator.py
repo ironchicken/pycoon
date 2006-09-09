@@ -3,14 +3,14 @@ Copyright (C) Richard Lewis 2006
 
 This software is licensed under the terms of the GNU GPL.
 
-This module provides the sql_source component which allows SQL statements to be executed
+This module provides the sql_generator component which allows SQL statements to be executed
 against databases to provide sources for pipelines. The module also contains whose names
 follow the pattern "init_datasource_*(sitemap, attrs)" which are used to acquire a cursor
 for the '*' named database. This is part of the 'backends' framework. In order to add new
 backends, it is necessary to add the appropriate function to this module.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
 import lxml.etree
@@ -22,14 +22,14 @@ def register_invokation_syntax(server):
     """
         
     invk_syn = invokation_syntax()
-    invk_syn.element_name = "source"
+    invk_syn.element_name = "generate"
     invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "sql"}
     invk_syn.optional_attribs = ["template"]
     invk_syn.allowed_child_components = ["parameter"]
 
-    server.component_syntaxes[("source", "sql")] = invk_syn
+    server.component_syntaxes[("generate", "sql")] = invk_syn
     return invk_syn
 
 def init_datasource_mysql(sitemap, attrs):
@@ -54,14 +54,14 @@ def init_datasource_mysql(sitemap, attrs):
                                                                             db_name=database).cursor()
     if sitemap.parent.log_debug: sitemap.parent.error_log.write("Added data-source: \"%s\" using %s" % (ds_name, database))
 
-class sql_source(pycoon.sources.source):
+class sql_generator(pycoon.generators.generator):
     """
-    sql_source encapsulates an SQL query to be executed against the given SQL cursor.
+    sql_generator encapsulates an SQL query to be executed against the given SQL cursor.
     """
 
     def __init__(self, parent, src, query, template="", root_path=""):
         """
-        sql_source constructor.
+        sql_generator constructor.
 
         @src: the name of a data source from the server_config.data_sources dictionary
         @query: file name of a SQL statement
@@ -71,8 +71,8 @@ class sql_source(pycoon.sources.source):
         self.datasource_name = src
         self.sql_filename = query
         self.template_filename = template_filename
-        pycoon.sources.source.__init__(self, parent, root_path)
-        self.description = "sql_source(\"%s\", \"%s\")" % (self.db_name, self.sql_filename)
+        pycoon.generators.generator.__init__(self, parent, root_path)
+        self.description = "sql_generator(\"%s\", \"%s\")" % (self.db_name, self.sql_filename)
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True

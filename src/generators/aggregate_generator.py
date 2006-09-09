@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
 import lxml.etree
@@ -22,28 +22,28 @@ def register_invokation_syntax(server):
     invk_syn.required_attribs = []
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = ["root-node"]
-    invk_syn.allowed_child_components = ["source"]
+    invk_syn.allowed_child_components = ["generate"]
 
     server.component_syntaxes[("aggregate", None)] = invk_syn
     return invk_syn
 
-class aggregate_source(pycoon.sources.source):
+class aggregate_generator(pycoon.generators.generator):
     """
-    aggregate_source encapsulates other source components into one source ElementTree.
+    aggregate_generator encapsulates other generator components into one source ElementTree.
     """
 
     function = "aggregate"
     
     def __init__(self, parent, root_node="aggregation", root_path=""):
         """
-        aggregate_source constructor.
+        aggregate_generator constructor.
 
         @root_node: the name of the root node of the aggregated document. Optional.
         """
 
         self.root_node = root_node
-        pycoon.sources.source.__init__(self, parent, root_path)
-        self.description = "aggregate_source(\"%s\")" % self.root_node
+        pycoon.generators.generator.__init__(self, parent, root_path)
+        self.description = "aggregate_generator(\"%s\")" % self.root_node
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True

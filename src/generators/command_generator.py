@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -19,31 +19,31 @@ def register_invokation_syntax(server):
     """
         
     invk_syn = invokation_syntax()
-    invk_syn.element_name = "source"
+    invk_syn.element_name = "generate"
     invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "command"}
     invk_syn.optional_attribs = []
     invk_syn.allowed_child_components = ["parameter"]
 
-    server.component_syntaxes[("source", "command")] = invk_syn
+    server.component_syntaxes[("generate", "command")] = invk_syn
     return invk_syn
 
-class command_source(pycoon.sources.source):
+class command_generator(pycoon.generators.generator):
     """
-    command_source encapsulates a shell command which must return a well-formed XML document
-    string. It implements the source interface and can be used as the source component in a pipeline.
+    command_generator encapsulates a shell command which must return a well-formed XML document
+    string. It implements the generator interface and can be used as a generator component in a pipeline.
     """
 
     def __init__(self, parent, src, root_path=""):
         """
-        command_source constructor. Requires 'pwd' (present working directory) and command string. Commands
+        command_generator constructor. Requires 'pwd' (present working directory) and command string. Commands
         may use named string formatting to integrate request parameters when executed.
         """
 
         self.command = src
-        pycoon.sources.source.__init__(self, parent, root_path)
-        self.description = "command_source(\"%s\")" % self.command
+        pycoon.generators.generator.__init__(self, parent, root_path)
+        self.description = "command_generator(\"%s\")" % self.command
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True

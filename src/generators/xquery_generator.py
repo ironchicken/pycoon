@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -19,14 +19,14 @@ def register_invokation_syntax(server):
     """
         
     invk_syn = invokation_syntax()
-    invk_syn.element_name = "source"
+    invk_syn.element_name = "generate"
     invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "xquery"}
     invk_syn.optional_attribs = []
     invk_syn.allowed_child_components = ["parameter"]
 
-    server.component_syntaxes[("source", "xquery")] = invk_syn
+    server.component_syntaxes[("generate", "xquery")] = invk_syn
     return invk_syn
 
 def init_datasource_dbxml(sitemap, attrs):
@@ -56,24 +56,27 @@ def init_datasource_dbxml(sitemap, attrs):
     if sitemap.parent.log_debug:
         sitemap.parent.error_log.write("Added data-source: \"%s\" from %s" % (ds_name, container_file))
 
-class xquery_source(pycoon.sources.source):
+class xquery_generator(pycoon.generators.generator):
     """
-    xquery_source encapsulates an XQuery to be executed against the given dbxml container and implements
-    the source interface.
+    xquery_generator encapsulates an XQuery to be executed against the given dbxml container and implements
+    the generator interface.
     """
 
     def __init__(self, parent, src, query, root_path=""):
         """
-        xquery_source constructor. Requires the name of a dbxml which has been specified as a data-source element
-        in the sitemap configuration and the name of an xquery file which can be a string to be interpolated.
+        xquery_generator constructor.
+
+        @src: the name of a dbxml which has been specified as a data-source element in the sitemap configuration
+        @query: the name of an xquery file (which can be a string to be interpolated)
+
         XQuery files may use named string formatting to integrate parameters when executed.
         """
 
         self.datasource_name = src
         self.xq_filename = query
-        pycoon.sources.source.__init__(self, parent, root_path)
+        pycoon.generators.generator.__init__(self, parent, root_path)
         self.dbxml_fn = self.sitemap.data_sources[self.datasource_name + "_source"]
-        self.description = "xquery_source(\"%s\", \"%s\")" % (self.datasource_name, self.xq_filename)
+        self.description = "xquery_generator(\"%s\", \"%s\")" % (self.datasource_name, self.xq_filename)
 
     def _descend(self, req, uri_pattern, p_sibling_result=None):
         return True

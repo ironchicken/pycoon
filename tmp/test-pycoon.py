@@ -4,7 +4,7 @@ import sys
 import pycoon
 
 SITES = {"home": {'SERVER_NAME': "localhost.localdomain",\
-                  'DOCUMENT_ROOT': "/home/richard/Documents/python",\
+                  'DOCUMENT_ROOT': "/home/richard/Documents/python/pycoon/tmp",\
                   'sitemap': "test-sitemap.xml"},\
         "studio": {'SERVER_NAME': "localhost.localdomain",\
                    'DOCUMENT_ROOT': "/var/www-studio",\

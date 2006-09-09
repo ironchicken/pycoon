@@ -27,16 +27,16 @@
     <selectors>
 
     </selectors>
-    <sources>
-      <source name="file" module="pycoon.sources.xml_source" class="xml_source" />
-      <source name="xpath" module="pycoon.sources.xpath_source" class="xpath_source" />
-      <source name="xquery" module="pycoon.sources.xquery_source" class="xquery_source" backend="dbxml" />
-      <source name="swishe" module="pycoon.sources.swishe_source" class="swishe_source" />
-      <source name="aggregate" module="pycoon.sources.aggregate_source" class="aggregate_source" />
-      <source name="command" module="pycoon.sources.command_source" class="command_source" />
-      <source name="sql" module="pycoon.sources.sql_source" class="sql_source" backend="mysql" />
-      <source name="directory-list" module="pycoon.sources.directory_source" class="directory_source" />
-    </sources>
+    <generators>
+      <generator name="file" module="pycoon.generators.xml_generator" class="xml_generator" />
+      <generator name="xpath" module="pycoon.generators.xpath_generator" class="xpath_generator" />
+      <generator name="xquery" module="pycoon.generators.xquery_generator" class="xquery_generator" backend="dbxml" />
+      <generator name="swishe" module="pycoon.generators.swishe_generator" class="swishe_generator" />
+      <generator name="aggregate" module="pycoon.generators.aggregate_generator" class="aggregate_generator" />
+      <generator name="command" module="pycoon.generators.command_generator" class="command_generator" />
+      <generator name="sql" module="pycoon.generators.sql_generator" class="sql_generator" backend="mysql" />
+      <generator name="directory-list" module="pycoon.generators.directory_generator" class="directory_generator" />
+    </generators>
     <transformers>
       <transformer name="xslt" module="pycoon.transformers.xslt_transformer" class="xslt_transformer" />
       <transformer name="command" module="pycoon.transformers.command_transformer" class="command_transformer" />
@@ -52,21 +52,21 @@
   </components>
   <pipelines>
     <pipeline name="not-found" on-error-code="404" mime="text/html">
-      <source type="file" src="resources/not-found.xml" />
+      <generate type="file" src="resources/not-found.xml" />
       <transform type="xslt" src="resources/error2html.xslt">
 	<parameter name="uri" value="'{uri}'" />
       </transform>
       <serialize type="xhtml" />
     </pipeline>
     <pipeline name="bad-request" on-error-code="400" mime="text/html">
-      <source type="file" src="resources/bad-request.xml" />
+      <generate type="file" src="resources/bad-request.xml" />
       <transform type="xslt" src="resources/error2html.xslt">
 	<parameter name="uri" value="'{uri}'" />
       </transform>
       <serialize type="xhtml" />
     </pipeline>
     <pipeline name="internal-error" on-error-code="500" mime="text/html">
-      <source type="file" src="resources/internal-error.xml" />
+      <generate type="file" src="resources/internal-error.xml" />
       <transform type="xslt" src="resources/error2html.xslt">
 	<parameter name="uri" value="'{uri}'" />
 	<parameter name="traceback" value="'{traceback}'" />

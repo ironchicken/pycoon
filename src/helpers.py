@@ -84,68 +84,10 @@ class log_buffer:
         self.stream.write("[%s]: [\"%s\"] %s\n" % (str(datetime.datetime.today()), self.server_name, data))
         self.stream.flush()
 
-# def create_pl_required_options(server, parent_sitemap, pipeline_type, attrs, order=0):
-#     """
-#     create_pl_required_options accepts an xml.sax.Attributes object and converts it into a
-#     dictionary of only the _required_ parameters to construct a pipeline object. It is a
-#     helper function for the sitemap and server _config_parse classes. It differs from
-#     create_pl_extra_options in that it does not require a reference to a pipeline object.
-#     """
-
-#     pl_opts = {'name': str(attrs['name']), 'pipeline_type': pipeline_type}
-
-#     if parent_sitemap != None:
-#         pl_opts['parent'] = parent_sitemap
-#     else:
-#         pl_opts['parent'] = server
-
-#     # add a uri_pattern object, if a pattern is specified
-#     if attrs.has_key('uri-pattern'):
-#         pl_opts['uri_pattern'] = uri_pattern(str(attrs['uri-pattern']))
-#     else:
-#         pl_opts['uri_pattern'] = uri_pattern("")
-
-#     pl_opts['order'] = order
-
-#     # add the "cache-as" value, if specified
-#     if attrs.has_key('cache-as'): pl_opts['cache_as'] = str(attrs['cache-as'])
-
-#     return pl_opts
-
-# def create_pl_extra_options(server, parent_sitemap, pipeline, attrs):
-#     """
-#     create_pl_extra_options accepts a xml.sax.Attrbiutes object and converts it into a
-#     dictionary of any non-required parameters available for pipeline objects. It is a
-#     helper function for the sitemap and server _config_parse classes. It differs from
-#     create_pl_required_options in that it accepts a reference to a pipeline object as a
-#     parameter as so can construct any objects (such as serializers) which require a
-#     reference to their parent pipeline.
-#     """
-
-#     pl_opts = {}
-    
-#     # add a serializer object, (using MIME type, or "text/html" if none is specified)
-#     if attrs.has_key('mime'):
-#         mime = str(attrs['mime'])
-#     else:
-#         # if no MIME type is specified, use "text/html"
-#         mime = "text/html"
-
-#     # try to load the approriate serializer class for the MIME type
-#     if mime in server.serializers.keys():
-#         pl_opts['mime'] = server.serializers[mime](pipeline)
-#         if server.log_debug:
-#             server.error_log.write("Added %s" % mime)
-#     else:
-#         # if there is no serializer, then just set mime as a string:
-#         pl_opts['mime'] = mime
-
-#     return pl_opts
-
 def attributes2options(attrs):
     """
     attributes2options turns the given xml.sax.Attributes into a dictionary. It is used to
-    get initialisation options for source and transformer components. It returns the value of
+    get initialisation options for generator and transformer components. It returns the value of
     the "type" attribute and a dictionary of the other attributes.
     """
 

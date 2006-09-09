@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.sources
+import pycoon.generators
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -18,31 +18,31 @@ def register_invokation_syntax(server):
     """
         
     invk_syn = invokation_syntax()
-    invk_syn.element_name = "source"
+    invk_syn.element_name = "generate"
     invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "directory-list"}
     invk_syn.optional_attribs = []
     invk_syn.allowed_child_components = []
 
-    server.component_syntaxes[("source", "directory-list")] = invk_syn
+    server.component_syntaxes[("generate", "directory-list")] = invk_syn
     return invk_syn
 
-class directory_source(pycoon.sources.source):
+class directory_generator(pycoon.generators.generator):
     """
-    directory_source class implements the source interface and returns an XML document containing a
+    directory_generator class implements the generator interface and returns an XML document containing a
     directory tree.
     """
     
     def __init__(self, parent, src, root_path=""):
         """
-        directory_source constructor. Requires the path string.
+        directory_generator constructor. Requires the path string.
         """
 
         self.path = src
         self.doc_str = ""
-        pycoon.sources.source.__init__(self, parent, root_path)
-        self.description = "directory_source(\"%s\")" % self.path
+        pycoon.generators.generator.__init__(self, parent, root_path)
+        self.description = "directory_generator(\"%s\")" % self.path
 
     def list_path(self, path):
         """
