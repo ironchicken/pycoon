@@ -18,7 +18,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "swishe"}
     invk_syn.optional_attribs = ["custom-properties"]
@@ -70,10 +70,10 @@ class swishe_generator(pycoon.generators.generator):
 
         self.description = "swishe_generator(\"%s\", \"%s\")" % (self.datasource_name, self.query_pattern)
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Perform the search and return an Element object.
         """

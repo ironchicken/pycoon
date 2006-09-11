@@ -24,6 +24,10 @@
       <component name="parameter" module="pycoon.parameter" class="parameter" />
       <component name="read" module="pycoon.read" class="read" />
     </built-in>
+    <matchers>
+      <matcher name="uri" module="pycoon.matchers.uri_matcher" class="uri_matcher" />
+      <matcher name="error" module="pycoon.matchers.error_matcher" class="error_matcher" />
+    </matchers>
     <selectors>
 
     </selectors>

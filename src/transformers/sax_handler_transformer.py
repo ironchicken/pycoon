@@ -19,7 +19,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "transform"
-    invk_syn.allowed_parent_components = ["pipeline"]
+    invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["type", "module", "handler"]
     invk_syn.required_attrib_values = {"type": "sax-handler"}
     invk_syn.optional_attribs = []
@@ -51,10 +51,10 @@ class sax_handler_transformer(pycoon.transformers.transformer):
 
         self.description = "sax_handler_transfomer(\"%s\", \"%s\")" % (module, handler)
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Parses the p_sibling_result using self.handler and returns the result as an Element object.
         """
@@ -63,8 +63,7 @@ class sax_handler_transformer(pycoon.transformers.transformer):
         for c in child_results:
             parameters.update(c)
 
-        if uri_pattern:
-            self.handler.set_parameters(parameters)
+        self.handler.set_parameters(parameters)
         
         parseString(lxml.etree.tostring(p_sibling_result), self.handler)
 

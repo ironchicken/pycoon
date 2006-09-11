@@ -19,7 +19,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "directory-list"}
     invk_syn.optional_attribs = []
@@ -76,15 +76,15 @@ class directory_generator(pycoon.generators.generator):
             # it'll just return an incomplete tree
             pass
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Generate the directory list and return the result as an Element object.
         """
 
-        path = interpolate(self.context, self.path, uri_pattern, as_filename=True, root_path=self.root_path)
+        path = interpolate(self, self.path, as_filename=True, root_path=self.root_path)
         
         if os.stat(path):
             self.list_path(path)

@@ -23,13 +23,14 @@ class server:
 
 class request:
     def __init__(self, uri):
-        self.uri = uri
-        self.unparsed_uri = uri
-        self._content_type = ""
-        self.status = None
         self.subprocess_env = SITES[sys.argv[1]]
         self.server = server()
         self.server.server_hostname = self.subprocess_env['SERVER_NAME']
+        self.uri = uri
+        self.unparsed_uri = uri
+        self.parsed_uri = ("context", "", "", "", self.server.server_hostname, 80, uri, "", "")
+        self._content_type = ""
+        self.status = None
 
     def document_root(self):
         return self.subprocess_env['DOCUMENT_ROOT']

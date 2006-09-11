@@ -18,7 +18,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "serialize"
-    invk_syn.allowed_parent_components = ["pipeline"]
+    invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["type"]
     invk_syn.required_attrib_values = {"type": "html"}
     invk_syn.optional_attribs = []
@@ -41,10 +41,10 @@ class html_serializer(pycoon.serializers.serializer):
         self.mime_str = "text/html"
         self.description = "html_serializer()"
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Executes tidy.parseString on the p_sibling_result and returns the resultant HTML.
         """
@@ -52,4 +52,4 @@ class html_serializer(pycoon.serializers.serializer):
         options = dict(output_html=1, add_xml_decl=1, doctype="strict", indent=1, wrap=120, tidy_mark=0,\
                        input_encoding="utf8", output_encoding="utf8")
         
-        return (True, correct_script_chars(str(tidy.parseString(tounicode(p_sibling_result).encode("utf-8"), **options))))
+        return (True, (correct_script_chars(str(tidy.parseString(tounicode(p_sibling_result).encode("utf-8"), **options))), self.mime_str))

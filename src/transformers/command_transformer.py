@@ -19,7 +19,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "transform"
-    invk_syn.allowed_parent_components = ["pipeline"]
+    invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "command"}
     invk_syn.optional_attribs = []
@@ -45,10 +45,10 @@ class command_transformer(pycoon.transformers.transformer):
         pycoon.transformers.transformer.__init__(self, parent, root_path)
         self.description = "command_transfomer(\"%s\")" % self.command
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Execute the command using the p_sibling_result as input along with any child
         parameter elements.

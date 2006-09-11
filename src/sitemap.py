@@ -30,15 +30,13 @@ class sitemap_config(object):
         self.data_sources = {}         # a dictionary of database connections
         self.ds_mods = {}              # a dictionary of Python modules which implement database bindings
 
-        self.pipelines = {}            # a dictionary of pipeline objects indexed by name
-        self.error_pipelines = {}      # a dictionary of pipeline objects indexed by error code, used as error handlers
-        self.pipeline_iter = []        # a list of pipeline names in the order that they should be evalulated
+        self.pipelines = []            # a list of pipeline objects
 
-        self.requests_cache = {}       # a dictionary of request reponses; indexed by uri
-        self.requests_cache_queue = [] # a list of cached request uris in order of when they were cached
+        #self.requests_cache = {}       # a dictionary of request reponses; indexed by uri
+        #self.requests_cache_queue = [] # a list of cached request uris in order of when they were cached
 
-        self.files_cache = {}          # a dictionary of ordinary files cached in memory; indexed by file name
-        self.files_cache_queue = []    # a list of cached file names in order of when they were cached
+        #self.files_cache = {}          # a dictionary of ordinary files cached in memory; indexed by file name
+        #self.files_cache_queue = []    # a list of cached file names in order of when they were cached
 
     def handle(self, req):
         """
@@ -49,28 +47,29 @@ class sitemap_config(object):
         """
         
         # iterate over the pipelines
-        for pi in self.pipeline_iter:
-            p = self.pipelines[pi]
+        for p in self.pipelines:
+            (success, result, mime) = p.execute(req)
 
-            # the first one that matches the req uri is executed
-            if p.match(req.unparsed_uri):
-                (success, result) = p.execute(req)
+            if success:
+                # if its successful it writes its result to the request object
+                req.content_type = mime
+                req.set_content_length(len(result))
+                req.write(result)
+                
+                if self.server.log_requests:
+                    self.server.access_log.write("Handled request: \"%s\"" % req.unparsed_uri)
 
-                if success:
-                    # if its successful it writes its result to the request object
-                    req.content_type = p.mime
-                    req.set_content_length(len(result))
-                    req.write(result)
+                return (True, apache.OK)
+            elif result is None:
+                # in this case there was no error
+                pass
+            elif result is not None:
+                # if its not successful but the result is not None, then it is an error code
+                req.status = result
+                return self.handle_error(req, result)
 
-                    if self.server.log_requests:
-                        self.server.access_log.write("Pipeline \"%s\" handled request: \"%s\"" % (p.name, req.unparsed_uri))
-
-                    return (True, apache.OK)
-                else:
-                    # if its not successful then it tries to find an error pipeline for the returned error code
-                    return self.handle_error(req, result)
-
-        # if execution reaches this point then no matching pipeline was found
+        # if execution reaches this point then the request was not handled
+        req.status = apache.HTTP_NOT_FOUND
         return self.handle_error(req, apache.HTTP_NOT_FOUND)
 
     def handle_error(self, req, error_code):
@@ -80,27 +79,24 @@ class sitemap_config(object):
         @req: an Apache request object
         @error_code: an Apache error code
         """
+
+        for p in self.pipelines:
+            (success, result, mime) = p.handle_error(req)
         
-        if error_code in self.error_pipelines.keys():
-            # and if there is an error pipeline in the sitemap to handle the error code
-            # then execute it.
-            req.status = error_code
-
-            if self.server.log_errors:
-                self.server.error_log.write("Sitemap handling error %s; request: \"%s\"" % (error_code, req.unparsed_uri))
-
-            (success, result) = self.error_pipelines[error_code].execute(req)
-
             if success:
-                req.content_type = self.error_pipelines[error_code].mime
+                req.status = error_code
+
+                if self.server.log_errors:
+                    self.server.error_log.write("Sitemap handling error %s; request: \"%s\"" % (error_code, req.unparsed_uri))
+
+                req.content_type = mime
                 req.set_content_length(len(result))
                 req.write(result)
 
                 return (True, apache.DONE)
-            else:
-                return (False, error_code)
-        else:
-            return (False, error_code)
+
+        # if execution reaches this point then the error was not handled
+        return (False, error_code)
 
 class sitemap_config_parse(ContentHandler):
     """
@@ -149,17 +145,16 @@ class sitemap_config_parse(ContentHandler):
 
             if self.server.log_debug:
                 if len(self.proc_comp_stack) > 2:
-                    self.server.error_log.write("Pipeline: %s: %s appended to %s" %\
-                                                (self.proc_comp_stack[0].name, self.proc_comp_stack[-1].description, self.proc_comp_stack[-2].description))
+                    self.server.error_log.write("%s appended to %s" %\
+                                                (self.proc_comp_stack[-1].description, self.proc_comp_stack[-2].description))
                 else:
-                    self.server.error_log.write("Pipeline: %s: %s appended" %\
-                                                (self.proc_comp_stack[0].name, self.proc_comp_stack[-1].description))
+                    self.server.error_log.write("%s appended" % self.proc_comp_stack[-1].description)
                                                 
 
     def endElement(self, name):
         if name == "pipeline":
             if self.sitemap.parent.log_debug:
-                self.sitemap.parent.error_log.write("Added pipeline: \"%s\"" % self.proc_comp_stack[-1].name)
+                self.sitemap.parent.error_log.write("Added pipeline: \"%s\"" % self.proc_comp_stack[-1].description)
 
         elif name in self.server.component_enames:
             self.proc_comp_stack.pop()

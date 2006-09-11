@@ -16,7 +16,9 @@ COMPONENT_TYPES = {"stream": {"generator": {"module": "pycoon.generators", "supe
                    "syntax": {"selector": {"module": "pycoon.selectors", "super_class": "selector"},\
                               "authenticator": {"module": "pycoon.authenticators", "super_class": "authenticator"}}}
                             
-                   
+
+class ComponentException(Exception): pass
+
 def register_component(server, super_type, attrs):
     """
     Reads a component described by the content of the given XML element attributes object and
@@ -84,14 +86,16 @@ class invokation_syntax(object):
         of the type encapsulated in this invokation_syntax instance.
         """
 
-        return name == self.element_name and \
-               parent_name in self.allowed_parent_components and \
-               reduce(lambda a, b: a and b, [attrib in attrs.keys() for attrib in self.required_attribs], True) and \
-               reduce(lambda a, b: a and b, [attrs[n] == v for n, v in self.required_attrib_values.items()], True)
-           
-        #raise SAXException("%s may not have child components of the type: \"%s\"" % (self.curr_component.type, component_type))
-        #raise SAXException("Unknown %s type: \"%s\"" % (super_type, component_type))
-        #raise SAXException("Invalid component syntax for \"%s\"" % name)
+        if name != self.element_name:
+            raise ComponentException("Incorrect element name: \"%s\"" % name)
+        elif parent_name not in self.allowed_parent_components:
+            raise ComponentException("%s may not be a child of %s" % (name, parent_name))
+        elif not reduce(lambda a, b: a and b, [attrib in attrs.keys() for attrib in self.required_attribs], True):
+            raise ComponentException("Missing required attributes for component \"%s\"" % name)
+        elif not reduce(lambda a, b: a and b, [attrs[n] == v for n, v in self.required_attrib_values.items()], True):
+            raise ComponentException("Invalid attribute values for component \"%s\"" % name)
+        else:
+            return True
 
 class component(object):
     """
@@ -153,7 +157,7 @@ class component(object):
         
         self.description = "Component base class"
 
-    def __call__(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def __call__(self, req, p_sibling_result=None, child_results=[]):
         """
         Calling a component causes it to activate its function by calling its _descend and _result methods.
         Depending on the return value of its _descend method, it also attempts to call its child components.
@@ -162,7 +166,6 @@ class component(object):
         and whose second is the 'result'.
 
         @req: is the current apache request object
-        @uri_pattern: is the current request uri_pattern object
         @p_sibling_result: is the result of the pipeline so far (i.e. up to the previous sibling
         component) (optional)
         @child_result: is the result of the child pipelines of this component (optional)
@@ -172,21 +175,24 @@ class component(object):
             self.server.error_log.write("%s called with previous sibling: %s; child results: %s" % (self.description, p_sibling_result, child_results))
         
         c_tree = []
-        if self._descend(req, uri_pattern, p_sibling_result):
+        if self._descend(req, p_sibling_result):
             for comp in self.children:
                 if len(c_tree) > 0:
-                    (success, result) = comp(req, uri_pattern, c_tree[-1])
+                    (success, result) = comp(req, c_tree[-1])
                 else:
-                    (success, result) = comp(req, uri_pattern, None)
+                    (success, result) = comp(req, None)
                 
                 if success:
                     c_tree.append(result)
                 else:
                     return (False, result)
 
-        return self._result(req, uri_pattern, p_sibling_result, c_tree)
+                if not comp._continue(req, p_sibling_result):
+                    break
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+        return self._result(req, p_sibling_result, c_tree)
+
+    def _descend(self, req, p_sibling_result=None):
         """
         Given the current execution context, allows the component to determine whether or not it will
         allow its child components to be executed. Returns True if child components are to be executed,
@@ -196,7 +202,25 @@ class component(object):
 
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _continue(self, req, p_sibling_result=None):
+        """
+        Given the current execution context, allows the component to determine whether or not it will
+        allow its following siblings to be executed. Default behaviour is to return True but matcher
+        components will often disallow their following sibling components from executing (by returning
+        False) because further pipeline processing is unecessary.
+        """
+
+        #Hack alert: I've added this functionality as a result of implementing matcher components because,
+        #if there are more matchers in a pipeline after the stream has been serialized (even ones that
+        #don't match) the serialized result gets lost. This is may be useful functionality to have, but
+        #its a flakey solution to this problem. (What happens, for e.g., if you have a serializer at the
+        #end of a pipeline outside of any matchers?) (A possible solution would be along the lines of
+        #working out exactly what happens to the result and maybe having some mechanism of making sure a
+        #non-matching matcher just passes the result on  - correctly!)
+        
+        return True
+
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Given the current execution context, the component should carry out its main function and
         return a tuple whose first member is a 'successful' flag and whose second member is its
@@ -214,6 +238,20 @@ class component(object):
         else:
             self.children.insert(pos, c)
         return c
+
+    def find_components(self, function, type_value, found=[]):
+        """
+        Searches this component's child components for any components with the given function
+        and type. Either returns the component(s) or [].
+        """
+
+        if self.function == function and self.__class__.__name__ == "%s_%s" % (type_value, function):
+            found.append(self)
+
+        for c in self.children:
+            c.find_components(function, type_value, found)
+
+        return found
 
 class stream_component(component):
     """
@@ -262,3 +300,14 @@ class syntax_component(component):
     def __init__(self, parent, root_path=""):
         component.__init__(self, parent, root_path)
         self.description = "Syntax component base class"
+
+    def _result(self, req, p_sibling_result=None, child_results=[]):
+        """
+        syntax_component implements default behaviour for _result method: just return the given
+        child_results parameter. (Subclasses may override this behaviour.)
+        """
+
+        if len(child_results) > 0:
+            return (True, child_results[-1])
+        else:
+            return (True, None)

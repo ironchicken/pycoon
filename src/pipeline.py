@@ -22,11 +22,10 @@ def register_invokation_syntax(server):
     invk_syn = invokation_syntax()
     invk_syn.element_name = "pipeline"
     invk_syn.allowed_parent_components = ["sitemap", "server"]
-    invk_syn.required_attribs = ["name", "mime"]
+    invk_syn.required_attribs = []
     invk_syn.required_attrib_values = {}
-    invk_syn.optional_attribs = ["uri-pattern", "on-error-code"]
-    invk_syn.allowed_child_components = ["aggregate", "file", "xpath", "xquery", "swishe", "command", "sql",\
-                                         "directory-list", "xslt", "sax-handler"]
+    invk_syn.optional_attribs = []
+    invk_syn.allowed_child_components = ["match"]
 
     server.component_syntaxes[("component", "pipeline")] = invk_syn
 
@@ -41,60 +40,21 @@ def build_pipeline(server, sitemap, attrs, **kw_args):
 
     kw_args can include: 'on-error-code' for error pipelines
     """
+
+    pl_opts = {}
     
-    pipeline_name = str(attrs['name'])
-    pl_opts = {'name': pipeline_name}
-               
-    # determine the type of pipeline
-    if attrs.has_key('uri-pattern'):
-        if sitemap is None:
-            raise Exception("Server may only contain error handling pipelines.")
-
-        pipeline_type = "public"
-        pl_opts['pipeline_type'] = pipeline_type
-
-    elif attrs.has_key('on-error-code'):
-        pipeline_type = "error"
-        #pl_opts['on_error_code'] = int(attrs['on-error-code'])
-        pl_opts['pipeline_type'] = pipeline_type
-        
-    else:
-        if sitemap is None:
-            raise Exception("Server may only contain error handling pipelines.")
-
-        pipeline_type = "private"
-        pl_opts['pipeline_type'] = pipeline_type
-
-
-    # add a uri_pattern object, if a pattern is specified
-    if attrs.has_key('uri-pattern'):
-        pl_opts['uri_pattern'] = uri_pattern(str(attrs['uri-pattern']))
-    else:
-        pl_opts['uri_pattern'] = uri_pattern("")
-
     if attrs.has_key('cache-as'):
         pl_opts['cache_as'] = str(attrs['cache-as'])
-
-    if attrs.has_key('mime'):
-        pl_opts['mime'] = str(attrs['mime'])
 
     # determine the parent type and create and add the new pipeline to its parent
     if sitemap != None:
         pl_opts['parent'] = sitemap
-        if pipeline_type == "public":
-            if pipeline_name in sitemap.pipelines.keys():
-                raise Exception("Attempted to add pipeline to sitemap with non-unique name: \"%s\"" % pipeline_name)
-            pl = sitemap.pipelines[pipeline_name] = pipeline(**pl_opts)
-            sitemap.pipeline_iter.append(pipeline_name)
-        elif pipeline_type == "error":
-            pl = sitemap.error_pipelines[int(attrs['on-error-code'])] = pipeline(**pl_opts)
-        elif pipeline_type == "private":
-            if pipeline_name in sitemap.pipelines.keys():
-                raise Exception("Attempted to add pipeline to sitemap with non-unique name: \"%s\"" % pipeline_name)
-            pl = sitemap.pipelines[pipeline_name] = pipeline(**pl_opts)
+        sitemap.pipelines.append(pipeline(**pl_opts))
+        pl = sitemap.pipelines[-1]
     else:
         pl_opts['parent'] = server
-        pl = server.error_pipelines[int(attrs['on-error-code'])] = pipeline(**pl_opts)
+        server.pipelines.append(pipeline(**pl_opts))
+        pl = server.pipelines[-1]
     
     return pl
 
@@ -106,45 +66,30 @@ class pipeline(component):
     role = "pipeline"
     function = "pipeline"
     
-    def __init__(self, parent, name, pipeline_type, uri_pattern, mime, cache_as=""):
+    def __init__(self, parent, cache_as=""):
         """
         pipeline constructor.
 
         @parent: sitemap or server
-        @attrs: an xml.sax.Attributes instance containing the pipeline information
-        @uri_pattern: uri_pattern object which the pipeline should match
-        @mime: the pipeline's MIME type
+        @cache_as: (optional)
         """
 
         component.__init__(self, parent)
 
-        self.name = name
-        self.pipeline_type = pipeline_type
-        self.pattern = uri_pattern
-        self.mime = mime
         self.cache_as = cache_as
 
-        self.description = "Pipeline: \"%s\"" % self.name
-
-    def match(self, uri):
-        """
-        Returns a match object if the pipeline's uri_pattern matches the given uri,
-        otherwise returns None.
-        """
-
-        return self.pattern.match(uri)
+        self.description = "Pipeline"
 
     def force_execute(self, output, uri):
         """
-        Used to execute the pipeline without matching it against a uri and without returning the result
-        directly to the HTTP response.
+        Used to execute the pipeline without returning the result directly to the HTTP response.
 
         @output: a file-like object
         @uri: a URI string
         """
 
         if self.server.log_debug:
-            self.server.error_log.write("Pipeline \"%s\" forced to execute for uri: \"%s\"" % (self.name, uri))
+            self.server.error_log.write("Pipeline forced to execute for uri: \"%s\"" % uri)
         
         # create a little pretend apache request object
         class fake_request:
@@ -152,20 +97,17 @@ class pipeline(component):
                 self.write = ostream.write
                 self.unparsed_uri = uri
                 self.content_type = None
+                self.parsed_uri = ("context", "", "", "", self.server.name, 80, uri, "", "")
 
             def set_content_length(self, l): pass
             def sendfile(self, fn): pass
 
-        # when execution is forced, its likely that self.pattern hasn't been executed and that,
-        # therefore, its .uri property is empty:
-        self.pattern.uri = uri
-        
         return self.execute(fake_request(output, uri))
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         return (True, child_results[-1])
     
     def execute(self, req):
@@ -175,12 +117,13 @@ class pipeline(component):
         @req: an Apache request object
         """
 
-        # when execution is forced, its likely that self.pattern hasn't been executed and that,
-        # therefore, its .uri property is empty:
-        self.pattern.uri = req.unparsed_uri
-
         try:
-            return self.__call__(req, self.pattern)
+            (success, result) = self.__call__(req)
+            if isinstance(result, tuple):
+                # split the result and the mime type
+                return (success, result[0], result[1])
+            else:
+                return (success, result, "unknown")
         except Exception:
             # if there was an error during execution, return error 500
             # store the exception in case there is a 500 handler pipeline
@@ -189,4 +132,24 @@ class pipeline(component):
             if self.server.log_errors:
                 self.server.error_log.write(string.join(traceback.format_exception(*sys.exc_info()), "\n"))
 
-            return (False, apache.HTTP_INTERNAL_SERVER_ERROR)
+            return (False, apache.HTTP_INTERNAL_SERVER_ERROR, None)
+
+    def handle_error(self, req):
+        """
+        Execute the pipeline, but only using its error handler matcher for the given error code.
+
+        @req: an Apache request object
+        """
+
+        # um, we could make all matchers check the req.status to make sure its not an error condition
+        # so that this function is then the same as execute...
+        for m in self.find_components("match", "error"):
+            (success, result) = m(req)
+            if success:
+                if isinstance(result, tuple):
+                    # split the result and the mime type
+                    return (success, result[0], result[1])
+                else:
+                    return (success, result, "unknown")
+
+        return (False, None, None)
