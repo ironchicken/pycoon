@@ -108,7 +108,10 @@ class pipeline(component):
         return True
 
     def _result(self, req, p_sibling_result=None, child_results=[]):
-        return (True, child_results[-1])
+        if len(child_results) > 0 and child_results[-1] is not None:
+            return (True, child_results[-1])
+        else:
+            return (False, None)
     
     def execute(self, req):
         """
@@ -143,7 +146,7 @@ class pipeline(component):
 
         # um, we could make all matchers check the req.status to make sure its not an error condition
         # so that this function is then the same as execute...
-        for m in self.find_components("match", "error"):
+        for m in self.find_components("error_matcher"):
             (success, result) = m(req)
             if success:
                 if isinstance(result, tuple):
