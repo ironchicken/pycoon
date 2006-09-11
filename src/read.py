@@ -50,16 +50,16 @@ class read(stream_component):
         self.description = "Read: \"%s\"" % src
         self.function = "read"
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
     
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         # it makes most sense simply to call req.sendfile(). However, it fits the architecture better to read the contents of the file
         # into a memory stream first so that it can go through the rest of the pipeline (especially for XML/HTML docs.)
         # However, this is going to to be *bad* for binary files. Could we make this some sort of exception?
 
         try:
-            fn = interpolate(self.context, self.file_name, uri_pattern)
+            fn = interpolate(self, self.file_name)
             #os.stat(fn)
 
             return (True, file(fn, 'r').read())

@@ -19,7 +19,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "xpath"}
     invk_syn.optional_attribs = []
@@ -51,24 +51,20 @@ class xpath_generator(pycoon.generators.generator):
         pycoon.generators.generator.__init__(self, parent, root_path)
         self.description = "xpath_generator(\"%s\", \"%s\")" % (self.source_file, self.xpath_expr)
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Execute the XPath expression and return the results in an Element object.
         """
 
         try:
-            source_tree = lxml.etree.parse(open(interpolate(self.context, self.source_file, uri_pattern,\
-                                                            as_filename=True, root_path=self.root_path), 'r'))
+            source_tree = lxml.etree.parse(open(interpolate(self, self.source_file, as_filename=True, root_path=self.root_path), 'r'))
         except OSError:
             return (False, apache.HTTP_NOT_FOUND)
 
-        if uri_pattern is not None:
-            xpath = interpolate(self.context, self.xpath_expr, uri_pattern)
-        else:
-            xpath = self.xpath_expr
+        xpath = interpolate(self, self.xpath_expr)
 
         nodes = source_tree.xpath(xpath)
 

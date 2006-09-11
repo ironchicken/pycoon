@@ -16,7 +16,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "serialize"
-    invk_syn.allowed_parent_components = ["pipeline"]
+    invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["type"]
     invk_syn.required_attrib_values = {"type": "xml"}
     invk_syn.optional_attribs = []
@@ -39,12 +39,12 @@ class xml_serializer(pycoon.serializers.serializer):
         self.mime_str = "text/xml"
         self.description = "xml_serializer()"
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Executes lxml.etree.tounicode with the p_sibling_result and returns the resultant XML.
         """
 
-        return (True, "<?xml version=\"1.0\"?>%s" % tounicode(p_sibling_result))
+        return (True, ("<?xml version=\"1.0\"?>%s" % tounicode(p_sibling_result), self.mime_str))

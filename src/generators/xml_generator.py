@@ -18,7 +18,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "file"}
     invk_syn.optional_attribs = []
@@ -44,16 +44,15 @@ class xml_generator(pycoon.generators.generator):
         pycoon.generators.generator.__init__(self, parent, root_path)
         self.description = "xml_generator(\"%s\")" % self.src
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
-        Returns an ElementTree representation of the XML document, interpolating the XML source
-        filename with the given uri_pattern.
+        Returns an ElementTree representation of the XML document.
         """
 
         try:
-            return (True, lxml.etree.parse(open(interpolate(self.context, self.src, uri_pattern, as_filename=True, root_path=self.root_path), "r")).getroot())
-        except:
+            return (True, lxml.etree.parse(open(interpolate(self, self.src, as_filename=True, root_path=self.root_path), "r")).getroot())
+        except (IOError, OSError):
             return (False, apache.HTTP_NOT_FOUND)

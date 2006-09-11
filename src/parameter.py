@@ -49,13 +49,13 @@ class parameter(syntax_component):
         self.description = "Parameter: %s: \"%s\"" % (self.param_name, self.param_value)
         #self.function = "parameter"
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return False
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Parameter components return the name of the parameter along with the parameter's
         interpolated value.
         """
 
-        return (True, {self.param_name: interpolate(self.context, self.param_value, uri_pattern)})
+        return (True, {self.param_name: interpolate(self, self.param_value)})

@@ -20,7 +20,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "xquery"}
     invk_syn.optional_attribs = []
@@ -78,15 +78,15 @@ class xquery_generator(pycoon.generators.generator):
         self.dbxml_fn = self.sitemap.data_sources[self.datasource_name + "_source"]
         self.description = "xquery_generator(\"%s\", \"%s\")" % (self.datasource_name, self.xq_filename)
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
-        Perform the xquery filling in any parameters using the given uri_pattern object.
+        Perform the xquery and return the result as an ElementTree.
         """
 
-        xq_file = open(interpolate(self.context, self.xq_filename, uri_pattern, as_filename=True, root_path=self.root_path), "r")
+        xq_file = open(interpolate(self, self.xq_filename, as_filename=True, root_path=self.root_path), "r")
         xq_str = xq_file.read()
         xq_file.close()
 

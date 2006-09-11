@@ -9,7 +9,10 @@ attributes to include a special syntax (denoted by {}) for parameterizing their 
 
 import string, re, os, traceback
 from StringIO import StringIO
+from pycoon import apache
 from pycoon.helpers import strip_amps
+
+class InterpolationException(Exception): pass
 
 class interpolation_syntax(object):
     """
@@ -29,22 +32,23 @@ class interpolation_syntax(object):
         self.pattern = re.compile(pattern)
         self.component = component
 
-    def _match(self, statement):
+    def _match(self, instruction):
         """
-        test the given statement against the object's pattern and return True if it matches or
+        test the given instruction against the object's pattern and return True if it matches or
         False if it doesn't.
         """
 
-        self.statement = statement
-        return self.pattern.match(statement) != None
+        self.instruction = instruction
+        self.match_obj = self.pattern.match(instruction)
+        return self.match_obj != None
 
-    def __call__(self, statement, uri_pattern, context):
+    def __call__(self, instruction, uri_matcher, context):
         """
-        implements the 'action' of this interpolation syntax. Should a tuple: first member is result
-        of self._match, second is either interpolated string or None.
+        implements the 'action' of this interpolation syntax. Should return a tuple: first member
+        is result of self._match, second is either interpolated string or None.
 
-        @statement: is the syntax to be interpolated
-        @uri_pattern: the uri_pattern instance of the request that is being processed
+        @instruction: is the syntax to be interpolated
+        @uri_matcher: a uri_matcher instance for the request that is being processed
         @context: a sitemap_config or server_config instance
         """
 
@@ -73,10 +77,10 @@ class interpolate_pattern_match_number(interpolation_syntax):
     def __init__(self):
         interpolation_syntax.__init__(self, "^\$[0-9]+$")
     
-    def __call__(self, statement, uri_pattern, context):
-        if self._match(statement):
+    def __call__(self, instruction, uri_matcher, context):
+        if self._match(instruction):
             try:
-                return (True, uri_pattern.match_obj.group(int(statement.replace("$", ""))))
+                return (True, uri_matcher.match_obj.group(int(instruction.replace("$", ""))))
             except IndexError:
                 return (False, None)
         else:
@@ -98,16 +102,16 @@ class interpolate_uri(interpolation_syntax):
     def __init__(self):
         interpolation_syntax.__init__(self, "^uri:?.*$")
 
-    def __call__(self, statement, uri_pattern, context):
-        if self._match(statement):
+    def __call__(self, instruction, uri_matcher, context):
+        if self._match(instruction):
             try:
                 # first, split the instruction up on ':'s
-                uri_comps = statement.split(":")
+                uri_comps = instruction.split(":")
 
                 # if its just 'uri'
-                if statement == "uri":
+                if instruction == "uri":
                     # then return the whole uri
-                    return (True, uri_pattern.uri)
+                    return (True, uri_matcher.uri)
 
                 # if its 'uri:path'
                 elif uri_comps[1] == "path":
@@ -115,72 +119,68 @@ class interpolate_uri(interpolation_syntax):
                     if len(uri_comps) >= 3:
                         # then return the numbered part of the path
                         # (where 0 is the left-most part)
-                        return (True, uri_pattern.parsed["path"][int(uri_comps[2])])
+                        return (True, string.split(uri_matcher.path, "/")[int(uri_comps[2])])
                     else:
                         # if there's no argument, then return the whole path
                         # but using OS sepcific separators so that it can be a local filename
-                        return (True, uri_pattern.parsed["path"].join(os.sep))
+                        return (True, uri_matcher.path)
 
                 # if its 'uri:filename' then return the filename portion of the uri
                 elif uri_comps[1] == "filename":
-                    return (True, uri_pattern.parsed["filename"])
+                    return (True, uri_matcher.filename)
 
                 # if its 'uri:query'
                 elif uri_comps[1] == "query":
                     # and if there's a named query element:
                     if len(uri_comps) >= 3:
                         # then return the value of that query element
-                        return (True, uri_pattern.parsed["query"][uri_comps[2]])
+                        return (True, uri_matcher.query_dict[uri_comps[2]])
                     else:
                         # otherwise, format and return the whole query string
-                        return (True, "?" + string.join([n + "=" + v for n, v in uri_pattern.parsed["query"]], "&"))
+                        return (True, "?" + uri_matcher.query)
 
                 # if its 'uri:fragment' then return the fragment portion of the uri
                 elif uri_comps[1] == "fragment":
-                    return (True, uri_pattern.parsed["fragment"])
+                    return (True, uri_matcher.fragment)
             except IndexError:
                 # do I need to catch these?
                 return (False, None)
         else:
             return (False, None)
                 
-class interpolate_pipeline(interpolation_syntax):
+class interpolate_context(interpolation_syntax):
     """
-    interpolate_pipeline interprets the '{|name}' syntax, where 'name' is the name of a pipeline whose result
-    is returned. A URI argument may be passed to the named pipeline using this syntax '{|name:uri}' (however,
-    note that 'nested' interpolation is not supported).
+    interpolate_context interprets the '{context:...}' syntax, where '...' should be a URI which will be
+    handled by the sitemap and its result will be returned. (However, note that 'nested' interpolation
+    is not supported.)
     """
     
     def __init__(self):
-        interpolation_syntax.__init__(self, "^|\w+:?.*$")
+        interpolation_syntax.__init__(self, "^context:.+$")
 
-    def __call__(self, statement, uri_pattern, context):
-        if self._match(statement):
+    def __call__(self, instruction, uri_matcher, context):
+        if self._match(instruction):
             try:
                 # split the instruction on :'s
-                instruct_comps = statement.split(":")
+                instruct_comps = instruction.split(":")
 
-                # extract the pipeline name
-                pl_name = instruct_comps[0].strip("|")
-
-                # and the given uri (if there is one)
+                # and get given uri
                 if len(instruct_comps) > 1:
                     # this is where nested interpolation is _not_ happening
-                    # (you'd need to pass the parent uri_pattern(s) to this function...)
                     given_uri = instruct_comps[1]
-                else: given_uri = ""
+                else:
+                    raise InterpolationException("context: instruction requires a URI")
 
                 result = StringIO()
                 # force the named pipeline to execute, using a buffer for the result and uri from
                 # the interpolation instruction (if there was one)
-                context.pipelines[pl_name].force_execute(result, given_uri)
+                context.pipelines.force_execute(result, given_uri)
 
                 result_string += result.getvalue()
                 result.close()
 
                 return (True, result_string)
             except (KeyError, AttributeError):
-                # this means that the named pipeline does not exist. 
                 return (False, None)
         else:
             return (False, None)
@@ -193,8 +193,8 @@ class interpolate_traceback(interpolation_syntax):
     def __init__(self):
         interpolation_syntax.__init__(self, "^traceback$")
 
-    def __call__(self, statement, uri_pattern, context):
-        if self._match(statement):
+    def __call__(self, instruction, uri_matcher, context):
+        if self._match(instruction):
             try:
                 exc = context.server.EXCEPTION
             except AttributeError:
@@ -205,68 +205,82 @@ class interpolate_traceback(interpolation_syntax):
         else:
             return (False, None)
 
-def interpolate(context, string_arg, uri_pattern, as_filename=False, root_path=""):
-    """
-    parses the string_arg argument using the given uri_pattern to interpolate the special {} delimited
-    parts of string_arg with values from the uri_pattern. Returns a string.
+# this regex is used to extract the interpolation instructions from a string
+_find_instructions = re.compile("\{[^}]+\}")
 
-    @context: a sitemap_config or server_config instance
+def interpolate(component, string_arg, as_filename=False, root_path=""):
+    """
+    parses the string_arg argument using the current request uri to interpolate the special {} delimited
+    parts of string_arg with values from the uri. Returns a string.
+
+    @component: the component which has called this function
     @string_arg: the attribute value to be processed (should contain {} delimited syntax)
-    @uri_pattern: the uri_pattern object of the current request
     @as_filename: if True, the result will be an absolute path name. Optional
     @root_path: use to specify a path root other than the sitemap's document root. Optional
     """
 
+    # first attempt to find an active uri_matcher instance in the pipeline hierarchy
+    uri_matcher = None
+    p = component.parent
+    while p is not None:
+        if p.__class__.__name__ in ["uri_matcher", "error_matcher"]:
+            uri_matcher = p
+            break
+        try:
+            p = p.parent
+        except AttributeError:
+            p = None
+            break
+    if uri_matcher is None:
+        raise InterpolationException("interpolate called by component, \"%s\", with no uri_matcher or error_matcher instance in pipeline"
+                                     % component.description)
+        
     if as_filename:
-        if root_path == "": root_path = context.document_root
+        if root_path == "": root_path = component.context.document_root
         # if its supposed to be a filename, then start the return string with the given root_path
         return_string = root_path + os.sep
     else:
         # otherwise, just create an empty return string
         return_string = ""
 
-    statement = ""   # this will contain the current interpolation instruction
-    interpol_val = ""   # this will contain the current interpolated value
-    in_interpol = False # True when the s's current position is between a { and a }
+    # retrieve the available interpolation syntax objects from the server_config
+    if component.context.__class__.__name__ == "sitemap_config":
+        i_syntaxes = component.context.server.interpolation_syntaxes.values()
+    elif component.context.__class__.__name__ == "server_config":
+        i_syntaxes = component.context.interpolation_syntaxes.values()
 
-    # loop over each character in the string_arg and keep a counter pointer
-    for i, c in zip(range(len(string_arg)), string_arg):
-        # if the current character is a '{' and we're not already processing an interpolation
-        if not in_interpol and c == "{":
-            # start a new interpolation by setting statement to be empty and in_interpol to True
-            statement = ""
-            in_interpol = True
+    # first insert the characters up to the first interpolation instruction (could be the whole string):
 
-        # if we're currently processing an interpolation and the current character is not a { or a }
-        elif in_interpol and c not in ['{', '}']:
-            # then add it to the current interpolation instruction string
-            statement += c
+    last_pos = string_arg.find("{")
 
-        # if we're currently processing an interpolation and the current character is a }
-        elif in_interpol and c == "}":
-            # then we've got to the end of the interpolation instruction string,
-            # so interpolate it:
+    if last_pos == -1:
+        # in this case there are no interpolation instructions in the string so just use all of string_arg
+        return_string += string_arg
 
-            # first retrieve the available interpolation syntax objects from the server_config
-            if context.__class__.__name__ == "sitemap_config":
-                i_syntaxes = context.server.interpolation_syntaxes.values()
-            elif context.__class__.__name__ == "server_config":
-                i_syntaxes = context.interpolation_syntaxes.values()
+    else:
+        # in this case there are some interpolation instructions
 
-            # then iterate over them until one matches
+        start_pos = 0
+        
+        # iterate over the interpolation instructions in the string_arg
+        for instruction in _find_instructions.finditer(string_arg):
+            last_pos = instruction.start() - 1
+            if last_pos < 0: last_pos = 0
+
+            # first, add the characters between the previous instruction and this one to the return_string
+            return_string += string_arg[start_pos:last_pos]
+
+            # then iterate over the interpolation syntax objects until one matches
             for i in i_syntaxes:
-                (success, result) = i(statement, uri_pattern, context)
+                (success, result) = i(instruction.group()[1:-1], uri_matcher, component.context)
+
                 if success:
                     return_string += result
                     break
 
-            # we've now finished with this interpolation so set the flag to False
-            in_interpol = False
+            start_pos = instruction.end()
 
-        # if we're not processing an interpolation and the current character is not a { or a }
-        elif not in_interpol and c not in ['{', '}']:
-            # then just add it unaltered to the return string
-            return_string += c
+        return_string += string_arg[start_pos:]
 
     # return the completed return string
     return return_string

@@ -40,7 +40,7 @@ class server_config(object):
         self.MAX_FILES_CACHE = 10      # the maximum number of cached files
         self.MAX_CACHE_FILE_SIZE = 512 * 1024 # the maximum size (in bytes) of files that can be cached
 
-        self.component_types = ["component", "selector", "generator", "transformer", "serializer"]
+        self.component_types = ["component", "matcher", "selector", "generator", "transformer", "serializer"]
         self.components = {}           # dictionary of available components (indexed by tuple: (function, type value))
         self.component_enames = []     # a list of available element names used by components
 
@@ -52,7 +52,7 @@ class server_config(object):
         self.ds_initialisers = {}      # dictionary of available generator component data-source initialisation methods
                                        # (indexed by source name)
 
-        self.error_pipelines = {}      # a dictionary of pipeline objects indexed by error code, used as error handlers
+        self.pipelines = []            # a list of pipeline objects, used as error handlers
 
         self.access_log = None
         self.error_log = None
@@ -60,7 +60,7 @@ class server_config(object):
         # register built-in interpolation syntaxes
         register_interpolation_syntax(self, interpolate_pattern_match_number(), "pattern-match-number")
         register_interpolation_syntax(self, interpolate_uri(), "uri")
-        register_interpolation_syntax(self, interpolate_pipeline(), "pipeline")
+        register_interpolation_syntax(self, interpolate_context(), "context")
         register_interpolation_syntax(self, interpolate_traceback(), "traceback")
 
     # config_root and document_root should always contains the same value
@@ -105,38 +105,28 @@ class server_config(object):
         @req: an Apache request object
         @error_code: an Apache error code
         """
+
+        for p in self.pipelines:
+            (success, result, mime) = p.handle_error(req)
         
-        if error_code in self.error_pipelines.keys():
-            # and if there is an error pipeline in the sitemap to handle the error code
-            # then execute it.
-            req.status = error_code
-
-            if self.log_errors:
-                self.error_log.write("Server handling error %s; request: \"%s\"" % (error_code, req.unparsed_uri))
-            self.error_pipelines[error_code].execute(req)
-
-            (success, result) = self.error_pipelines[error_code].execute(req)
-
             if success:
-                req.content_type = self.error_pipelines[error_code].mime
+                req.status = error_code
+
+                if self.server.log_errors:
+                    self.server.error_log.write("Server handling error %s; request: \"%s\"" % (error_code, req.unparsed_uri))
+
+                req.content_type = mime
                 req.set_content_length(len(result))
                 req.write(result)
 
                 return (True, apache.DONE)
 
-            else:
-                req.status = apache.HTTP_INTERNAL_SERVER_ERROR
-                if self.log_errors:
-                    self.error_log.write("Unhandled error %s; request: \"%s\"; returning status 500" % (error_code, req.unparsed_uri))
+        # if execution reaches this point then the error was not handled
+        req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+        if self.log_errors:
+            self.error_log.write("Unhandled error %s; request: \"%s\"; returning status 500" % (error_code, req.unparsed_uri))
 
-                return (False, apache.DONE)
-
-        else:
-            req.status = apache.HTTP_INTERNAL_SERVER_ERROR
-            if self.log_errors:
-                self.error_log.write("Unhandled error %s; request: \"%s\"; returning status 500" % (error_code, req.unparsed_uri))
-
-            return (False, apache.DONE)
+        return (False, apache.DONE)
 
 class server_config_parse(ContentHandler):
     """
@@ -202,7 +192,7 @@ class server_config_parse(ContentHandler):
             # register a component
             register_component(self.server, str(attrs['name']), attrs)
             
-        elif name == "pipeline" and attrs.has_key('on-error-code'):
+        elif name == "pipeline":
             if not self.done_components:
                 # ensure that all the component classes have been registered before processing any server pipelines
                 raise SAXException("<pipeline> elements must follow the <components> element.")
@@ -247,7 +237,7 @@ class server_config_parse(ContentHandler):
 
         elif name == "pipeline":
             if self.server.log_debug:
-                self.server.error_log.write("Added server pipeline: \"%s\"" % self.proc_comp_stack[-1].name)
+                self.server.error_log.write("Added server pipeline: \"%s\"" % self.proc_comp_stack[-1].description)
 
         elif name in self.server.component_enames and self.done_components:
             self.proc_comp_stack.pop()

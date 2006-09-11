@@ -20,7 +20,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "command"}
     invk_syn.optional_attribs = []
@@ -45,10 +45,10 @@ class command_generator(pycoon.generators.generator):
         pycoon.generators.generator.__init__(self, parent, root_path)
         self.description = "command_generator(\"%s\")" % self.command
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         """
         Execute the command and parse the output stream as an lxml.etree.
         """

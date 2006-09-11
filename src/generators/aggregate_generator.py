@@ -18,7 +18,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "aggregate"
-    invk_syn.allowed_parent_components = ["pipeline"]
+    invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = []
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = ["root-node"]
@@ -45,10 +45,10 @@ class aggregate_generator(pycoon.generators.generator):
         pycoon.generators.generator.__init__(self, parent, root_path)
         self.description = "aggregate_generator(\"%s\")" % self.root_node
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
+    def _result(self, req, p_sibling_result=None, child_results=[]):
         root = lxml.etree.Element(self.root_node)
 
         for c in child_results:

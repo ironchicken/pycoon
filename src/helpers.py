@@ -22,10 +22,38 @@ class fake_apache:
         self.OK = 200
         self.DONE = 1000
         self.SERVER_RETURN = Exception
+        self.URI_SCHEME=0
+        self.URI_HOSTINFO=1
+        self.URI_USER=2
+        self.URI_PASSWORD=3
+        self.URI_HOSTNAME=4
+        self.URI_PORT=5
+        self.URI_PATH=6
+        self.URI_QUERY=7
+        self.URI_FRAGMENT=8
     def import_module(self, name):
         return __import__(name)
     def server_root(self):
         return ""
+
+def uri_pattern2regex(pattern):
+    """
+    Converts the given URI pattern string into a Python regular expression object.
+    """
+
+    regex = "^" + pattern
+    
+    escape_chars = [".", "(", ")", "[", "]", "{", "}", "?", "+"]
+    for c in escape_chars:
+        regex = regex.replace(c, "\\%s" % c)
+
+    regex = regex.replace("/", "/+")
+
+    regex = regex.replace("**", "([A-Za-z0-9_.-/]+)").replace("*", "([A-Za-z0-9_.-]+)")
+
+    regex += "$"
+
+    return re.compile(regex)
 
 # this compiled regex is used by the strip_amps function
 _strip_amps_regex = re.compile("&(?!(#[0-9]*|" + string.join(entitydefs.keys(), "|") + "))")
