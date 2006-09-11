@@ -23,7 +23,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "sql"}
     invk_syn.optional_attribs = ["template"]
@@ -74,11 +74,11 @@ class sql_generator(pycoon.generators.generator):
         pycoon.generators.generator.__init__(self, parent, root_path)
         self.description = "sql_generator(\"%s\", \"%s\")" % (self.db_name, self.sql_filename)
 
-    def _descend(self, req, uri_pattern, p_sibling_result=None):
+    def _descend(self, req, p_sibling_result=None):
         return True
 
-    def _result(self, req, uri_pattern, p_sibling_result=None, child_results=[]):
-        sql_file = open(interpolate(self.context, self.sql_filename, uri_pattern, as_filename=True, root_path=self.root_path), "r")
+    def _result(self, req, p_sibling_result=None, child_results=[]):
+        sql_file = open(interpolate(self, self.sql_filename, as_filename=True, root_path=self.root_path), "r")
         sql_str = sql_file.read()
         sql_file.close()
         

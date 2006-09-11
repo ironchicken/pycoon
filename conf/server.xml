@@ -24,6 +24,10 @@
       <component name="parameter" module="pycoon.parameter" class="parameter" />
       <component name="read" module="pycoon.read" class="read" />
     </built-in>
+    <matchers>
+      <matcher name="uri" module="pycoon.matchers.uri_matcher" class="uri_matcher" />
+      <matcher name="error" module="pycoon.matchers.error_matcher" class="error_matcher" />
+    </matchers>
     <selectors>
 
     </selectors>
@@ -51,27 +55,29 @@
     </serializers>
   </components>
   <pipelines>
-    <pipeline name="not-found" on-error-code="404" mime="text/html">
-      <generate type="file" src="resources/not-found.xml" />
-      <transform type="xslt" src="resources/error2html.xslt">
-	<parameter name="uri" value="'{uri}'" />
-      </transform>
-      <serialize type="xhtml" />
-    </pipeline>
-    <pipeline name="bad-request" on-error-code="400" mime="text/html">
-      <generate type="file" src="resources/bad-request.xml" />
-      <transform type="xslt" src="resources/error2html.xslt">
-	<parameter name="uri" value="'{uri}'" />
-      </transform>
-      <serialize type="xhtml" />
-    </pipeline>
-    <pipeline name="internal-error" on-error-code="500" mime="text/html">
-      <generate type="file" src="resources/internal-error.xml" />
-      <transform type="xslt" src="resources/error2html.xslt">
-	<parameter name="uri" value="'{uri}'" />
-	<parameter name="traceback" value="'{traceback}'" />
-      </transform>
-      <serialize type="xhtml" />
+    <pipeline>
+      <match type="error" error-code="404">
+	<generate type="file" src="resources/not-found.xml" />
+	<transform type="xslt" src="resources/error2html.xslt">
+	  <parameter name="uri" value="'{uri}'" />
+	</transform>
+	<serialize type="xhtml" />
+      </match>
+      <match type="error" error-code="400">
+	<generate type="file" src="resources/bad-request.xml" />
+	<transform type="xslt" src="resources/error2html.xslt">
+	  <parameter name="uri" value="'{uri}'" />
+	</transform>
+	<serialize type="xhtml" />
+      </match>
+      <match type="error" error-code="500">
+	<generate type="file" src="resources/internal-error.xml" />
+	<transform type="xslt" src="resources/error2html.xslt">
+	  <parameter name="uri" value="'{uri}'" />
+	  <parameter name="traceback" value="'{traceback}'" />
+	</transform>
+	<serialize type="xhtml" />
+      </match>
     </pipeline>
   </pipelines>
 </server>

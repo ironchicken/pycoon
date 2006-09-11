@@ -3,42 +3,45 @@
 <site-map document-root="/home/richard/Documents/python/pycoon/tmp">
 
 <pipelines>
-  <pipeline name="dir-list" uri-pattern="/" mime="text/xml">
+
+<pipeline>
+  <match type="uri" pattern="/">
     <generate type="directory-list" src="." />
     <serialize type="xml" />
-  </pipeline>
+  </match>
 
-  <pipeline name="list" uri-pattern="/list/*-*" mime="text/xml">
+  <match type="uri" pattern="/list/*-*">
     <generate type="xpath" src="data.xml" query="//item[position()&gt;={$1} and position()&lt;={$2}]" />
     <serialize type="xml" />
-  </pipeline>
+  </match>
 
-  <pipeline name="aggers" uri-pattern="/bigitup" mime="text/xml">
+  <match type="uri" pattern="/bigitup">
     <aggregate>
       <generate type="directory-list" src="." />
       <generate type="xpath" src="data.xml" query="//item[position()&gt;=1 and position()&lt;=5]" />
     </aggregate>
     <serialize type="xml" />
-  </pipeline>
+  </match>
 
-  <pipeline name="file" uri-pattern="/*" mime="text/html">
+  <match type="uri" pattern="/*">
     <generate type="file" src="data.xml" />
     <transform type="xslt" src="data2html.xslt">
-      <parameter name="uri" value="'{$1}'" />
+      <parameter name="uri" value="{$1}" />
     </transform>
     <serialize type="xhtml" />
-  </pipeline>
+  </match>
 
-  <pipeline name="file-by-command" uri-pattern="/cmd/*" mime="text/html">
+  <match type="uri" pattern="/cmd/*">
     <generate type="command" src="cat data.xml" />
     <transform type="command" src="sabcmd data2html.xslt" />
     <serialize type="html" />
-  </pipeline>
+  </match>
 
-  <pipeline name="not-found" on-error-code="404" mime="text/xml">
+  <match type="error" error-code="404">
     <generate type="file" src="not-found.xml" />
     <serialize type="xml" />
-  </pipeline>
+  </match>
+</pipeline>
 
 </pipelines>
 

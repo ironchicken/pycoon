@@ -21,6 +21,7 @@ cp -v $PYCOON_SRC/*.py $PYCOON_LIB
 DIRS="
 authenticators
 generators
+matchers
 selectors
 serializers
 transformers
