@@ -172,7 +172,8 @@ class component(object):
         """
 
         if self.server.log_debug:
-            self.server.error_log.write("%s called with previous sibling: %s; child results: %s" % (self.description, p_sibling_result, child_results))
+            self.server.error_log.write("%s called with req: \"%s\"; status: \"%s\"; previous sibling: %s; child results: %s" %\
+                                        (self.description, req.unparsed_uri, req.status, p_sibling_result, child_results))
         
         c_tree = []
         if self._descend(req, p_sibling_result):
@@ -239,17 +240,17 @@ class component(object):
             self.children.insert(pos, c)
         return c
 
-    def find_components(self, function, type_value, found=[]):
+    def find_components(self, class_name, found=[]):
         """
-        Searches this component's child components for any components with the given function
-        and type. Either returns the component(s) or [].
+        Searches this component's child components for any components with the given class name.
+        Either returns the component(s) or [].
         """
 
-        if self.function == function and self.__class__.__name__ == "%s_%s" % (type_value, function):
+        if self.__class__.__name__ == class_name:
             found.append(self)
 
         for c in self.children:
-            c.find_components(function, type_value, found)
+            c.find_components(class_name, found)
 
         return found
 
@@ -307,7 +308,7 @@ class syntax_component(component):
         child_results parameter. (Subclasses may override this behaviour.)
         """
 
-        if len(child_results) > 0:
+        if len(child_results) > 0 and child_results[-1] is not None:
             return (True, child_results[-1])
         else:
-            return (True, None)
+            return (True, p_sibling_result)

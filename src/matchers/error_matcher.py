@@ -38,7 +38,7 @@ class error_matcher(pycoon.matchers.matcher):
 
     def __init__(self, parent, error_code, root_path=""):
         self.error_code = error_code
-        
+
         pycoon.matchers.matcher.__init__(self, parent, root_path="")
 
         self.description = "error_matcher(\"%s\")" % self.error_code
@@ -51,7 +51,7 @@ class error_matcher(pycoon.matchers.matcher):
         repeats code from uri_matcher.
         """
 
-        if req.status == self.error_code:
+        if str(req.status) == str(self.error_code):
             self.req = req
             self.uri = req.unparsed_uri
 
@@ -88,4 +88,4 @@ class error_matcher(pycoon.matchers.matcher):
         none of the following sibling component's are executed.
         """
         
-        return req.status != self.error_code
+        return str(req.status) != str(self.error_code)
