@@ -13,7 +13,7 @@ SITES = {"home": {'SERVER_NAME': "localhost.localdomain",\
                    'DOCUMENT_ROOT': "/var/www-cursus",\
                    'sitemap': "sitemap.xml"}}
 
-class server:
+class server(object):
     def __init__(self):
         self.cleanup_func = None
         self.server_hostname = ""
@@ -21,7 +21,7 @@ class server:
     def register_cleanup(self, req, func):
         self.cleanup_func = func
 
-class request:
+class request(object):
     def __init__(self, uri):
         self.subprocess_env = SITES[sys.argv[1]]
         self.server = server()
@@ -36,7 +36,7 @@ class request:
         return self.subprocess_env['DOCUMENT_ROOT']
     
     def set_content_type(self, c):
-        sys.stderr.write("Content-type: %s\n" % s)
+        sys.stderr.write("Content-type: %s\n" % c)
         self._content_type = c
 
     def get_content_type(self): return self._content_type

@@ -19,7 +19,7 @@ def register_invokation_syntax(server):
     invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["type"]
     invk_syn.required_attrib_values = {"type": "xml"}
-    invk_syn.optional_attribs = []
+    invk_syn.optional_attribs = ["mime"]
     invk_syn.allowed_child_components = []
 
     server.component_syntaxes[("serialize", "xml")] = invk_syn
@@ -30,13 +30,13 @@ class xml_serializer(pycoon.serializers.serializer):
     xml_serializer class simply returns the XML source as a character stream.
     """
 
-    def __init__(self, parent, root_path=""):
+    def __init__(self, parent, mime="text/xml", root_path=""):
         """
         xml_serializer constructor.
         """
 
         pycoon.serializers.serializer.__init__(self, parent, root_path)
-        self.mime_str = "text/xml"
+        self.mime_str = mime
         self.description = "xml_serializer()"
 
     def _descend(self, req, p_sibling_result=None):
