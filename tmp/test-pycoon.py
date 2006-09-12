@@ -30,7 +30,7 @@ class request:
         self.unparsed_uri = uri
         self.parsed_uri = ("context", "", "", "", self.server.server_hostname, 80, uri, "", "")
         self._content_type = ""
-        self.status = None
+        self.status = 200
 
     def document_root(self):
         return self.subprocess_env['DOCUMENT_ROOT']

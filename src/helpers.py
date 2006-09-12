@@ -9,7 +9,6 @@ the Pycoon system.
 
 import re, string, datetime
 from htmlentitydefs import entitydefs
-from pycoon.uri_pattern import uri_pattern
 
 class fake_apache:
     """
@@ -41,7 +40,10 @@ def uri_pattern2regex(pattern):
     Converts the given URI pattern string into a Python regular expression object.
     """
 
-    regex = "^" + pattern
+    if pattern.startswith("/"):
+        regex = "^" + pattern
+    else:
+        regex = "^/" + pattern
     
     escape_chars = [".", "(", ")", "[", "]", "{", "}", "?", "+"]
     for c in escape_chars:
@@ -49,7 +51,7 @@ def uri_pattern2regex(pattern):
 
     regex = regex.replace("/", "/+")
 
-    regex = regex.replace("**", "([A-Za-z0-9_.-/]+)").replace("*", "([A-Za-z0-9_.-]+)")
+    regex = regex.replace("**", "([A-Za-z0-9_.+%-/]+)").replace("*", "([A-Za-z0-9_.+%-]+)")
 
     regex += "$"
 
