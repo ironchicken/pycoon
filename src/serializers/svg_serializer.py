@@ -11,7 +11,7 @@ import os, tempfile
 try:
     from gtk import gdk
     GDK_AVAIL = True
-except ImportError:
+except (ImportError, RuntimeError):
     GDK_AVAIL = False
 
 def register_invokation_syntax(server):

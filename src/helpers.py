@@ -40,21 +40,37 @@ def uri_pattern2regex(pattern):
     Converts the given URI pattern string into a Python regular expression object.
     """
 
+    # ensure that all patterns begin with a '/'
     if pattern.startswith("/"):
         regex = "^" + pattern
     else:
         regex = "^/" + pattern
-    
+
+    # escape any characters which are functional in regular expressions
     escape_chars = [".", "(", ")", "[", "]", "{", "}", "?", "+"]
     for c in escape_chars:
         regex = regex.replace(c, "\\%s" % c)
 
+    # allow '/' characters to be matched one or more times
     regex = regex.replace("/", "/+")
 
+    correct_init_char_class = False
+    # if there is a '**' pattern at the beginning of the pattern, allow it to match no characters
+    if regex[3:5] == "**":
+        regex = regex[:3] + "([A-Za-z0-9_.+%-/])" + regex[5:]
+        # (there should be a '*' before the closing ')' in this pattern. It is added at the end of
+        # the algorithm because otherwise it gets eaten by the replace()s below)
+        correct_init_char_class = True
+
+    # replace all '**' and '*' patterns with general character classes
     regex = regex.replace("**", "([A-Za-z0-9_.+%-/]+)").replace("*", "([A-Za-z0-9_.+%-]+)")
 
+    if correct_init_char_class:
+        regex = regex[:21] + "*" + regex[21:]
+    
     regex += "$"
 
+    # return a compiled regular expression object
     return re.compile(regex)
 
 # this compiled regex is used by the strip_amps function
