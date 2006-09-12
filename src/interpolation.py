@@ -264,7 +264,7 @@ def interpolate(component, string_arg, as_filename=False, root_path=""):
         
         # iterate over the interpolation instructions in the string_arg
         for instruction in _find_instructions.finditer(string_arg):
-            last_pos = instruction.start() - 1
+            last_pos = instruction.start()# - 1
             if last_pos < 0: last_pos = 0
 
             # first, add the characters between the previous instruction and this one to the return_string

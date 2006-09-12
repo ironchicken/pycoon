@@ -112,8 +112,8 @@ class server_config(object):
             if success:
                 req.status = error_code
 
-                if self.server.log_errors:
-                    self.server.error_log.write("Server handling error %s; request: \"%s\"" % (error_code, req.unparsed_uri))
+                if self.log_errors:
+                    self.error_log.write("Server handling error %s; request: \"%s\"" % (error_code, req.unparsed_uri))
 
                 req.content_type = mime
                 req.set_content_length(len(result))
