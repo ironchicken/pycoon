@@ -21,7 +21,7 @@ def register_invokation_syntax(server):
     invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["type"]
     invk_syn.required_attrib_values = {"type": "html"}
-    invk_syn.optional_attribs = []
+    invk_syn.optional_attribs = ["mime"]
     invk_syn.allowed_child_components = []
 
     server.component_syntaxes[("serialize", "html")] = invk_syn
@@ -32,13 +32,13 @@ class html_serializer(pycoon.serializers.serializer):
     html_serializer class encapsulates the uTidyLib class.
     """
 
-    def __init__(self, parent, root_path=""):
+    def __init__(self, parent, mime="text/html", root_path=""):
         """
         html_serializer constructor.
         """
 
         pycoon.serializers.serializer.__init__(self, parent, root_path)
-        self.mime_str = "text/html"
+        self.mime_str = mime
         self.description = "html_serializer()"
 
     def _descend(self, req, p_sibling_result=None):

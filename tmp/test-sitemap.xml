@@ -28,7 +28,7 @@
     <transform type="xslt" src="data2html.xslt">
       <parameter name="uri" value="{$1}" />
     </transform>
-    <serialize type="xhtml" />
+    <serialize type="xhtml" mime="text/html" />
   </match>
 
   <match type="uri" pattern="/cmd/*">
