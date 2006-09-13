@@ -32,10 +32,16 @@ def register_component(server, super_type, attrs):
         raise SAXException("Attempted to add %s component with non-unique name: \"%s\"" % (super_type, name))
 
     # attempt to import the specified container module
-    mod = __import__(str(attrs['module']).replace(".", os.sep))
+    try:
+        mod = __import__(str(attrs['module']), globals(), locals(), str(attrs['module']).split(".")[-1])
+    except ImportError:
+        raise ComponentException("Could not import component module: %s" % str(attrs['module']))
 
     # add the component class from the module to the given dictionary
-    comp = mod.__dict__[str(attrs['class'])]
+    try:
+        comp = getattr(mod, str(attrs['class']))
+    except AttributeError:
+        raise ComponentException("Could not retrieve component class \"%s\" from module \"%s\"" % (str(attrs['class']), str(attrs['module'])))
 
     if comp.function == name:
         server.components[(name, None)] = comp

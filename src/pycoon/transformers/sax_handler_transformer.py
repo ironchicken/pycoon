@@ -5,7 +5,7 @@ This software is licensed under the terms of the GNU GPL.
 """
 
 import pycoon.transformers
-from pycoon.components import invokation_syntax
+from pycoon.components import invokation_syntax, ComponentException
 import os
 import lxml.etree
 from StringIO import StringIO
@@ -36,16 +36,16 @@ class sax_handler_transformer(pycoon.transformers.transformer):
 
     def __init__(self, parent, module, handler, root_path=""):
         """
-        sax_handler_transformer constructor. Requires the name of the module in which the SAX handler
-        is implemented and the name of the SAX handler class.
+        sax_handler_transformer constructor.
+
+        @module: name of the module in which the SAX handler is implemented
+        @handler: SAX handler class name
         """
 
-        # WARNING: apparently os.sep will _not_ work on OS X with mod_python and Win32 is untested
-
         try:
-            self.handler = __import__(module).__dict__[handler]()
+            self.handler = __import__(module, globals(), locals(), module.split(".")[-1])()
         except ImportError:
-            self.handler = __import__(module.replace(".", os.sep)).__dict__[handler]()
+            raise ComponentException("Could not import sax_handler_transform handler class \"%s\" (from module \"%s\")" % (handler, module))
 
         pycoon.transformers.transformer.__init__(self, parent, root_path)
 

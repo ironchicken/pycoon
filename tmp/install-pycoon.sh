@@ -9,7 +9,7 @@ fi
 PY_VERSION=$1
 
 PYCOON_ROOT=..
-PYCOON_SRC=$PYCOON_ROOT/src
+PYCOON_SRC=$PYCOON_ROOT/src/pycoon
 PYCOON_LIB=/usr/local/lib/python${PY_VERSION}/site-packages/pycoon
 SERVER_CONF_SRC=$PYCOON_ROOT/conf/server.xml
 SERVER_CONF_LIB=/etc/pycoon/server.xml
