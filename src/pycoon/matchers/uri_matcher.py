@@ -71,13 +71,14 @@ class uri_matcher(pycoon.matchers.matcher):
 
             # and as a dictionary
             self.query_dict = {}
-            for q in self.query.split("&"):
-                if q.find("=") >= 0:
-                    (name, value) = q.split("=")
-                else:
-                    name = q
-                    value = ""
-                self.query_dict[name] = value
+            if self.query != None:
+                for q in self.query.split("&"):
+                    if q.find("=") >= 0:
+                        (name, value) = q.split("=")
+                    else:
+                        name = q
+                        value = ""
+                    self.query_dict[name] = value
 
             # store the fragment portion of the URI
             self.fragment = self.req.parsed_uri[apache.URI_FRAGMENT]

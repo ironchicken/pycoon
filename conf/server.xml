@@ -59,22 +59,22 @@
       <match type="error" error-code="404">
 	<generate type="file" src="resources/not-found.xml" />
 	<transform type="xslt" src="resources/error2html.xslt">
-	  <parameter name="uri" value="'{uri}'" />
+	  <parameter name="uri" value="{uri}" />
 	</transform>
 	<serialize type="xhtml" />
       </match>
       <match type="error" error-code="400">
 	<generate type="file" src="resources/bad-request.xml" />
 	<transform type="xslt" src="resources/error2html.xslt">
-	  <parameter name="uri" value="'{uri}'" />
+	  <parameter name="uri" value="{uri}" />
 	</transform>
 	<serialize type="xhtml" />
       </match>
       <match type="error" error-code="500">
 	<generate type="file" src="resources/internal-error.xml" />
 	<transform type="xslt" src="resources/error2html.xslt">
-	  <parameter name="uri" value="'{uri}'" />
-	  <parameter name="traceback" value="'{traceback}'" />
+	  <parameter name="uri" value="{uri}" />
+	  <parameter name="traceback" value="{traceback}" />
 	</transform>
 	<serialize type="xhtml" />
       </match>

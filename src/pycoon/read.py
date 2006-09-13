@@ -20,7 +20,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "read"
-    invk_syn.allowed_parent_components = ["pipeline"]
+    invk_syn.allowed_parent_components = ["pipeline", "match"]
     invk_syn.required_attribs = ["src"]
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = []
@@ -45,7 +45,7 @@ class read(stream_component):
     def __init__(self, parent, src, root_path=""):
         stream_component.__init__(self, parent, root_path)
 
-        self.file_name = root_path + os.sep + src
+        self.file_name = src
 
         self.description = "Read: \"%s\"" % src
         self.function = "read"
@@ -59,8 +59,7 @@ class read(stream_component):
         # However, this is going to to be *bad* for binary files. Could we make this some sort of exception?
 
         try:
-            fn = interpolate(self, self.file_name)
-            #os.stat(fn)
+            fn = interpolate(self, self.file_name, as_filename=True, root_path=self.root_path)
 
             return (True, file(fn, 'r').read())
 
