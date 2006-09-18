@@ -1,16 +1,28 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""test-pycoon.py -- tests the Pycoon framework without apache web server
+running
 
+Usage:
+    python test-pycoon.py <site-name> <request-uri> <environment-type>
+    
+Arguments:
+    site-name           an element from the SITES.keys() list, see the source
+    request-uri         an HTTP URI to which the request is made
+    environment-type    devel -- if the framework is just exported from svn
+                        lib   -- if the framework is installed as library and
+                                 is accessible via sys.path
+"""
 import sys
-import pycoon
 
-SITES = {"home": {'SERVER_NAME': "localhost.localdomain",\
-                  'DOCUMENT_ROOT': "/home/richard/Documents/python/pycoon/tmp",\
-                  'sitemap': "test-sitemap.xml"},\
-        "studio": {'SERVER_NAME': "localhost.localdomain",\
-                   'DOCUMENT_ROOT': "/var/www-studio",\
-                   'sitemap': "sitemap.xml"},\
-        "cursus": {'SERVER_NAME': "localhost.localdomain",\
-                   'DOCUMENT_ROOT': "/var/www-cursus",\
+SITES = {"home": {'SERVER_NAME': "localhost.localdomain",
+                  'DOCUMENT_ROOT': "/home/richard/Documents/python/pycoon/tmp",
+                  'sitemap': "test-sitemap.xml"},
+        "studio": {'SERVER_NAME': "localhost.localdomain",
+                   'DOCUMENT_ROOT': "/var/www-studio",
+                   'sitemap': "sitemap.xml"},
+        "cursus": {'SERVER_NAME': "localhost.localdomain",
+                   'DOCUMENT_ROOT': "/var/www-cursus",
                    'sitemap': "sitemap.xml"}}
 
 class server(object):
@@ -58,10 +70,26 @@ class request(object):
     def add_common_vars(self):
         pass
 
-r = request(sys.argv[2])
+if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        print "Wrong command line arguments"
+        print __doc__
+        sys.exit(1)
+        
+    if sys.argv[3] == "lib":
+        import pycoon
+    elif sys.argv[3] == "devel":
+        import os
+        sys.path.append(os.path.join("..", "src"))
+        import pycoon
+    else:
+        print "Wrong environment type, see usage"
+        sys.exit(1)
+        
+    r = request(sys.argv[2])
 
-res = pycoon.handler(r)
-print "Return code: %s" % res
-print "Return status: %s" % r.status
-
-r.server.cleanup_func(r)
+    res = pycoon.handler(r)
+    print "Return code: %s" % res
+    print "Return status: %s" % r.status
+    
+    r.server.cleanup_func(r)

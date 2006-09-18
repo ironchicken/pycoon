@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title>Pycoon Starter Guide</title>
+    <style type="text/css">
+dt {
+    font-weight: bold;
+}
+ol li ol li {
+    list-style-type: lower-latin;
+}
+.note:before {
+    content: "Note: ";
+    font-weight: bold;
+}
+.meta {
+    font-size: 70%;
+}
+    </style>
+  </head>
+  <body>
+    <h1>Pycoon Starter Guide</h1>
+    <dl class="meta">
+      <dt>Creator:</dt>
+      <dd>Richard Lewis</dd>
+      <dt>Editor:</dt>
+      <dd>Andrey Nordin</dd>
+      <dt>Date:</dt>
+      <dd>$Date:2006-09-12 03:45:29 +0400 (Вт, 12 сен 2006) $</dd>
+      <dt>Rights:</dt>
+      <dd>Copyright © 2006 Richard Lewis. All text is available under the terms of the GNU Free Documentation License</dd>
+    </dl>
+    <p class="note">For now, here is a <em>very</em> rough starter guide for the dedicated.</p>
+    <p>Prerequisites:</p>
+    <ul>
+      <li><a href="http://www.python.org/">Python</a></li>
+      <li><a href="http://httpd.apache.org/">Apache</a></li>
+      <li><a href="http://www.modpython.org/">mod_python</a></li>
+      <li><a href="http://codespeak.net/lxml/">lxml</a></li>
+      <li><a href="http://utidylib.berlios.de/">uTidyLib</a></li>
+    </ul>
+    <p>Optional:</p>
+    <ul>
+      <li><a href="http://mysql-python.sourceforge.net/">MySQLdb</a></li>
+      <li><a href="http://swish-e.org/">Swish-e</a></li>
+      <li><a href="http://jibe.freeshell.org/bits/SwishE/">Swish-e Python</a></li>
+      <li><a href="http://www.sleepycat.com/products/bdbxml.html">Berkeley DB XML</a></li>
+      <li><a href="http://librsvg.sourceforge.net/">RSVG</a></li>
+    </ul>
+    <ol>
+      <li>You need to install all of the prerequisite software and any of the optional tools you want.
+        <p class="note">On Debian you can simply go:</p>
+        <pre><kbd># apt-get install libapache2-mod-python2.4 python-lxml python-utidylib python-mysqldb librsvg2-bin</kbd></pre>
+        <p>however, there are no Debian packages for the Swish-e Python bindings or for DB XML.</p>
+      </li>
+      <li>Download the source code:
+        <pre><kbd>$ svn co http://pycoon.googlecode.com/svn/trunk pycoon</kbd></pre>
+      </li>
+      <li>Copy the contents of <code>conf</code> to a new directory called <code>/etc/pycoon</code></li>
+      <li>Copy the contents of <code>src</code> to a directory called <code>pycoon</code> somewhere on your Python path (e. g. <code>/usr/local/lib/python2.4/site-packages/pycoon</code>)
+        <ol>
+          <li>Check it, if you like, by doing:
+            <pre><kbd>$ python -c "import pycoon"</kbd></pre>
+          </li>
+        </ol>
+      </li>
+      <li>Create a Pycoon web site:
+        <ol>
+          <li>Choose a directory for it, e. g. <code>/var/www-mysite</code></li>
+          <li>Write a Pycoon sitemap in <code>/var/www-mysite/sitemap.xml</code>:
+            <pre><code><![CDATA[<?xml version='1.0'?>
+<site-map document-root='/var/www-mysite'>
+  <pipelines>
+    <pipeline>
+      <match type='uri' pattern='/*'>
+        <generate type='xpath' src='site-data.xml' query='//page[@id='{$1}']' />
+        <transform type='xslt' src='page2html.xslt' />
+        <serialize type='xhtml' />
+      </match>
+      <match type='uri' pattern='/'>
+        <generate type='file' src='site-index.xml' />
+        <transform type='xslt' src='page2html.xslt' />
+        <serialize type='xhtml' />
+      </match>
+    </pipeline>
+  </pipelines>
+</site-map>]]>
+            </code></pre>
+          </li>
+          <li>Create the files <code>site-index.xml</code>, <code>site-data.xml</code> and <code>page2html.xslt</code>, using your imagination ;-)
+            <p class="note">See <code>tmp</code> directory for some provisional examples and a command-line testing script</p>
+          </li>
+          <li>Create an Apache <code>VirtualHost</code> directive for the site:
+            <pre><code><![CDATA[<VirtualHost [ip-addr]:80>
+   ServerName www.mysite.com
+   DocumentRoot /var/www-mysite
+
+   SetHandler mod_python
+   PythonPath 'sys.path+['/var/www-mysite/']'
+
+   SetEnv sitemap sitemap.xml
+   PythonHandler pycoon
+</VirtualHost>]]></code></pre>
+          </li>
+          <li>Restart Apache</li>
+          <li>Try making a <a href="http://www.mysite.com">request</a> and see the Apache error log for details of errors</li>
+        </ol>
+      </li>
+    </ol>
+  </body>
+</html>
+
