@@ -42,7 +42,6 @@ except ImportError:
 
 from server import server_config, server_config_parse
 from interpolation import interpolate
-from uri_pattern import uri_pattern
 from sitemap import sitemap_config, sitemap_config_parse
 import sys
 

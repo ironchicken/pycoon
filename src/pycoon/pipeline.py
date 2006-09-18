@@ -10,7 +10,6 @@ import sys, string, traceback
 import lxml.etree
 from pycoon import apache
 from pycoon.interpolation import interpolate
-from pycoon.uri_pattern import uri_pattern
 from pycoon.components import component, invokation_syntax
 
 def register_invokation_syntax(server):
