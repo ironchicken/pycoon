@@ -17,13 +17,16 @@ import sys
 
 SITES = {"home": {'SERVER_NAME': "localhost.localdomain",
                   'DOCUMENT_ROOT': "/home/richard/Documents/python/pycoon/tmp",
-                  'sitemap': "test-sitemap.xml"},
+                  'PycoonSitemap': "test-sitemap.xml",
+                  'PycoonConfigRoot': "/etc/pycoon"},
         "studio": {'SERVER_NAME': "localhost.localdomain",
                    'DOCUMENT_ROOT': "/var/www-studio",
-                   'sitemap': "sitemap.xml"},
+                   'PycoonSitemap': "sitemap.xml",
+                   'PycoonConfigRoot': "/etc/pycoon"},
         "cursus": {'SERVER_NAME': "localhost.localdomain",
                    'DOCUMENT_ROOT': "/var/www-cursus",
-                   'sitemap': "sitemap.xml"}}
+                   'PycoonSitemap': "sitemap.xml",
+                   'PycoonConfigRoot': "/etc/pycoon"}}
 
 class server(object):
     def __init__(self):

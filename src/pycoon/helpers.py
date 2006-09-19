@@ -51,6 +51,9 @@ def uri_pattern2regex(pattern):
     for c in escape_chars:
         regex = regex.replace(c, "\\%s" % c)
 
+    # replace any repeated '/' with a single '/'
+    regex = re.sub("/{2,}", "/", regex)
+    
     # allow '/' characters to be matched one or more times
     regex = regex.replace("/", "/+")
 
@@ -64,6 +67,10 @@ def uri_pattern2regex(pattern):
 
     # replace all '**' and '*' patterns with general character classes
     regex = regex.replace("**", "([A-Za-z0-9_.+%-/]+)").replace("*", "([A-Za-z0-9_.+%-]+)")
+
+    # allow any '**' or '*' patterns (now converted to character classes) which immediately precede
+    # a '=' to match no characters
+    regex = regex.replace("=([A-Za-z0-9_.+%-/]+)", "=([A-Za-z0-9_.+%-/]*)").replace("=([A-Za-z0-9_.+%-]+)", "=([A-Za-z0-9_.+%-]*)")
 
     if correct_init_char_class:
         regex = regex[:21] + "*" + regex[21:]
