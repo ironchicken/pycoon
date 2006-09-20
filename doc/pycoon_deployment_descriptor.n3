@@ -1,4 +1,4 @@
-﻿# This is an incomplete deployment descriptor.
+# This is an incomplete deployment descriptor.
 # This is an application/rdf+n3 file.
 # See also <http://en.wikipedia.org/wiki/Notation_3>.
 
@@ -23,7 +23,22 @@
           :requiredElement
             [ a :SoftwareElement;
               :version "0.1";
-              :name "pycoon" ];
+              :name "pycoon";
+              :requiredProduct
+                [ a :SoftwareProduct;
+                  dc:title "uTidylib";
+                  :minVersion "0.2";
+                  :maxVersion "0.2.*";
+                  foaf:homepage <http://utidylib.berlios.de/>;
+                  :requiredProduct
+                    [ a :SoftwareProduct;
+                      dc:title "libtidy";
+                      foaf:homepage <http://tidy.sourceforge.net/> ],
+                    [ a :SoftwareProduct;
+                      dc:title "ctypes";
+                      :minVersion "1.0";
+                      :maxVersion "1.0.*";
+                      foaf:homepage <http://starship.python.net/crew/theller/ctypes/> ] ] ];
           :requiredProduct
             [ a :SoftwareProduct;
               dc:title "Python Interpreter";
