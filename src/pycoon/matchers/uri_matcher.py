@@ -57,12 +57,14 @@ class uri_matcher(pycoon.matchers.matcher):
 
         self.req = req
 
-        # first check to see if there is a query string
-        if not self.allow_query and not self.req.parsed_uri[apache.URI_QUERY]:
-            self.match_obj = None
-            return False
-        
-        self.match_obj = self.regex.match(req.unparsed_uri)
+        if not self.allow_query:
+            if self.req.parsed_uri[apache.URI_QUERY]:
+                self.match_obj = None
+                return False
+            else:
+                self.match_obj = self.regex.match(req.parsed_uri[apache.URI_PATH])
+        else:
+            self.match_obj = self.regex.match(req.unparsed_uri)
 
         if self.match_obj != None:
             self.uri = req.unparsed_uri

@@ -41,9 +41,20 @@ class request(object):
         self.subprocess_env = SITES[sys.argv[1]]
         self.server = server()
         self.server.server_hostname = self.subprocess_env['SERVER_NAME']
+
+        pos_qm = uri.find("?")
+        if pos_qm == -1: pos_qm = len(uri)
+        pos_hash = uri.find("#")
+        if pos_hash == -1: pos_hash = len(uri)
+
+        self.path = uri[:pos_qm]
+        self.query = uri[pos_qm+1:pos_hash]
+        self.fragment = uri[pos_hash+1:]
+
         self.uri = uri
         self.unparsed_uri = uri
-        self.parsed_uri = ("context", "", "", "", self.server.server_hostname, 80, uri, "", "")
+        self.parsed_uri = ("context", "", "", "", self.server.server_hostname, 80, self.path, self.query, self.fragment)
+
         self._content_type = ""
         self.status = 200
 
