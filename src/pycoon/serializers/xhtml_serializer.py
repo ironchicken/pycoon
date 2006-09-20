@@ -8,7 +8,13 @@ import pycoon.serializers
 from pycoon.components import invokation_syntax
 from pycoon.helpers import correct_script_chars
 from lxml.etree import tounicode
-import tidy
+import os
+
+try:
+    import tidy
+    UTIDYLIB_AVAIL = True
+except ImportError:
+    UTIDYLIB_AVAIL = False
 
 def register_invokation_syntax(server):
     """
@@ -49,7 +55,10 @@ class xhtml_serializer(pycoon.serializers.serializer):
         Executes tidy.parseString on the p_sibling_result and returns the resultant XHTML.
         """
 
-        options = dict(output_xhtml=1, add_xml_decl=1, doctype="strict", indent=1, wrap=120, tidy_mark=0,\
-                       input_encoding="utf8", output_encoding="utf8")
-        
-        return (True, (correct_script_chars(str(tidy.parseString(tounicode(p_sibling_result).encode("utf-8"), **options))), self.mime_str))
+        if os.name != "nt" and UTIDYLIB_AVAIL:
+            options = dict(output_xhtml=1, add_xml_decl=1, doctype="strict", indent=1, wrap=120, tidy_mark=0,\
+                           input_encoding="utf8", output_encoding="utf8")
+            
+            return (True, (correct_script_chars(str(tidy.parseString(tounicode(p_sibling_result).encode("utf-8"), **options))), self.mime_str))
+        else:
+            return (True, (correct_script_chars(tounicode(p_sibling_result).encode("utf-8")), self.mime_str))
