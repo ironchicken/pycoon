@@ -10,7 +10,7 @@ parser class.
 import string, os
 from xml.sax import parse, SAXException
 from xml.sax.handler import ContentHandler
-from pycoon import apache
+from pycoon import apache, PycoonConfigurationError
 from pycoon.helpers import attributes2options
 from pycoon.pipeline import pipeline, build_pipeline
 
@@ -98,6 +98,8 @@ class sitemap_config(object):
         # if execution reaches this point then the error was not handled
         return (False, error_code)
 
+class SitemapError(PycoonConfigurationError): pass
+
 class sitemap_config_parse(ContentHandler):
     """
     sitemap_config_parse parses a sitemap XML file to populate the sitemap's dictionaries
@@ -119,22 +121,39 @@ class sitemap_config_parse(ContentHandler):
 
     def startElement(self, name, attrs):
         if name == "site-map":
+            # some SAX flags
+            self.in_components = False
+            self.in_pipelines = False
+            
             # try to set the document_root property
             if not attrs.has_key('document-root'):
-                raise SAXException("<site-map> element must have a 'document-root' attribute.")
+                raise SitemapError("<site-map> element must have a 'document-root' attribute.")
+
             self.sitemap.document_root = str(attrs['document-root'])
+
             if self.sitemap.document_root != apache.server_root() and self.sitemap.parent.log_errors:
                 self.sitemap.parent.error_log.write("sitemap's document-root property is \"%s\". Is this correct?" %\
                                                     self.sitemap.document_root)
 
+        elif name == "components":
+            self.in_components = True
+            
         elif name == "data-source":
+            if not self.in_components:
+                raise SitemapError("<data-source> element may only appear inside the <components> element.")
+            
             # call the registered datasource initialisation function for the type of this data-source
             if self.sitemap.parent.ds_initialisers.has_key(str(attrs['type'])):
                 self.sitemap.parent.ds_initialisers[str(attrs['type'])](self.sitemap, attrs)
 
+        elif name == "pipelines":
+            self.in_pipelines = True
+            
         elif name == "pipeline":
+            if not self.in_pipelines:
+                raise SitemapError("<pipeline> element may only appear inside <pipelines> element.")
+            
             # process a pipeline specification
-
             self.proc_comp_stack = [build_pipeline(self.server, self.sitemap, attrs)]
 
         elif name in self.server.component_enames:
@@ -149,6 +168,9 @@ class sitemap_config_parse(ContentHandler):
                                                 (self.proc_comp_stack[-1].description, self.proc_comp_stack[-2].description))
                 else:
                     self.server.error_log.write("%s appended" % self.proc_comp_stack[-1].description)
+
+        else:
+            raise SitemapError("Unrecognised sitemap element: <%s>" % name)
                                                 
 
     def endElement(self, name):
@@ -158,3 +180,9 @@ class sitemap_config_parse(ContentHandler):
 
         elif name in self.server.component_enames:
             self.proc_comp_stack.pop()
+
+        elif name == "pipelines":
+            self.in_pipelines = False
+
+        elif name == "components":
+            self.in_components = False

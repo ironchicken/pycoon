@@ -99,7 +99,9 @@ if __name__ == "__main__":
     else:
         print "Wrong environment type, see usage"
         sys.exit(1)
-        
+
+    pycoon.apache._server_root = SITES[sys.argv[1]]['DOCUMENT_ROOT']
+    
     r = request(sys.argv[2])
 
     res = pycoon.handler(r)

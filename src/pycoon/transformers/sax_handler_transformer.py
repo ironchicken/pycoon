@@ -5,7 +5,7 @@ This software is licensed under the terms of the GNU GPL.
 """
 
 import pycoon.transformers
-from pycoon.components import invokation_syntax, ComponentException
+from pycoon.components import invokation_syntax, ComponentError
 import os
 import lxml.etree
 from StringIO import StringIO
@@ -45,7 +45,7 @@ class sax_handler_transformer(pycoon.transformers.transformer):
         try:
             self.handler = __import__(module, globals(), locals(), module.split(".")[-1])()
         except ImportError:
-            raise ComponentException("Could not import sax_handler_transform handler class \"%s\" (from module \"%s\")" % (handler, module))
+            raise ComponentError("Could not import sax_handler_transform handler class \"%s\" (from module \"%s\")" % (handler, module))
 
         pycoon.transformers.transformer.__init__(self, parent, root_path)
 

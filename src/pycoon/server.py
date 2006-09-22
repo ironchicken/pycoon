@@ -10,11 +10,11 @@ configuration files.
 import string, os
 from xml.sax import parse, SAXException
 from xml.sax.handler import ContentHandler
-from pycoon import apache
+from pycoon import apache, PycoonConfigurationError
 from interpolation import *
 from pycoon.helpers import attributes2options
 from pycoon.pipeline import pipeline, build_pipeline
-from pycoon.components import register_component
+from pycoon.components import register_component, ComponentError
 
 class server_config(object):
     """
@@ -40,6 +40,7 @@ class server_config(object):
         self.MAX_FILES_CACHE = 10      # the maximum number of cached files
         self.MAX_CACHE_FILE_SIZE = 512 * 1024 # the maximum size (in bytes) of files that can be cached
 
+        self.component_super_types = ["built-in", "matchers", "selectors", "authenticators", "generators", "transformers", "serializers"]
         self.component_types = ["component", "matcher", "selector", "generator", "transformer", "serializer"]
         self.components = {}           # dictionary of available components (indexed by tuple: (function, type value))
         self.component_enames = []     # a list of available element names used by components
@@ -90,13 +91,15 @@ class server_config(object):
         except KeyError:
             component_id = (el_name, None)
         
-        if component_id in self.component_syntaxes.keys() and\
-               self.component_syntaxes[component_id].validate(parent.function, el_name, attrs):
-            (component_type, attrs_dict) = attributes2options(attrs)
-            attrs_dict['parent'] = parent
-            attrs_dict['root_path'] = root_path
+        if component_id in self.component_syntaxes.keys():
+            if self.component_syntaxes[component_id].validate(parent.function, el_name, attrs):
+                (component_type, attrs_dict) = attributes2options(attrs)
+                attrs_dict['parent'] = parent
+                attrs_dict['root_path'] = root_path
 
-            return self.components[component_id](**attrs_dict)
+                return self.components[component_id](**attrs_dict)
+        else:
+            raise ComponentError("Could not find a component to match: <%s type=\"%s\">" % component_id)
 
     def handle_error(self, req, error_code):
         """
@@ -128,6 +131,8 @@ class server_config(object):
 
         return (False, apache.DONE)
 
+class ServerConfigurationError(PycoonConfigurationError): pass
+
 class server_config_parse(ContentHandler):
     """
     server_config_parse parses the server configuration XML file (using SAX) and populates the given server_config
@@ -140,9 +145,14 @@ class server_config_parse(ContentHandler):
         """
         
         self.server = server
-        self.chars = u""        # SAX characters buffer
-        self.col_chars = False  # SAX save characters flag
-        self.done_components = False # flag set to True when the <components> element is completed
+
+        # SAX flags and characters buffer
+        self.chars = u""
+        self.col_chars = False
+        self.done_components = False
+        self.in_components = False
+        self.in_pipelines = False
+        
         self.server.config_root = os.path.split(filename)[0].replace("file://", "")
 
         self.proc_comp_stack = []  # a stack for components being constructed
@@ -151,7 +161,11 @@ class server_config_parse(ContentHandler):
         parse(filename, self)
 
     def startElement(self, name, attrs):
-        if name in ["admin-email", "max-files-cache", "max-file-size",\
+        if name == "server": pass
+
+        elif name == "details": pass
+        
+        elif name in ["name", "admin-email", "max-files-cache", "max-file-size",\
                     "max-requests-cache", "max-request-size"]:
             # these are the text-only configuration details
             # instruct the parser to collect the textual content of the elements
@@ -167,6 +181,8 @@ class server_config_parse(ContentHandler):
             # boolean option "requests-cache": specifies whether pipeline results should be cached
             self.server.use_requests_cache = True
             if self.server.log_debug: self.server.error_log.write("Using requests cache is True.")
+
+        elif name == "logging": pass
 
         elif name == "log-up-down" and attrs['use'] == "yes":
             # boolean logging level option "log-up-down": specifies whether the server startup and shutdown events should be logged
@@ -188,15 +204,35 @@ class server_config_parse(ContentHandler):
             self.server.log_debug = True
             if self.server.log_debug: self.server.error_log.write("Log level debug is True.")
 
-        elif name in self.server.component_types and attrs.has_key('name'):
-            # register a component
-            register_component(self.server, str(attrs['name']), attrs)
+        elif name == "components":
+            self.in_components = True
+        
+        elif name in self.server.component_super_types:
+            if not self.in_components:
+                raise ServerConfigurationError("<%s> element must appear inside <components> element." % name)
+        
+        elif name in self.server.component_types:
+            # attempt to register a component
+            if self.in_components:
+                if attrs.has_key("name") and attrs.has_key("module") and attrs.has_key("class"):
+                    register_component(self.server, str(attrs['name']), attrs)
+                else:
+                    raise ServerConfigurationError("<%s> registration must provide name, module and class; given: %s" %\
+                                                   (name, string.join(["%s=\"%s\"" % (n, v) for n, v in attrs.items()], ", ")))
+            else:
+                raise ServerConfigurationError("<%s> component must be registered inside the <components> element." % name)
+            
+        elif name == "pipelines":
+            self.in_pipelines = True
             
         elif name == "pipeline":
             if not self.done_components:
                 # ensure that all the component classes have been registered before processing any server pipelines
-                raise SAXException("<pipeline> elements must follow the <components> element.")
+                raise ServerConfigurationError("<pipeline> elements must follow the <components> element.")
 
+            if not self.in_pipelines:
+                raise ServerConfigurationError("<pipeline> elements must appear inside the <pipelines> element.")
+            
             self.proc_comp_stack = [build_pipeline(self.server, sitemap=None, attrs=attrs)]
 
         elif name in self.server.component_enames and self.done_components:
@@ -205,12 +241,15 @@ class server_config_parse(ContentHandler):
             self.proc_comp_stack.append(self.proc_comp_stack[-1].add_component(\
                 self.server.get_new_component(name, self.proc_comp_stack[-1], attrs, self.server.document_root)))
 
+        else:
+            raise ServerConfigurationError("Unrecognised server config element <%s>" % name)
+
     def characters(self, data):
         if self.col_chars:
             self.chars += data
 
     def endElement(self, name):
-        if name in ["admin-email"]:
+        if name in ["name", "admin-email"]:
             try:
                 self.server.__dict__[str(name.replace("-", "_"))] = str(self.chars)
                 self.col_chars = False
@@ -218,7 +257,8 @@ class server_config_parse(ContentHandler):
                 if self.server.log_debug:
                     self.server.error_log.write("Set server property: \"%s\": \"%s\"." %\
                                            (str(name.replace("-", "_")), self.server.__dict__[str(name.replace("-", "_"))]))
-            except KeyError: raise KeyError("Unknown server property: %s" % name)
+            except KeyError:
+                raise ServerConfigurationError("Unknown server property: %s" % name)
             
         elif name in ["max-files-cache", "max-file-size",\
                     "max-requests-cache", "max-request-size"]:
@@ -229,12 +269,18 @@ class server_config_parse(ContentHandler):
                 if self.server.log_debug:
                     self.server.error_log.write("Set server property: \"%s\": \"%s\"." %\
                                            (str(name.replace("-", "_")), self.server.__dict__[str(name.replace("-", "_"))]))
-            except KeyError: raise KeyError("Unknown server property: %s" % name)
-            except SyntaxError: raise ValueError("Invalid value for %s: %s" % (name, self.chars))
+            except KeyError:
+                raise ServerConfigurationError("Unknown server property: %s" % name)
+            except SyntaxError:
+                raise ServerConfigurationError("Invalid value for %s: %s" % (name, self.chars))
 
         elif name == "components":
             self.done_components = True
+            self.in_components = False
 
+        elif name == "pipelines":
+            self.in_pipelines = False
+            
         elif name == "pipeline":
             if self.server.log_debug:
                 self.server.error_log.write("Added server pipeline: \"%s\"" % self.proc_comp_stack[-1].description)
