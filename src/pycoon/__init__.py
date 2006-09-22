@@ -36,6 +36,10 @@ This module provides the Apache handler() and cleanup() functions, global variab
 the server and site settings.
 """
 
+class PycoonException(Exception): pass
+class PycoonConfigurationError(PycoonException): pass
+class PycoonRuntimeError(PycoonException): pass
+
 from helpers import fake_apache, log_buffer
 
 try:

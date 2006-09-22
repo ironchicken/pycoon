@@ -7,7 +7,8 @@ This module contains top level classes and helper functions for working with com
 used in the Pycoon system.
 """
 
-import os
+import os, string
+from pycoon import PycoonConfigurationError
 from pycoon.interpolation import interpolate
 
 COMPONENT_TYPES = {"stream": {"generator": {"module": "pycoon.generators", "super_class": "generator"},\
@@ -17,7 +18,7 @@ COMPONENT_TYPES = {"stream": {"generator": {"module": "pycoon.generators", "supe
                               "authenticator": {"module": "pycoon.authenticators", "super_class": "authenticator"}}}
                             
 
-class ComponentException(Exception): pass
+class ComponentError(PycoonConfigurationError): pass
 
 def register_component(server, super_type, attrs):
     """
@@ -35,13 +36,13 @@ def register_component(server, super_type, attrs):
     try:
         mod = __import__(str(attrs['module']), globals(), locals(), str(attrs['module']).split(".")[-1])
     except ImportError:
-        raise ComponentException("Could not import component module: %s" % str(attrs['module']))
+        raise ComponentError("Could not import component module: %s" % str(attrs['module']))
 
     # add the component class from the module to the given dictionary
     try:
         comp = getattr(mod, str(attrs['class']))
     except AttributeError:
-        raise ComponentException("Could not retrieve component class \"%s\" from module \"%s\"" % (str(attrs['class']), str(attrs['module'])))
+        raise ComponentError("Could not retrieve component class \"%s\" from module \"%s\"" % (str(attrs['class']), str(attrs['module'])))
 
     if comp.function == name:
         server.components[(name, None)] = comp
@@ -93,13 +94,15 @@ class invokation_syntax(object):
         """
 
         if name != self.element_name:
-            raise ComponentException("Incorrect element name: \"%s\"" % name)
+            raise ComponentError("Incorrect element name: <%s>" % name)
         elif parent_name not in self.allowed_parent_components:
-            raise ComponentException("%s may not be a child of %s" % (name, parent_name))
+            raise ComponentError("<%s> may not be a child of <%s>" % (name, parent_name))
         elif not reduce(lambda a, b: a and b, [attrib in attrs.keys() for attrib in self.required_attribs], True):
-            raise ComponentException("Missing required attributes for component \"%s\"" % name)
+            raise ComponentError("Missing required attributes for component <%s>; given: %s" %\
+                                 (name, string.join(["%s=\"%s\"" % (n, v) for n, v in attrs.items()], ", ")))
         elif not reduce(lambda a, b: a and b, [attrs[n] == v for n, v in self.required_attrib_values.items()], True):
-            raise ComponentException("Invalid attribute values for component \"%s\"" % name)
+            raise ComponentError("Invalid attribute values for component <%s>; given: %s" %\
+                                 (name, string.join(["%s=\"%s\"" % (n, v) for n, v in attrs.items()], ", ")))
         else:
             return True
 
