@@ -6,11 +6,11 @@ This software is licensed under the terms of the GNU GPL.
 Pycoon is an Apache module which allows you to match URI pattern's from HTTP requests
 to 'pipelines' of XML processing.
 
-Pipelines consist of a 'source' element which generates the initial XML ElementTree. Provided
-sources include: ordinary XML documents, XPath expressions against documents, XQuery
-expressions against Berkeley DB XML containers and SQL databases.
+Pipelines consist of a 'generator' element which generates the initial XML ElementTree. Provided
+generators include: ordinary XML documents, XPath expressions against documents, XQuery
+expressions against Berkeley DB XML containers, SQL databases and aggregators.
 
-After the source, pipelines may contain any number of 'transformers' which alter the
+After the generator, pipelines may contain any number of 'transformers' which alter the
 XML ElementTree. Provided transformers include: XSLT transformer, SAX handler transformer
 and a shell command transformer.
 
@@ -19,13 +19,18 @@ Provided serializers include 'xhtml' and 'html' which use uTidyLib to convert th
 ElementTree into an (X)HTML document before writing it back to the client and 'svg' uses
 RSVG to perform an SVG rasterisation of the XML ElementTree to a PNG image.
 
+Pipeline execution may also include conditional processing using 'matcher' components,
+'selector' components and 'authenticator' components. Provided matchers include the main URI
+matcher and the HTTP error condition matcher. Selectors include the browser selector,
+user language selector and general request header selector.
+
 Pycoon is configured using a 'sitemap' document (which has a simple XML syntax) and
 should be assigned as the handler for an Apache VirtualHost directive.
 
 It supports logging events of various levels (start-up/shutdown, errors, requests, debug)
 to Apache's log files.
 
-It also supports caching of processed requests and resource files such as CSS or images.
+It also supports caching of processed requests and resources.
 
 This module provides the Apache handler() and cleanup() functions, global variables for
 the server and site settings.
@@ -42,7 +47,6 @@ except ImportError:
 
 from server import server_config, server_config_parse
 from interpolation import interpolate
-from uri_pattern import uri_pattern
 from sitemap import sitemap_config, sitemap_config_parse
 import sys
 
@@ -117,16 +121,26 @@ def handler(req):
             sys.path.append(use_document_root)
         # (otherwise this is done with the mod_python PythonPath directive)
 
-        server_config_parse("file://%s/%s" % ("/etc/pycoon", "server.xml"), server)
+        if env_dict.has_key('PycoonConfigRoot'):
+            config_root =  env_dict['PycoonConfigRoot']
+        else:
+            config_root = "/etc/pycoon"
+        
+        server_config_parse("file://%s/%s" % (config_root, "server.xml"), server)
         if server.log_up_down:
             server.error_log.write("Successfully loaded server configuration, \"%s\", for \"%s\"" %\
                                    ("server.xml", use_server_name))
+
+        if env_dict.has_key('PycoonSitemap'):
+            sitemap_filename = env_dict['PycoonSitemap']
+        else:
+            sitemap_filename = "sitemap.xml"
         
         sitemap.server_name = use_server_name
-        sitemap_config_parse("file://%s/%s" % (use_document_root, env_dict['sitemap']), sitemap)
+        sitemap_config_parse("file://%s/%s" % (use_document_root, sitemap_filename), sitemap)
         if server.log_up_down:
             server.error_log.write("Successfully loaded sitemap configuration, \"%s\", for \"%s\"" %\
-                                   (env_dict['sitemap'], use_server_name))
+                                   (sitemap_filename, use_server_name))
 
     # handle the request
     (success, status) = sitemap.handle(req)

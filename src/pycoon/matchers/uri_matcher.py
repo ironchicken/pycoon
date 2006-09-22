@@ -24,7 +24,7 @@ def register_invokation_syntax(server):
     invk_syn.allowed_parent_components = ["pipeline"]
     invk_syn.required_attribs = ["type", "pattern"]
     invk_syn.required_attrib_values = {"type": "uri"}
-    invk_syn.optional_attribs = []
+    invk_syn.optional_attribs = ["allow-query"]
     invk_syn.allowed_child_components = ["generate","transform","serialize","match"]
 
     server.component_syntaxes[("match", "uri")] = invk_syn
@@ -35,10 +35,12 @@ class uri_matcher(pycoon.matchers.matcher):
     uri_matcher class allows pipeline execution to be conditional on URI patterns.
 
     @pattern: the URI pattern string
+    @allow_query: if True, then a URI including a query string will match (default: True)
     """
 
-    def __init__(self, parent, pattern, root_path=""):
+    def __init__(self, parent, pattern, allow_query=True, root_path=""):
         self.pattern = pattern
+        self.allow_query = allow_query
         self.regex = uri_pattern2regex(self.pattern)
         self.match_obj = None
         
@@ -53,8 +55,16 @@ class uri_matcher(pycoon.matchers.matcher):
         constituent parts and stores them for later use.
         """
 
-        self.match_obj = self.regex.match(req.unparsed_uri)
         self.req = req
+
+        if not self.allow_query:
+            if self.req.parsed_uri[apache.URI_QUERY]:
+                self.match_obj = None
+                return False
+            else:
+                self.match_obj = self.regex.match(req.parsed_uri[apache.URI_PATH])
+        else:
+            self.match_obj = self.regex.match(req.unparsed_uri)
 
         if self.match_obj != None:
             self.uri = req.unparsed_uri

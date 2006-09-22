@@ -69,39 +69,41 @@ ol li ol li {
         <ol>
           <li>Choose a directory for it, e. g. <code>/var/www-mysite</code></li>
           <li>Write a Pycoon sitemap in <code>/var/www-mysite/sitemap.xml</code>:
-            <pre><code><![CDATA[<?xml version='1.0'?>
-<site-map document-root='/var/www-mysite'>
-  <pipelines>
-    <pipeline>
-      <match type='uri' pattern='/*'>
-        <generate type='xpath' src='site-data.xml' query='//page[@id='{$1}']' />
-        <transform type='xslt' src='page2html.xslt' />
-        <serialize type='xhtml' />
-      </match>
-      <match type='uri' pattern='/'>
-        <generate type='file' src='site-index.xml' />
-        <transform type='xslt' src='page2html.xslt' />
-        <serialize type='xhtml' />
-      </match>
-    </pipeline>
-  </pipelines>
-</site-map>]]>
+            <pre><code>&lt;?xml version='1.0'?&gt;
+&lt;site-map document-root='/var/www-mysite'&gt;
+  &lt;pipelines&gt;
+    &lt;pipeline&gt;
+      &lt;match type='uri' pattern='/*'&gt;
+        &lt;generate type='xpath' src='site-data.xml' query='//page[@id='{$1}']' /&gt;
+        &lt;transform type='xslt' src='page2html.xslt' /&gt;
+        &lt;serialize type='xhtml' /&gt;
+      &lt;/match&gt;
+      &lt;match type='uri' pattern='/'&gt;
+        &lt;generate type='file' src='site-index.xml' /&gt;
+        &lt;transform type='xslt' src='page2html.xslt' /&gt;
+        &lt;serialize type='xhtml' /&gt;
+      &lt;/match&gt;
+    &lt;/pipeline&gt;
+  &lt;/pipelines&gt;
+&lt;/site-map&gt;
             </code></pre>
           </li>
           <li>Create the files <code>site-index.xml</code>, <code>site-data.xml</code> and <code>page2html.xslt</code>, using your imagination ;-)
             <p class="note">See <code>tmp</code> directory for some provisional examples and a command-line testing script</p>
           </li>
           <li>Create an Apache <code>VirtualHost</code> directive for the site:
-            <pre><code><![CDATA[<VirtualHost [ip-addr]:80>
+            <pre><code>&lt;VirtualHost [ip-addr]:80&gt;
    ServerName www.mysite.com
    DocumentRoot /var/www-mysite
 
    SetHandler mod_python
    PythonPath 'sys.path+['/var/www-mysite/']'
 
-   SetEnv sitemap sitemap.xml
+   SetEnv PycoonConfigRoot /etc/pycoon
+   SetEnv PycoonSitemap sitemap.xml
    PythonHandler pycoon
-</VirtualHost>]]></code></pre>
+&lt;/VirtualHost&gt;</code></pre>
+	    <small>Both the PycoonConfigRoot and PycoonSitemap variables are optional; the values shown in the example are the same as the default values.</small>
           </li>
           <li>Restart Apache</li>
           <li>Try making a <a href="http://www.mysite.com">request</a> and see the Apache error log for details of errors</li>
