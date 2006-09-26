@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -29,7 +29,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("generate", "command")] = invk_syn
     return invk_syn
 
-class command_generator(pycoon.generators.generator):
+class command_generator(generator):
     """
     command_generator encapsulates a shell command which must return a well-formed XML document
     string. It implements the generator interface and can be used as a generator component in a pipeline.
@@ -42,7 +42,7 @@ class command_generator(pycoon.generators.generator):
         """
 
         self.command = src
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
         self.description = "command_generator(\"%s\")" % self.command
 
     def _descend(self, req, p_sibling_result=None):
@@ -53,11 +53,9 @@ class command_generator(pycoon.generators.generator):
         Execute the command and parse the output stream as an lxml.etree.
         """
 
-        parameters = {}
-        for c in child_results:
-            parameters.update(c)
-
         try:
+            parameters = self.parameter_children(child_results)
+
             ostream = os.popen(self.command % parameters)
         
             # for some reason it won't accept the ostream file object here,
@@ -67,4 +65,7 @@ class command_generator(pycoon.generators.generator):
             
             return (True, ret_tree)
         except OSError:
-            return (False, apache.HTTP_NOT_FOUND)
+            raise GeneratorError("command_generator: error occured when executing command: \"%s\"" % self.command % parameters)
+            #return (False, apache.HTTP_NOT_FOUND)
+        except etree.XMLSyntaxError, e:
+            raise GeneratorError("command_generator: generated document stream contains a syntax error: \"%s\"" % str(e))

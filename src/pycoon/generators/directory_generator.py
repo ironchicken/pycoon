@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -28,7 +28,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("generate", "directory-list")] = invk_syn
     return invk_syn
 
-class directory_generator(pycoon.generators.generator):
+class directory_generator(generator):
     """
     directory_generator class implements the generator interface and returns an XML document containing a
     directory tree.
@@ -41,7 +41,7 @@ class directory_generator(pycoon.generators.generator):
 
         self.path = src
         self.doc_str = ""
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
         self.description = "directory_generator(\"%s\")" % self.path
 
     def list_path(self, path):
@@ -90,4 +90,5 @@ class directory_generator(pycoon.generators.generator):
             self.list_path(path)
             return (True, self.dirlist)
         else:
-            return (False, apache.HTTP_NOT_FOUND)
+            raise GeneratorError("directory_generator: path not found \"%s\"" % path)
+            #return (False, apache.HTTP_NOT_FOUND)

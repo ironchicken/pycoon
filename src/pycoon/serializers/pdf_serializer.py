@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.serializers
+from pycoon.serializers import serializer, SerializerError
 from pycoon.components import invokation_syntax
 from lxml.etree import tounicode
 
@@ -25,7 +25,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("serialize", "pdf")] = invk_syn
     return invk_syn
 
-class pdf_serializer(pycoon.serializers.serializer):
+class pdf_serializer(serializer):
     """
     pdf_serializer class is not yet implemented. Requires an XSL FO implementation.
     """
@@ -35,7 +35,7 @@ class pdf_serializer(pycoon.serializers.serializer):
         pdf_serializer constructor.
         """
 
-        pycoon.serializers.serializer.__init__(self, parent, root_path)
+        serializer.__init__(self, parent, root_path)
         self.mime_str = mime
         self.description = "pdf_serializer()"
 
@@ -47,4 +47,9 @@ class pdf_serializer(pycoon.serializers.serializer):
         Executes ?? on the p_sibling_result and returns the resultant PDF.
         """
 
-        return (True, (tounicode(p_sibling_result), self.mime_str))
+        try:
+            return (True, (tounicode(p_sibling_result), self.mime_str))
+        except TypeError:
+            if p_sibling_result is None:
+                raise SerializerError("pdf_serializer: preceding pipeline components have returned no content!")
+        

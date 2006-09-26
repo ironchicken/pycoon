@@ -84,6 +84,10 @@ class sitemap_config(object):
             (success, result, mime) = p.handle_error(req)
         
             if success:
+                if result is None:
+                    # why would this happen?
+                    return (False, error_code)
+                
                 req.status = error_code
 
                 if self.server.log_errors:

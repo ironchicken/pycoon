@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -27,7 +27,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("generate", "file")] = invk_syn
     return invk_syn
 
-class xml_generator(pycoon.generators.generator):
+class xml_generator(generator):
     """
     xml_generator encapsulates an XML source file using the generator interface.
     """
@@ -41,7 +41,7 @@ class xml_generator(pycoon.generators.generator):
         """
 
         self.src = src
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
         self.description = "xml_generator(\"%s\")" % self.src
 
     def _descend(self, req, p_sibling_result=None):
@@ -55,4 +55,8 @@ class xml_generator(pycoon.generators.generator):
         try:
             return (True, lxml.etree.parse(open(interpolate(self, self.src, as_filename=True, root_path=self.root_path), "r")).getroot())
         except (IOError, OSError):
-            return (False, apache.HTTP_NOT_FOUND)
+            raise GeneratorError("xml_generator: source file not found \"%s\"" % interpolate(self, self.src, as_filename=True, root_path=self.root_path))
+            #return (False, apache.HTTP_NOT_FOUND)
+        except etree.XMLSyntaxError, e:
+            raise GeneratorError("xml_generator: syntax error in XML source, \"%s\": \"%s\"" %\
+                                 (interpolate(self, self.src, as_filename=True, root_path=self.root_path), str(e)))

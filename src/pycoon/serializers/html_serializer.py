@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.serializers
+from pycoon.serializers import serializer, SerializerError
 from pycoon.components import invokation_syntax
 from pycoon.helpers import correct_script_chars
 from lxml.etree import tounicode
@@ -33,7 +33,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("serialize", "html")] = invk_syn
     return invk_syn
 
-class html_serializer(pycoon.serializers.serializer):
+class html_serializer(serializer):
     """
     html_serializer class encapsulates the uTidyLib class.
     """
@@ -43,7 +43,7 @@ class html_serializer(pycoon.serializers.serializer):
         html_serializer constructor.
         """
 
-        pycoon.serializers.serializer.__init__(self, parent, root_path)
+        serializer.__init__(self, parent, root_path)
         self.mime_str = mime
         self.description = "html_serializer()"
 
@@ -55,10 +55,14 @@ class html_serializer(pycoon.serializers.serializer):
         Executes tidy.parseString on the p_sibling_result and returns the resultant HTML.
         """
 
-        if os.name != "nt" and UTIDYLIB_AVAIL:
-            options = dict(output_html=1, add_xml_decl=1, doctype="strict", indent=1, wrap=120, tidy_mark=0,\
-                           input_encoding="utf8", output_encoding="utf8")
+        try:
+            if os.name != "nt" and UTIDYLIB_AVAIL:
+                options = dict(output_html=1, add_xml_decl=1, doctype="strict", indent=1, wrap=120, tidy_mark=0,\
+                               input_encoding="utf8", output_encoding="utf8")
         
-            return (True, (correct_script_chars(str(tidy.parseString(tounicode(p_sibling_result).encode("utf-8"), **options))), self.mime_str))
-        else:
-            return (True, (correct_script_chars(tounicode(p_sibling_result).encode("utf-8")), self.mime_str))
+                return (True, (correct_script_chars(str(tidy.parseString(tounicode(p_sibling_result).encode("utf-8"), **options))), self.mime_str))
+            else:
+                return (True, (correct_script_chars(tounicode(p_sibling_result).encode("utf-8")), self.mime_str))
+        except TypeError:
+            if p_sibling_result is None:
+                raise SerializerError("html_serializer: preceding pipeline components have returned no content!")

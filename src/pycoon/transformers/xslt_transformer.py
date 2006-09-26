@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.transformers
+from pycoon.transformers import transformer, TransformerError
 from pycoon.components import invokation_syntax
 from pycoon.interpolation import interpolate
 import os
@@ -27,7 +27,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("transform", "xslt")] = invk_syn
     return invk_syn
 
-class xslt_transformer(pycoon.transformers.transformer):
+class xslt_transformer(transformer):
     """
     xslt_transformer class encapsulates an XSLT object from the lxml module and implements the
     transformer interface.
@@ -45,7 +45,7 @@ class xslt_transformer(pycoon.transformers.transformer):
 
         self.src = src
         
-        pycoon.transformers.transformer.__init__(self, parent, root_path)
+        transformer.__init__(self, parent, root_path)
 
         self.description = "xslt_transfomer(\"%s\")" % src
 
@@ -57,15 +57,20 @@ class xslt_transformer(pycoon.transformers.transformer):
         Parse the p_sibling_result through the XSLT stylesheet.
         """
 
-        self.transform = lxml.etree.XSLT(lxml.etree.parse(interpolate(self, self.src, as_filename=True, root_path=self.root_path)))
+        try:
+            self.transform = lxml.etree.XSLT(lxml.etree.parse(interpolate(self, self.src, as_filename=True, root_path=self.root_path)))
 
-        parameters = {}
-        for c in child_results:
-            for k, v in c.items():
-                c[k] = "'%s'" % v
-            parameters.update(c)
+            parameters = {}
+            for c in child_results:
+                if isinstance(c, dict):
+                    for k, v in c.items():
+                        c[k] = "'%s'" % v
+                    parameters.update(c)
 
-        if len(parameters) > 0:
-            return (True, self.transform(p_sibling_result, **parameters).getroot())
-        else:
-            return (True, self.transform(p_sibling_result).getroot())
+            if len(parameters) > 0:
+                return (True, self.transform(p_sibling_result, **parameters).getroot())
+            else:
+                return (True, self.transform(p_sibling_result).getroot())
+        except etree.XMLSyntaxError, e:
+            raise TransformerError("xslt_transformer: XML syntax error in stylesheet file, \"%s\": \"%s\"" %\
+                                   (interpolate(self, self.src, as_filename=True, root_path=self.root_path), str(e)))
