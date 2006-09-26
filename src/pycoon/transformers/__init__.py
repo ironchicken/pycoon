@@ -7,7 +7,9 @@ The transformers module provides the transformer class which is the base class o
 all transformers.
 """
 
-from pycoon.components import stream_component, invokation_syntax
+from pycoon.components import stream_component, invokation_syntax, ComponentError
+
+class TransformerError(ComponentError): pass
 
 def register_invokation_syntax(server):
     """

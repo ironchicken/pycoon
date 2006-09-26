@@ -7,8 +7,10 @@ The generators module provides the generator class which is the base class of al
 generator classes.
 """
 
-from pycoon.components import stream_component, invokation_syntax
+from pycoon.components import stream_component, invokation_syntax, ComponentError
 from pycoon.interpolation import interpolate
+
+class GeneratorError(ComponentError): pass
 
 def register_invokation_syntax(server):
     """

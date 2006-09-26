@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon import apache
 from pycoon.components import invokation_syntax
 from pycoon.interpolation import interpolate
@@ -28,7 +28,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("generate", "xpath")] = invk_syn
     return invk_syn
 
-class xpath_generator(pycoon.generators.generator):
+class xpath_generator(generator):
     """
     xpath_generator encapsulates an XPath expression to be executed against the given XML document and
     implements the generator interface.
@@ -48,7 +48,7 @@ class xpath_generator(pycoon.generators.generator):
 
         self.source_file = src
         self.xpath_expr = query
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
         self.description = "xpath_generator(\"%s\", \"%s\")" % (self.source_file, self.xpath_expr)
 
     def _descend(self, req, p_sibling_result=None):
@@ -61,16 +61,21 @@ class xpath_generator(pycoon.generators.generator):
 
         try:
             source_tree = lxml.etree.parse(open(interpolate(self, self.source_file, as_filename=True, root_path=self.root_path), 'r'))
+            xpath = interpolate(self, self.xpath_expr)
+            nodes = source_tree.xpath(xpath)
+
+            ret_tree = lxml.etree.Element("result")
+
+            for n in nodes:
+                ret_tree.append(n)
+
+            return (True, ret_tree)
+
         except OSError:
-            return (False, apache.HTTP_NOT_FOUND)
-
-        xpath = interpolate(self, self.xpath_expr)
-
-        nodes = source_tree.xpath(xpath)
-
-        ret_tree = lxml.etree.Element("result")
-
-        for n in nodes:
-            ret_tree.append(n)
-
-        return (True, ret_tree)
+            raise GeneratorError("xpath_generator: source file not found \"%s\"" % interpolate(self, self.source_file, as_filename=True, root_path=self.root_path))
+            #return (False, apache.HTTP_NOT_FOUND)
+        except etree.XMLSyntaxError, e:
+            raise GeneratorError("xpath_generator: syntax error in XML source, \"%s\": \"%s\"" %\
+                                 (interpolate(self, self.source_file, as_filename=True, root_path=self.root_path), str(e)))
+        except etree.XPathSyntaxError:
+            raise GeneratorError("xpath_generator: XPath syntax error: \"%s\"" % xpath)

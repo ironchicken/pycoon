@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.transformers
+from pycoon.transformers import transformer, TransformerError
 from pycoon.components import invokation_syntax, ComponentError
 import os
 import lxml.etree
@@ -28,7 +28,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("transform", "sax-handler")] = invk_syn
     return invk_syn
 
-class sax_handler_transformer(pycoon.transformers.transformer):
+class sax_handler_transformer(transformer):
     """
     sax_handler_transformer encapsulates a SAX handler which takes an XML document string as input
     and must return a well-formed XML document.
@@ -47,7 +47,7 @@ class sax_handler_transformer(pycoon.transformers.transformer):
         except ImportError:
             raise ComponentError("Could not import sax_handler_transform handler class \"%s\" (from module \"%s\")" % (handler, module))
 
-        pycoon.transformers.transformer.__init__(self, parent, root_path)
+        transformer.__init__(self, parent, root_path)
 
         self.description = "sax_handler_transfomer(\"%s\", \"%s\")" % (module, handler)
 
@@ -59,12 +59,15 @@ class sax_handler_transformer(pycoon.transformers.transformer):
         Parses the p_sibling_result using self.handler and returns the result as an Element object.
         """
 
-        parameters = {}
-        for c in child_results:
-            parameters.update(c)
+        try:
+            parameters = self.parameter_children(child_results)
 
-        self.handler.set_parameters(parameters)
+            self.handler.set_parameters(parameters)
         
-        parseString(lxml.etree.tostring(p_sibling_result), self.handler)
+            parseString(lxml.etree.tostring(p_sibling_result), self.handler)
 
-        return (True, lxml.etree.parse(StringIO(self.handler.ostream)).getroot())
+            return (True, lxml.etree.parse(StringIO(self.handler.ostream)).getroot())
+        except SAXException, e:
+            raise TransformerError("sax_handler_transformer: SAX transformation caused an exception: \"%s\"" % str(e))
+        except etree.XMLSyntaxError, e:
+            raise TransformerError("sax_handler_transformer: transformation result document contains a syntax error: \"%s\"" % str(e))

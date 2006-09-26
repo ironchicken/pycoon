@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon.components import invokation_syntax
 from pycoon.helpers import unescape_url
 import os, string
@@ -46,7 +46,7 @@ def init_datasource(sitemap, attrs):
     sitemap.data_sources[index_name + "_source"] = index_files
     if sitemap.parent.log_debug: sitemap.parent.error_log.write("Added data-source: \"%s\"" % index_name)
 
-class swishe_generator(pycoon.generators.generator):
+class swishe_generator(generator):
     """
     swishe_generator encapsulates a swish-e index, allowing searches to be made against it. It implements
     the generator interface.
@@ -66,7 +66,7 @@ class swishe_generator(pycoon.generators.generator):
         self.auto_properties = ["swishreccount", "swishtitle", "swishrank", "swishdocpath", "swishdocsize",\
                                 "swishlastmodified", "swishdescription", "swishdbfile"]
 
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
 
         self.description = "swishe_generator(\"%s\", \"%s\")" % (self.datasource_name, self.query_pattern)
 
@@ -78,61 +78,63 @@ class swishe_generator(pycoon.generators.generator):
         Perform the search and return an Element object.
         """
 
-        parameters = {}
-        for c in child_results:
-            parameters.update(c)
+        try:
+            parameters = self.parameter_children(child_results)
 
-        query = unescape_url(self.query_pattern % parameters)
+            query = unescape_url(self.query_pattern % parameters)
 
-        # there may be parameters for swish-e such as max hits etc.
-        #for p in parameters:
-        #    pass
+            # there may be parameters for swish-e such as max hits etc.
+            #for p in parameters:
+            #    pass
         
-        results = self.sitemap.data_sources[self.datasource_name].query(query)
+            results = self.sitemap.data_sources[self.datasource_name].query(query)
 
-        ret_tree = lxml.etree.Element("swishe")
-        ret_tree.attrib["query"] = query.replace("\"", "'").replace("+"," ")
-        ret_tree.attrib["hits"] = str(results.hits())
+            ret_tree = lxml.etree.Element("swishe")
+            ret_tree.attrib["query"] = query.replace("\"", "'").replace("+"," ")
+            ret_tree.attrib["hits"] = str(results.hits())
 
-        # first add the property names to the top of the result tree so that they
-        # are not repeated for every result
-        all_properties = self.auto_properties + self.custom_properties
+            # first add the property names to the top of the result tree so that they
+            # are not repeated for every result
+            all_properties = self.auto_properties + self.custom_properties
 
-        properties_header = lxml.etree.Element("properties")
-        properties = {}
+            properties_header = lxml.etree.Element("properties")
+            properties = {}
         
-        for n, p_name in zip(range(len(all_properties)), all_properties):
-            p = lxml.etree.Element("property")
-            p.attrib["id"] = str(n)
-            p.attrib["name"] = p_name
-            properties_header.append(p)
+            for n, p_name in zip(range(len(all_properties)), all_properties):
+                p = lxml.etree.Element("property")
+                p.attrib["id"] = str(n)
+                p.attrib["name"] = p_name
+                properties_header.append(p)
 
-            properties[p_name] = n
+                properties[p_name] = n
 
-        ret_tree.append(properties_header)
+            ret_tree.append(properties_header)
 
-        # now add the hits
-        hits = lxml.etree.Element("results")
+            # now add the hits
+            hits = lxml.etree.Element("results")
         
-        for n, r in zip(range(results.hits()), results):
-            hit = lxml.etree.Element("result")
-            hit.attrib["n"] = str(n)
+            for n, r in zip(range(results.hits()), results):
+                hit = lxml.etree.Element("result")
+                hit.attrib["n"] = str(n)
                 
-            for p_name in all_properties:
-                try:
-                    e_name = properties[p_name]
-                    value = r.getproperty(p_name)
-                    if value is None: break
+                for p_name in all_properties:
+                    try:
+                        e_name = properties[p_name]
+                        value = r.getproperty(p_name)
+                        if value is None: break
 
-                    p = lxml.etree.Element(str(properties[p_name]))
-                    p.text = str(value)
-                    hit.append(p)
-                except:
-                    # this is a Swish-e error; property didn't exist, doesn't matter
-                    pass
+                        p = lxml.etree.Element(str(properties[p_name]))
+                        p.text = str(value)
+                        hit.append(p)
+                    except:
+                        # this is a Swish-e error; property didn't exist, doesn't matter
+                        pass
 
-            hits.append(hit)
+                hits.append(hit)
+                
+            ret_tree.append(hits)
 
-        ret_tree.append(hits)
-
-        return (True, ret_tree)
+            return (True, ret_tree)
+        
+        except KeyError:
+            raise GeneratorError("swishe_generator: no datasource called \"%s\"" % self.datasource_name)

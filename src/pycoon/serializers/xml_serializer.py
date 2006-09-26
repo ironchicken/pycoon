@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.serializers
+from pycoon.serializers import serializer, SerializerError
 from pycoon.components import invokation_syntax
 from lxml.etree import tounicode
 
@@ -25,7 +25,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("serialize", "xml")] = invk_syn
     return invk_syn
 
-class xml_serializer(pycoon.serializers.serializer):
+class xml_serializer(serializer):
     """
     xml_serializer class simply returns the XML source as a character stream.
     """
@@ -35,7 +35,7 @@ class xml_serializer(pycoon.serializers.serializer):
         xml_serializer constructor.
         """
 
-        pycoon.serializers.serializer.__init__(self, parent, root_path)
+        serializer.__init__(self, parent, root_path)
         self.mime_str = mime
         self.description = "xml_serializer()"
 
@@ -47,4 +47,8 @@ class xml_serializer(pycoon.serializers.serializer):
         Executes lxml.etree.tounicode with the p_sibling_result and returns the resultant XML.
         """
 
-        return (True, ("<?xml version=\"1.0\"?>%s" % tounicode(p_sibling_result), self.mime_str))
+        try:
+            return (True, ("<?xml version=\"1.0\"?>%s" % tounicode(p_sibling_result), self.mime_str))
+        except TypeError:
+            if p_sibling_result is None:
+                raise SerializerError("xml_serializer: preceding pipeline components have returned no content!")

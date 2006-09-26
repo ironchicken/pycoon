@@ -10,7 +10,7 @@ for the '*' named database. This is part of the 'backends' framework. In order t
 backends, it is necessary to add the appropriate function to this module.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
 import lxml.etree
@@ -54,7 +54,7 @@ def init_datasource_mysql(sitemap, attrs):
                                                                             db_name=database).cursor()
     if sitemap.parent.log_debug: sitemap.parent.error_log.write("Added data-source: \"%s\" using %s" % (ds_name, database))
 
-class sql_generator(pycoon.generators.generator):
+class sql_generator(generator):
     """
     sql_generator encapsulates an SQL query to be executed against the given SQL cursor.
     """
@@ -71,34 +71,36 @@ class sql_generator(pycoon.generators.generator):
         self.datasource_name = src
         self.sql_filename = query
         self.template_filename = template_filename
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
         self.description = "sql_generator(\"%s\", \"%s\")" % (self.db_name, self.sql_filename)
 
     def _descend(self, req, p_sibling_result=None):
         return True
 
     def _result(self, req, p_sibling_result=None, child_results=[]):
-        sql_file = open(interpolate(self, self.sql_filename, as_filename=True, root_path=self.root_path), "r")
-        sql_str = sql_file.read()
-        sql_file.close()
+        try:
+            sql_file = open(interpolate(self, self.sql_filename, as_filename=True, root_path=self.root_path), "r")
+            sql_str = sql_file.read()
+            sql_file.close()
+            
+            parameters = self.parameter_children(self.child_results)
+
+            cursor = self.sitemap.data_sources[self.datasource_name]
+            cursor.execute(sql_str % parameters)
+
+            result = lxml.etree.Element("result")
+            result.attrib["query"] = sql_str
+            result.attrib["rowcount"] = str(cursor.rowcount)
+
+            col_names = [row_desc[0] for row_desc in cursor.description]
         
-        parameters = {}
-        for c in child_results:
-            parameters.update(c)
+            for row in cursor.fetchall():
+                result.append(lxml.etree.Element("row"))
+                for n, v in zip(col_names, row):
+                    result[-1].append(lxml.etree.Element(n))
+                    result[-1][-1].text = unicode(str(v), encoding="utf-8", errors="replace")
 
-        cursor = self.sitemap.data_sources[self.datasource_name]
-        cursor.execute(sql_str % parameters)
+            return (True, result)
+        except KeyError:
+            raise GeneratorError("sql_generator: no datasource called \"%s\"" % self.datasource_name)
 
-        result = lxml.etree.Element("result")
-        result.attrib["query"] = sql_str
-        result.attrib["rowcount"] = str(cursor.rowcount)
-
-        col_names = [row_desc[0] for row_desc in cursor.description]
-        
-        for row in cursor.fetchall():
-            result.append(lxml.etree.Element("row"))
-            for n, v in zip(col_names, row):
-                result[-1].append(lxml.etree.Element(n))
-                result[-1][-1].text = unicode(str(v), encoding="utf-8", errors="replace")
-
-        return (True, result)

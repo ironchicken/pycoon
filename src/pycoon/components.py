@@ -249,6 +249,18 @@ class component(object):
             self.children.insert(pos, c)
         return c
 
+    def parameter_children(self, child_results):
+        """
+        Returns a dictionary of name/values for all the parameter component children of this component.
+        """
+
+        parameters = {}
+        for c in child_results:
+            if isinstance(c, dict):
+                parameters.update(c)
+
+        return parameters
+
     def find_components(self, class_name, found=[]):
         """
         Searches this component's child components for any components with the given class name.

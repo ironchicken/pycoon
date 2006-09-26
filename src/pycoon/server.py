@@ -113,6 +113,10 @@ class server_config(object):
             (success, result, mime) = p.handle_error(req)
         
             if success:
+                if result is None:
+                    # why would this happen?
+                    continue
+                
                 req.status = error_code
 
                 if self.log_errors:

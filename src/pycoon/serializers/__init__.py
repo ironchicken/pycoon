@@ -7,7 +7,9 @@ The serializers module provides the serializer class which is the base class of 
 serializer classes.
 """
 
-from pycoon.components import stream_component, invokation_syntax
+from pycoon.components import stream_component, invokation_syntax, ComponentError
+
+class SerializerError(ComponentError): pass
 
 def register_invokation_syntax(server):
     """

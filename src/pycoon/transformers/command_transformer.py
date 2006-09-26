@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.transformers
+from pycoon.transformers import transformer, TransformerError
 from pycoon import apache
 from pycoon.components import invokation_syntax
 import lxml.etree
@@ -28,7 +28,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("transform", "command")] = invk_syn
     return invk_syn
 
-class command_transformer(pycoon.transformers.transformer):
+class command_transformer(transformer):
     """
     command_transformer encapsulates a shell command which takes an XML document as input and must
     return a well-formed XML document.
@@ -42,7 +42,7 @@ class command_transformer(pycoon.transformers.transformer):
         """
 
         self.command = src
-        pycoon.transformers.transformer.__init__(self, parent, root_path)
+        transformer.__init__(self, parent, root_path)
         self.description = "command_transfomer(\"%s\")" % self.command
 
     def _descend(self, req, p_sibling_result=None):
@@ -54,11 +54,9 @@ class command_transformer(pycoon.transformers.transformer):
         parameter elements.
         """
 
-        parameters = {}
-        for c in child_results:
-            parameters.update(c)
-
         try:
+            parameters = self.parameter_children(child_results)
+            
             if len(parameters) > 0:
                 (istream, ostream) = os.popen2(self.command % parameters)
             else:
@@ -74,4 +72,7 @@ class command_transformer(pycoon.transformers.transformer):
                 return (True, ret_tree)
         
         except OSError:
-            return (False, apache.HTTP_NOT_FOUND)
+            #return (False, apache.HTTP_NOT_FOUND)
+            raise TransformerError("command_transformer: error occured when executing command: \"%s\"" % self.command % parameters)
+        except etree.XMLSyntaxError, e:
+            raise TransformerError("command_transformer: transformation result document contains a syntax error: \"%s\"" % str(e))

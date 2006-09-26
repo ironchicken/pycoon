@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.generators
+from pycoon.generators import generator, GeneratorError
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -56,7 +56,7 @@ def init_datasource_dbxml(sitemap, attrs):
     if sitemap.parent.log_debug:
         sitemap.parent.error_log.write("Added data-source: \"%s\" from %s" % (ds_name, container_file))
 
-class xquery_generator(pycoon.generators.generator):
+class xquery_generator(generator):
     """
     xquery_generator encapsulates an XQuery to be executed against the given dbxml container and implements
     the generator interface.
@@ -74,7 +74,7 @@ class xquery_generator(pycoon.generators.generator):
 
         self.datasource_name = src
         self.xq_filename = query
-        pycoon.generators.generator.__init__(self, parent, root_path)
+        generator.__init__(self, parent, root_path)
         self.dbxml_fn = self.sitemap.data_sources[self.datasource_name + "_source"]
         self.description = "xquery_generator(\"%s\", \"%s\")" % (self.datasource_name, self.xq_filename)
 
@@ -86,20 +86,23 @@ class xquery_generator(pycoon.generators.generator):
         Perform the xquery and return the result as an ElementTree.
         """
 
-        xq_file = open(interpolate(self, self.xq_filename, as_filename=True, root_path=self.root_path), "r")
-        xq_str = xq_file.read()
-        xq_file.close()
+        try:
+            xq_file = open(interpolate(self, self.xq_filename, as_filename=True, root_path=self.root_path), "r")
+            xq_str = xq_file.read()
+            xq_file.close()
 
-        parameters = {'dbxml': self.dbxml_fn}
-        for c in child_results:
-            parameters.update(c)
+            parameters = {'dbxml': self.dbxml_fn}
+            parameters.update(self.parameter_children(child_results))
 
-        results = self.sitemap.data_sources[self.datasource_name].query(str(xq_str % parameters),\
+            results = self.sitemap.data_sources[self.datasource_name].query(str(xq_str % parameters),\
                                                                         self.sitemap.data_sources[self.datasource_name + "_qc"])
         
-        results.reset()
+            results.reset()
 
-        if results.size() == 0:
-            return (False, apache.HTTP_NOT_FOUND)
-        else:
-            return (True, lxml.etree.parse(StringIO(results.peek().asString())).getroot())
+            if results.size() == 0:
+                return (False, apache.HTTP_NOT_FOUND)
+                # or should this raise a GeneratorError?
+            else:
+                return (True, lxml.etree.parse(StringIO(results.peek().asString())).getroot())
+        except KeyError:
+            raise GeneratorError("xquery_generator: no datasource called \"%s\"" % self.datasource_name)

@@ -4,7 +4,7 @@ Copyright (C) Richard Lewis 2006
 This software is licensed under the terms of the GNU GPL.
 """
 
-import pycoon.serializers
+from pycoon.serializers import serializer, SerializerError
 from pycoon.components import invokation_syntax
 from lxml.etree import tounicode
 import os, tempfile
@@ -31,7 +31,7 @@ def register_invokation_syntax(server):
     server.component_syntaxes[("serialize", "svg")] = invk_syn
     return invk_syn
 
-class svg_serializer(pycoon.serializers.serializer):
+class svg_serializer(serializer):
     """
     svg_serializer class encapsulates the RSVG rasterizer.
     """
@@ -41,7 +41,7 @@ class svg_serializer(pycoon.serializers.serializer):
         svg_serializer constructor.
         """
 
-        pycoon.serializers.serializer.__init__(self, parent, root_path)
+        serializer.__init__(self, parent, root_path)
         self.mime_str = mime
         self.description = "svg_serializer()"
 
@@ -97,3 +97,6 @@ class svg_serializer(pycoon.serializers.serializer):
         
         except (GError, OSError):
             return (True, (p_sibling_result, "text/xml"))
+        except TypeError:
+            if p_sibling_result is None:
+                raise SerializerError("svg_serializer: preceding pipeline components have returned no content!")
