@@ -18,11 +18,11 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "aggregate"
-    invk_syn.allowed_parent_components = ["pipeline", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "match", "select"]
     invk_syn.required_attribs = []
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = ["root-node"]
-    invk_syn.allowed_child_components = ["generate"]
+    invk_syn.allowed_child_components = ["generate", "select"]
 
     server.component_syntaxes[("aggregate", None)] = invk_syn
     return invk_syn

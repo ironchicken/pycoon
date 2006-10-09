@@ -20,7 +20,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = ["query"]

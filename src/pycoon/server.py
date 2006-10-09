@@ -113,10 +113,6 @@ class server_config(object):
             (success, result, mime) = p.handle_error(req)
         
             if success:
-                if result is None:
-                    # why would this happen?
-                    continue
-                
                 req.status = error_code
 
                 if self.log_errors:
@@ -176,37 +172,49 @@ class server_config_parse(ContentHandler):
             self.chars = u""
             self.col_chars = True
 
-        elif name == "files-cache" and attrs['use'] == "yes":
+        elif name == "files-cache":
             # boolean option "files-cache": specifies whether <read> component files should be cached
-            self.server.use_files_cache = True
-            if self.server.log_debug: self.server.error_log.write("Using files cache is True.")
+            if attrs['use'] == "yes":
+                self.server.use_files_cache = True
+                if self.server.log_debug: self.server.error_log.write("Using files cache is True.")
+            elif attrs['use'] == "no": self.server.use_files_cache = False
 
-        elif name == "requests-cache" and attrs['use'] == "yes":
+        elif name == "requests-cache":
             # boolean option "requests-cache": specifies whether pipeline results should be cached
-            self.server.use_requests_cache = True
-            if self.server.log_debug: self.server.error_log.write("Using requests cache is True.")
+            if attrs['use'] == "yes":
+                self.server.use_requests_cache = True
+                if self.server.log_debug: self.server.error_log.write("Using requests cache is True.")
+            elif attrs['use'] == "no": self.server.use_requests_cache = False
 
         elif name == "logging": pass
 
-        elif name == "log-up-down" and attrs['use'] == "yes":
+        elif name == "log-up-down":
             # boolean logging level option "log-up-down": specifies whether the server startup and shutdown events should be logged
-            self.server.log_up_down = True
-            if self.server.log_debug: self.server.error_log.write("Log level server up/down is True.")
+            if attrs['use'] == "yes":
+                self.server.log_up_down = True
+                if self.server.log_debug: self.server.error_log.write("Log level server up/down is True.")
+            elif attrs['use'] == "no": self.server.log_up_down = False
 
-        elif name == "log-errors" and attrs['use'] == "yes":
+        elif name == "log-errors":
             # boolean logging level option "log-errors": specifies whether handled errors should be logged
-            self.server.log_errors = True
-            if self.server.log_debug: self.server.error_log.write("Log level errors is True.")
+            if attrs['use'] == "yes":
+                self.server.log_errors = True
+                if self.server.log_debug: self.server.error_log.write("Log level errors is True.")
+            elif attrs['use'] == "no": self.server.log_errors = False
 
-        elif name == "log-requests" and attrs['use'] == "yes":
+        elif name == "log-requests":
             # boolean logging level option "log-requests": specifies whether all handled requests should be logged
-            self.server.log_requests = True
-            if self.server.log_debug: self.server.error_log.write("Log level requests is True.")
+            if attrs['use'] == "yes":
+                self.server.log_requests = True
+                if self.server.log_debug: self.server.error_log.write("Log level requests is True.")
+            elif attrs['use'] == "no": self.server.log_requests = False
 
-        elif name == "log-debug-info" and attrs['use'] == "yes":
+        elif name == "log-debug-info":
             # boolean logging level option "log-debug": specifies whether debugging information should be logged
-            self.server.log_debug = True
-            if self.server.log_debug: self.server.error_log.write("Log level debug is True.")
+            if attrs['use'] == "yes":
+                self.server.log_debug = True
+                if self.server.log_debug: self.server.error_log.write("Log level debug is True.")
+            elif attrs['use'] == "no": self.server.log_debug = False
 
         elif name == "components":
             self.in_components = True

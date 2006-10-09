@@ -7,7 +7,7 @@ This module provides the error_matcher class which allows pipeline execution to 
 conditional on Apache error codes.
 """
 
-import pycoon.matchers
+from pycoon.matchers import matcher, MatcherError
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -24,12 +24,12 @@ def register_invokation_syntax(server):
     invk_syn.required_attribs = ["type", "error-code"]
     invk_syn.required_attrib_values = {"type": "error"}
     invk_syn.optional_attribs = []
-    invk_syn.allowed_child_components = ["generate","transform","serialize","match"]
+    invk_syn.allowed_child_components = ["generate","transform","serialize","match","select"]
 
     server.component_syntaxes[("match", "error")] = invk_syn
     return invk_syn
 
-class error_matcher(pycoon.matchers.matcher):
+class error_matcher(matcher):
     """
     error_matcher class allows pipeline execution to be conditional on Apache error codes.
 
@@ -39,9 +39,41 @@ class error_matcher(pycoon.matchers.matcher):
     def __init__(self, parent, error_code, root_path=""):
         self.error_code = error_code
 
-        pycoon.matchers.matcher.__init__(self, parent, root_path="")
+        matcher.__init__(self, parent, root_path="")
 
         self.description = "error_matcher(\"%s\")" % self.error_code
+
+    def parse_uri(self, req):
+        """
+        Parses the request URI into its constituent parts and stores them for later use.
+        """
+        
+        self.req = req
+        self.uri = req.unparsed_uri
+
+        # store the path portion of the URI
+        path = self.req.parsed_uri[apache.URI_PATH]
+        self.path = path[:path.rfind("/")]
+
+        # store the filename portion of the URI
+        self.filename = path[path.rfind("/"):]
+        
+        # store the query portion of the URI as a string
+        self.query = self.req.parsed_uri[apache.URI_QUERY]
+        
+        # and as a dictionary
+        self.query_dict = {}
+        if self.query != None:
+            for q in self.query.split("&"):
+                if q.find("=") >= 0:
+                    (name, value) = q.split("=")
+                else:
+                    name = q
+                    value = ""
+                self.query_dict[name] = value
+
+        # store the fragment portion of the URI
+        self.fragment = self.req.parsed_uri[apache.URI_FRAGMENT]
 
     def _descend(self, req, p_sibing_result=None, child_results=[]):
         """
@@ -52,33 +84,8 @@ class error_matcher(pycoon.matchers.matcher):
         """
 
         if str(req.status) == str(self.error_code):
-            self.req = req
-            self.uri = req.unparsed_uri
-
-            # store the path portion of the URI
-            path = self.req.parsed_uri[apache.URI_PATH]
-            self.path = path[:path.rfind("/")]
-
-            # store the filename portion of the URI
-            self.filename = path[path.rfind("/"):]
-
-            # store the query portion of the URI as a string
-            self.query = self.req.parsed_uri[apache.URI_QUERY]
-
-            # and as a dictionary
-            self.query_dict = {}
-            if self.query != None:
-                for q in self.query.split("&"):
-                    if q.find("=") >= 0:
-                        (name, value) = q.split("=")
-                    else:
-                        name = q
-                        value = ""
-                    self.query_dict[name] = value
-
-            # store the fragment portion of the URI
-            self.fragment = self.req.parsed_uri[apache.URI_FRAGMENT]
-
+            self.parse_uri(req)
+            
             return True
         else:
             return False

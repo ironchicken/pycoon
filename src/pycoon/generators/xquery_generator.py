@@ -20,7 +20,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src", "query"]
     invk_syn.required_attrib_values = {"type": "xquery"}
     invk_syn.optional_attribs = []
@@ -101,7 +101,7 @@ class xquery_generator(generator):
 
             if results.size() == 0:
                 return (False, apache.HTTP_NOT_FOUND)
-                # or should this raise a GeneratorError?
+                # or should this raise a GeneratorError? or return an empty document?
             else:
                 return (True, lxml.etree.parse(StringIO(results.peek().asString())).getroot())
         except KeyError:

@@ -2,10 +2,10 @@
 
 <server>
   <logging> <!--Put this first so that debugging info for server startup is shown-->
-    <log-debug-info use="yes" />
+    <log-debug-info use="no" />
     <log-up-down use="yes" />
     <log-errors use="yes" />
-    <log-requests use="yes" />
+    <log-requests use="no" />
   </logging>
   <details>
     <name>localhost</name>
@@ -23,13 +23,19 @@
     <built-in>
       <component name="parameter" module="pycoon.parameter" class="parameter" />
       <component name="read" module="pycoon.read" class="read" />
+      <component name="when" module="pycoon.selectors.when_element" class="when" />
+      <component name="otherwise" module="pycoon.selectors.otherwise_element" class="otherwise" />
+      <component name="throw" module="pycoon.throw" class="throw" />
     </built-in>
     <matchers>
       <matcher name="uri" module="pycoon.matchers.uri_matcher" class="uri_matcher" />
       <matcher name="error" module="pycoon.matchers.error_matcher" class="error_matcher" />
     </matchers>
     <selectors>
-
+      <selector name="browser-class" module="pycoon.selectors.browser_class_selector" class="browser_class_selector" />
+      <selector name="browser" module="pycoon.selectors.browser_selector" class="browser_selector" />
+      <selector name="resource-exists" module="pycoon.selectors.resource_exists_selector" class="resource_exists_selector" />
+      <selector name="request-parameter" module="pycoon.selectors.request_parameter_selector" class="request_parameter_selector" />
     </selectors>
     <generators>
       <generator name="file" module="pycoon.generators.xml_generator" class="xml_generator" />
@@ -38,6 +44,7 @@
       <generator name="swishe" module="pycoon.generators.swishe_generator" class="swishe_generator" />
       <generator name="aggregate" module="pycoon.generators.aggregate_generator" class="aggregate_generator" />
       <generator name="command" module="pycoon.generators.command_generator" class="command_generator" />
+      <generator name="http" module="pycoon.generators.http_generator" class="http_generator" />
       <generator name="sql" module="pycoon.generators.sql_generator" class="sql_generator" backend="mysql" />
       <generator name="directory-list" module="pycoon.generators.directory_generator" class="directory_generator" />
     </generators>

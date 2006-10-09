@@ -18,8 +18,52 @@
   <match type="uri" pattern="/bigitup">
     <aggregate>
       <generate type="directory-list" src="." />
-      <generate type="xpath" src="data.xml" query="//item[position()&gt;=1 and position()&lt;=5]" />
+      <select type="resource-exists" method="inclusive">
+	<when test="data.xml">
+	  <generate type="xpath" src="data.xml" query="//item[position()&gt;=1 and position()&lt;=5]" />
+	</when>
+	<when test="browsers.xml">
+	  <generate type="file" src="browsers.xml" />
+	</when>
+      </select>
     </aggregate>
+    <serialize type="xml" />
+  </match>
+
+  <match type="uri" pattern="/browser">
+    <generate type="file" src="browsers.xml" />
+    <select type="browser">
+      <when test="konqueror">
+	<transform type="xslt" src="browsers2html.xslt">
+	  <parameter name="browser" value="Konqueror" />
+	</transform>
+      </when>
+      <when test="msie">
+	<throw error-code="404" />
+      </when>
+      <when test="firefox galeon">
+	<transform type="xslt" src="browsers2html.xslt">
+	  <parameter name="browser" value="Firefox or Galeon" />
+	</transform>
+      </when>
+      <otherwise>
+	<transform type="xslt" src="browsers2html.xslt">
+	  <parameter name="browser" value="unknown" />
+	</transform>
+      </otherwise>
+    </select>
+    <serialize type="xhtml" />
+  </match>
+
+  <match type="uri" pattern="/query">
+    <select type="request-parameter" parameter="document">
+      <when test="data">
+	<generate type="file" src="data.xml" />
+      </when>
+      <when test="browsers">
+	<generate type="file" src="browsers.xml" />
+      </when>
+    </select>
     <serialize type="xml" />
   </match>
 
@@ -28,7 +72,14 @@
     <transform type="xslt" src="data2html.xslt">
       <parameter name="uri" value="{$1}" />
     </transform>
-    <serialize type="xhtml" mime="text/html" />
+    <select type="browser-class">
+      <when test="graphic">
+	<serialize type="xhtml" mime="text/html" />
+      </when>
+      <otherwise>
+	<serialize type="html" mime="text/html" />
+      </otherwise>
+    </select>
   </match>
 
   <match type="uri" pattern="/cmd/*">

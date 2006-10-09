@@ -36,6 +36,26 @@ class fake_apache:
     def server_root(self):
         return self._server_root
 
+class fake_table(object):
+    """
+    A copy of the apache module's table class.
+    """
+
+    def __init__(self):
+        self.dictionary = {}
+        
+    def __setitem__(self, key, val):
+        self.dictionary[string.upper(key)] = val
+
+    def __getitem__(self, key):
+        return self.dictionary[string.upper(key)]
+
+    def has_key(self, key):
+        return self.dictionary.has_key(string.upper(key))
+
+    def add(self, key, val):
+        self.__setitem__(key, val)
+    
 def uri_pattern2regex(pattern):
     """
     Converts the given URI pattern string into a Python regular expression object.

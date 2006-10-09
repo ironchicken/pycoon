@@ -94,9 +94,21 @@ class pipeline(component):
         class fake_request:
             def __init__(self, ostream, uri):
                 self.write = ostream.write
+
+                pos_qm = uri.find("?")
+                if pos_qm == -1: pos_qm = len(uri)
+                pos_hash = uri.find("#")
+                if pos_hash == -1: pos_hash = len(uri)
+
+                self.path = uri[:pos_qm]
+                self.query = uri[pos_qm+1:pos_hash]
+                self.fragment = uri[pos_hash+1:]
+                
+                self.uri = uri
                 self.unparsed_uri = uri
+                self.parsed_uri = ("context", "", "", "", self.server.server_hostname, 80, self.path, self.query, self.fragment)
+                
                 self.content_type = None
-                self.parsed_uri = ("context", "", "", "", self.server.name, 80, uri, "", "")
 
             def set_content_length(self, l): pass
             def sendfile(self, fn): pass
@@ -145,13 +157,16 @@ class pipeline(component):
 
         # um, we could make all matchers check the req.status to make sure its not an error condition
         # so that this function is then the same as execute...
+
         for m in self.find_components("error_matcher"):
-            (success, result) = m(req)
-            if success:
-                if isinstance(result, tuple):
-                    # split the result and the mime type
-                    return (success, result[0], result[1])
-                else:
-                    return (success, result, "unknown")
+            matches = m._descend(req, None, None)
+            if matches:
+                (success, result) = m(req)
+                if success:
+                    if isinstance(result, tuple):
+                        # split the result and the mime type
+                        return (success, result[0], result[1])
+                    else:
+                        return (success, result, "unknown")
 
         return (False, None, None)

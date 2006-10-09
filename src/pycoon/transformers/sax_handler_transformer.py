@@ -19,7 +19,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "transform"
-    invk_syn.allowed_parent_components = ["pipeline", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "module", "handler"]
     invk_syn.required_attrib_values = {"type": "sax-handler"}
     invk_syn.optional_attribs = []
@@ -69,5 +69,5 @@ class sax_handler_transformer(transformer):
             return (True, lxml.etree.parse(StringIO(self.handler.ostream)).getroot())
         except SAXException, e:
             raise TransformerError("sax_handler_transformer: SAX transformation caused an exception: \"%s\"" % str(e))
-        except etree.XMLSyntaxError, e:
+        except lxml.etree.XMLSyntaxError, e:
             raise TransformerError("sax_handler_transformer: transformation result document contains a syntax error: \"%s\"" % str(e))

@@ -177,7 +177,7 @@ class component(object):
         @req: is the current apache request object
         @p_sibling_result: is the result of the pipeline so far (i.e. up to the previous sibling
         component) (optional)
-        @child_result: is the result of the child pipelines of this component (optional)
+        @child_results: is the result of the child pipelines of this component (optional)
         """
 
         if self.server.log_debug:
@@ -190,7 +190,7 @@ class component(object):
                 if len(c_tree) > 0:
                     (success, result) = comp(req, c_tree[-1])
                 else:
-                    (success, result) = comp(req, None)
+                    (success, result) = comp(req, p_sibling_result)
                 
                 if success:
                     c_tree.append(result)
@@ -199,6 +199,10 @@ class component(object):
 
                 if not comp._continue(req, p_sibling_result):
                     break
+
+        if self.server.log_debug:
+            self.server.error_log.write("%s about to call _result(\"%s\", %s, %s)" %\
+                                        (self.description, req.unparsed_uri, p_sibling_result, c_tree))
 
         return self._result(req, p_sibling_result, c_tree)
 

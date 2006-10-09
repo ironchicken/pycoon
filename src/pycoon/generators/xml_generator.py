@@ -5,7 +5,6 @@ This software is licensed under the terms of the GNU GPL.
 """
 
 from pycoon.generators import generator, GeneratorError
-from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
 import lxml.etree
@@ -18,7 +17,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "file"}
     invk_syn.optional_attribs = []
@@ -57,6 +56,6 @@ class xml_generator(generator):
         except (IOError, OSError):
             raise GeneratorError("xml_generator: source file not found \"%s\"" % interpolate(self, self.src, as_filename=True, root_path=self.root_path))
             #return (False, apache.HTTP_NOT_FOUND)
-        except etree.XMLSyntaxError, e:
+        except lxml.etree.XMLSyntaxError, e:
             raise GeneratorError("xml_generator: syntax error in XML source, \"%s\": \"%s\"" %\
                                  (interpolate(self, self.src, as_filename=True, root_path=self.root_path), str(e)))

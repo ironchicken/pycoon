@@ -5,7 +5,6 @@ This software is licensed under the terms of the GNU GPL.
 """
 
 from pycoon.generators import generator, GeneratorError
-from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
 import os
@@ -20,7 +19,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "generate"
-    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "command"}
     invk_syn.optional_attribs = []
@@ -67,5 +66,5 @@ class command_generator(generator):
         except OSError:
             raise GeneratorError("command_generator: error occured when executing command: \"%s\"" % self.command % parameters)
             #return (False, apache.HTTP_NOT_FOUND)
-        except etree.XMLSyntaxError, e:
+        except lxml.etree.XMLSyntaxError, e:
             raise GeneratorError("command_generator: generated document stream contains a syntax error: \"%s\"" % str(e))
