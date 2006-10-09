@@ -7,7 +7,7 @@ This module provides the uri_matcher class which allows pipeline execution to be
 conditional on URI patterns.
 """
 
-import pycoon.matchers
+from pycoon.matchers import matcher, MatcherError
 from pycoon import apache
 from pycoon.interpolation import interpolate
 from pycoon.components import invokation_syntax
@@ -25,12 +25,12 @@ def register_invokation_syntax(server):
     invk_syn.required_attribs = ["type", "pattern"]
     invk_syn.required_attrib_values = {"type": "uri"}
     invk_syn.optional_attribs = ["allow-query"]
-    invk_syn.allowed_child_components = ["generate","transform","serialize","match"]
+    invk_syn.allowed_child_components = ["generate","transform","serialize","match","select"]
 
     server.component_syntaxes[("match", "uri")] = invk_syn
     return invk_syn
 
-class uri_matcher(pycoon.matchers.matcher):
+class uri_matcher(matcher):
     """
     uri_matcher class allows pipeline execution to be conditional on URI patterns.
 
@@ -38,23 +38,27 @@ class uri_matcher(pycoon.matchers.matcher):
     @allow_query: if True, then a URI including a query string will match (default: True)
     """
 
-    def __init__(self, parent, pattern, allow_query=True, root_path=""):
+    def __init__(self, parent, pattern, allow_query="yes", root_path=""):
         self.pattern = pattern
-        self.allow_query = allow_query
+
+        if allow_query.upper() in ["YES", "1", "Y"]:
+            self.allow_query = True
+        elif allow_query.upper() in ["NO", "0", "N"]:
+            self.allow_query = False
+        
         self.regex = uri_pattern2regex(self.pattern)
         self.match_obj = None
         
-        pycoon.matchers.matcher.__init__(self, parent, root_path="")
+        matcher.__init__(self, parent, root_path="")
 
         self.description = "uri_matcher(\"%s\")" % self.pattern
 
-    def _descend(self, req, p_sibing_result=None, child_results=[]):
+    def parse_uri(self, req):
         """
-        Compare the given request object's URI against this pattern. Returns True
-        (i.e. allows descent) if it matches. Also parses the request URI into its
-        constituent parts and stores them for later use.
+        Parses the request URI into its constituent parts and stores them for later use. Returns
+        True if the request uri matches this object's pattern, returns False otherwise.
         """
-
+        
         self.req = req
 
         if not self.allow_query:
@@ -64,7 +68,8 @@ class uri_matcher(pycoon.matchers.matcher):
             else:
                 self.match_obj = self.regex.match(req.parsed_uri[apache.URI_PATH])
         else:
-            self.match_obj = self.regex.match(req.unparsed_uri)
+            #self.match_obj = self.regex.match(req.unparsed_uri)
+            self.match_obj = self.regex.match(req.parsed_uri[apache.URI_PATH])
 
         if self.match_obj != None:
             self.uri = req.unparsed_uri
@@ -97,11 +102,18 @@ class uri_matcher(pycoon.matchers.matcher):
         else:
             return False
 
+    def _descend(self, req, p_sibing_result=None, child_results=[]):
+        """
+        Compare the given request object's URI against this pattern. Returns True
+        (i.e. allows descent) if it matches.
+        """
+
+        return self.parse_uri(req)
+
     def _continue(self, req, p_sibling_result=None):
         """
         If this matcher matches the given request uri, then don't allow following siblings to execute
         (i.e. return False).
         """
-        
-        self.match_obj = self.regex.match(req.unparsed_uri)
-        return self.match_obj is None
+
+        return not self.parse_uri(req)

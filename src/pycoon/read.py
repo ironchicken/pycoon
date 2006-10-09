@@ -20,7 +20,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "read"
-    invk_syn.allowed_parent_components = ["pipeline", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["src"]
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = []

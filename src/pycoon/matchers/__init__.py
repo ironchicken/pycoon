@@ -7,7 +7,9 @@ The matchers module provides the matcher class which is the base class of all
 matcher classes.
 """
 
-from pycoon.components import syntax_component, invokation_syntax
+from pycoon.components import syntax_component, invokation_syntax, ComponentError
+
+class MatcherError(ComponentError): pass
 
 def register_invokation_syntax(server):
     """

@@ -5,7 +5,6 @@ This software is licensed under the terms of the GNU GPL.
 """
 
 from pycoon.transformers import transformer, TransformerError
-from pycoon import apache
 from pycoon.components import invokation_syntax
 import lxml.etree
 import os
@@ -19,7 +18,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "transform"
-    invk_syn.allowed_parent_components = ["pipeline", "match"]
+    invk_syn.allowed_parent_components = ["pipeline", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "command"}
     invk_syn.optional_attribs = []
@@ -74,5 +73,5 @@ class command_transformer(transformer):
         except OSError:
             #return (False, apache.HTTP_NOT_FOUND)
             raise TransformerError("command_transformer: error occured when executing command: \"%s\"" % self.command % parameters)
-        except etree.XMLSyntaxError, e:
+        except lxml.etree.XMLSyntaxError, e:
             raise TransformerError("command_transformer: transformation result document contains a syntax error: \"%s\"" % str(e))

@@ -18,7 +18,7 @@ def register_invokation_syntax(server):
         
     invk_syn = invokation_syntax()
     invk_syn.element_name = "parameter"
-    invk_syn.allowed_parent_components = ["generate", "transform"]
+    invk_syn.allowed_parent_components = ["generate", "transform", "select"]
     invk_syn.required_attribs = ["name", "value"]
     invk_syn.required_attrib_values = {}
     invk_syn.optional_attribs = []
