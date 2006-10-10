@@ -67,6 +67,15 @@
     <serialize type="xml" />
   </match>
 
+  <match type="uri" pattern="/sara-artist" required-parameters="id">
+    <generate type="http" src="http://www.sara.uea.ac.uk/body.php">
+      <parameter name="body" value="display-artist" />
+      <parameter name="artist_id" value="{uri:query:id}" />
+      <parameter name="format" value="XML" />
+    </generate>
+    <serialize type="xml" />
+  </match>
+
   <match type="uri" pattern="/*">
     <generate type="file" src="data.xml" />
     <transform type="xslt" src="data2html.xslt">
