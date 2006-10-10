@@ -34,7 +34,7 @@ class parameter(syntax_component):
     @parent: the parent component of this component.
     @root_path: the base path this component should prepend to any paths it uses when accessing files. Optional
                 argument. Uses current sitemap (or server) document_root by default.
-    @name: the name of the parameter.
+    @name: the name of the parameter (may include interpolation instructions).
     @value: the value of the parameter (may include interpolation instructions).
     """
 
@@ -58,4 +58,4 @@ class parameter(syntax_component):
         interpolated value.
         """
 
-        return (True, {self.param_name: interpolate(self, self.param_value)})
+        return (True, {interpolate(self, self.param_name): interpolate(self, self.param_value)})

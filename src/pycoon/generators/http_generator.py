@@ -25,7 +25,7 @@ def register_invokation_syntax(server):
     invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "http"}
-    invk_syn.optional_attribs = ["method"]
+    invk_syn.optional_attribs = ["method", "content"]
     invk_syn.allowed_child_components = ["parameter"]
 
     server.component_syntaxes[("generate", "http")] = invk_syn
@@ -37,16 +37,18 @@ class http_generator(generator):
     can be used to set POST or GET parameters.
     """
 
-    def __init__(self, parent, src, method="GET", root_path=""):
+    def __init__(self, parent, src, method="GET", content="xml", root_path=""):
         """
         http_generator constructor.
 
         @src: the URI of the HTTP request
-        @method: the HTTP method: [GET|POST]
+        @method: the HTTP method: [GET|POST]. Optional; GET is default
+        @content: the type of content expected [xml|html]. Optional; xml is default.
         """
 
         self.src = src
         self.method = method.upper()
+        self.content = content.lower()
         
         generator.__init__(self, parent, root_path)
 
@@ -76,7 +78,10 @@ class http_generator(generator):
                 response = conn.getresponse()
 
             if response.status == 200:
-                return (True, lxml.etree.parse(StringIO(response.read())).getroot())
+                if self.content == "xml":
+                    return (True, lxml.etree.parse(StringIO(response.read())).getroot())
+                elif self.content == "html":
+                    return (True, lxml.etree.parse(StringIO(response.read()), lxml.etree.HTMLParser()).getroot())
             else:
                 raise GeneratorError("http_generator: request \"%s\" returned error code: %s" % (uri, response.status))
 
