@@ -46,7 +46,7 @@ class http_generator(generator):
         """
 
         self.src = src
-        self.method = method
+        self.method = method.upper()
         
         generator.__init__(self, parent, root_path)
 
@@ -64,20 +64,25 @@ class http_generator(generator):
             uri = interpolate(self, self.src)
             (protocol, host, path, p, q, f) = urlparse.urlparse(uri)
             
-            parameters = urllib.urlencode(self.parameter_children(self.child_results)) + q
+            parameters = urllib.urlencode(self.parameter_children(child_results)) + q
 
             conn = httplib.HTTPConnection(host)
 
             if self.method == "GET":
-                response = conn.request("GET", urlparse.urlunparse(protocol, host, path, p, parameters, f))
+                conn.request("GET", urlparse.urlunparse((protocol, host, path, p, parameters, f)))
+                response = conn.getresponse()
             elif self.method == "POST":
-                response = conn.request("POST", urlparse.urlunparse(protocol, host, path, p, "", f), parameters)
+                conn.request("POST", urlparse.urlunparse((protocol, host, path, p, "", f)), parameters)
+                response = conn.getresponse()
 
             if response.status == 200:
                 return (True, lxml.etree.parse(StringIO(response.read())).getroot())
             else:
                 raise GeneratorError("http_generator: request \"%s\" returned error code: %s" % (uri, response.status))
-            
+
+        except httplib.HTTPException, e:
+            raise GeneratorError("http_generator: exception occured during HTTP request: \"%\"" % str(e))
+        
         except lxml.etree.XMLSyntaxError, e:
             raise GeneratorError("http_generator: syntax error in XML source, \"%s\": \"%s\"" %\
                                  (interpolate(self, self.src, as_filename=True, root_path=self.root_path), str(e)))
