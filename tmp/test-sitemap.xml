@@ -67,13 +67,13 @@
     <serialize type="xml" />
   </match>
 
-  <match type="uri" pattern="/sara-artist" required-parameters="id">
-    <generate type="http" src="http://www.sara.uea.ac.uk/body.php">
-      <parameter name="body" value="display-artist" />
-      <parameter name="artist_id" value="{uri:query:id}" />
-      <parameter name="format" value="XML" />
+  <match type="uri" pattern="/sara" required-parameters="type id">
+    <generate type="http" src="http://www.sara.uea.ac.uk/body.php" content="html">
+      <parameter name="body" value="display-{uri:query:type}" />
+      <parameter name="{uri:query:type}_id" value="{uri:query:id}" />
+      <parameter name="format" value="HTML" />
     </generate>
-    <serialize type="xml" />
+    <serialize type="xhtml" />
   </match>
 
   <match type="uri" pattern="/*">

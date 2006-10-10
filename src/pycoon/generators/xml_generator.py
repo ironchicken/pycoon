@@ -2,6 +2,9 @@
 Copyright (C) Richard Lewis 2006
 
 This software is licensed under the terms of the GNU GPL.
+
+This module implements the xml (or file) generator which uses the content of an XML
+file to generate the source for a pipeline.
 """
 
 from pycoon.generators import generator, GeneratorError
@@ -20,7 +23,7 @@ def register_invokation_syntax(server):
     invk_syn.allowed_parent_components = ["pipeline", "aggregate", "match", "when", "otherwise"]
     invk_syn.required_attribs = ["type", "src"]
     invk_syn.required_attrib_values = {"type": "file"}
-    invk_syn.optional_attribs = []
+    invk_syn.optional_attribs = ["content"]
     invk_syn.allowed_child_components = []
 
     server.component_syntaxes[("generate", "file")] = invk_syn
@@ -31,16 +34,19 @@ class xml_generator(generator):
     xml_generator encapsulates an XML source file using the generator interface.
     """
 
-    def __init__(self, parent, src, root_path=""):
+    def __init__(self, parent, src, content="xml", root_path=""):
         """
         xml_generator constructor.
 
-        @src: the source file path (can be a string to be interpolated
-        upon requests).
+        @src: the source file path (can be a string to be interpolated upon requests).
+        @content: the type of content in the source file [xml|html]. Optional; xml is default.
         """
 
         self.src = src
+        self.content = content.lower()
+        
         generator.__init__(self, parent, root_path)
+
         self.description = "xml_generator(\"%s\")" % self.src
 
     def _descend(self, req, p_sibling_result=None):
@@ -52,10 +58,15 @@ class xml_generator(generator):
         """
 
         try:
-            return (True, lxml.etree.parse(open(interpolate(self, self.src, as_filename=True, root_path=self.root_path), "r")).getroot())
+            path = interpolate(self, self.src, as_filename=True, root_path=self.root_path)
+            
+            if self.content == "xml":
+                return (True, lxml.etree.parse(open(path, "r")).getroot())
+            elif self.content == "html":
+                return (True, lxml.etree.parse(open(path, "r"), lxml.etree.HTMLParser()).getroot())
+            
         except (IOError, OSError):
-            raise GeneratorError("xml_generator: source file not found \"%s\"" % interpolate(self, self.src, as_filename=True, root_path=self.root_path))
-            #return (False, apache.HTTP_NOT_FOUND)
+            raise GeneratorError("xml_generator: source file not found \"%s\"" % path)
+        
         except lxml.etree.XMLSyntaxError, e:
-            raise GeneratorError("xml_generator: syntax error in XML source, \"%s\": \"%s\"" %\
-                                 (interpolate(self, self.src, as_filename=True, root_path=self.root_path), str(e)))
+            raise GeneratorError("xml_generator: syntax error in XML source, \"%s\": \"%s\"" % (path, str(e)))
