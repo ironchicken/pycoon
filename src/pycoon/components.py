@@ -109,10 +109,6 @@ class invokation_syntax(object):
 class component(object):
     """
     Super class for all component classes.
-
-    @parent: the parent component of this component.
-    @root_path: the base path this component should prepend to any paths it uses when accessing files. Optional
-                argument. Uses current sitemap (or server) document_root by default.
     """
 
     # role class property is: [stream|syntax]; corresponds to stream_component and syntax_component
@@ -124,6 +120,14 @@ class component(object):
     function = "none"
         
     def __init__(self, parent, root_path=""):
+        """
+        component constructor.
+
+        @parent: the parent component of this component.
+        @root_path: the base path this component should prepend to any paths it uses when accessing
+                    files. Optional argument. Uses current sitemap (or server) document_root by default.
+        """
+        
         self.parent = parent
 
         # create aliases for the parent pipeline, sitemap and server
@@ -283,47 +287,33 @@ class stream_component(component):
     """
     Super class for all components which handle XML data in pipelines (e.g. generators,
     transformers and serializers)
-
-    @parent: the parent component of this component.
-    @root_path: the base path this component should prepend to any paths it uses when accessing files.
-                Optional argument. Uses current sitemap (or server) document_root by default.
     """
 
     role = "stream"
     function = "none"
 
     def __init__(self, parent, root_path=""):
+        """
+        stream_component constructor.
+        """
+        
         component.__init__(self, parent, root_path)
         self.description = "Streamed component base class"
-
-    def _tap(self):
-        """
-        Returns a stream of the current state of the pipeline of which this component is a member after
-        applying this component's action.
-        """
-
-        pass
-    
-    def reload_source(self):
-        pass
-    
-    def cache(self):
-        pass
 
 class syntax_component(component):
     """
     Super class for all components which provide syntax elements in pipelines (e.g.
     selectors, authenticators)
-
-    @parent: the parent component of this component.
-    @root_path: the base path this component should prepend to any paths it uses when accessing files. Optional
-                argument. Uses current sitemap (or server) document_root by default.
     """
 
     role = "syntax"
     function = "none"
     
     def __init__(self, parent, root_path=""):
+        """
+        syntax_component constructor.
+        """
+        
         component.__init__(self, parent, root_path)
         self.description = "Syntax component base class"
 
