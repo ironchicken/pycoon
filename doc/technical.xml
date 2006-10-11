@@ -45,6 +45,37 @@
 	</list>
       </p>
     </div>
+    <div id="deployment" title="Deployment">
+      <p>
+	Pycoon is deployed as mod_python handler in Apache. It has been tested as a VirtualHost
+	handler, though would probably work as a handler for the whole Apache server (at the expense
+	of being able to do anything else with the server - including serving ordinary files!) and
+	may work as a directory handler but it would be necessary to use the absolute URI path in
+	matcher patterns.
+      </p>
+      <p>
+	The required Apache VirtualHost configuration should follow this format:
+      </p>
+      <code xml:space="preserve">
+&lt;VirtualHost *&gt;
+    ServerName localhost
+    DocumentRoot /var/www
+
+    SetHandler mod_python
+    PythonPath 'sys.path+["/var/www/"]'
+
+    SetEnv PycoonConfigRoot /etc/pycoon
+    SetEnv PycoonSitemap sitemap.xm
+
+    PythonHandler pycoon
+&lt;/VirtualHost&gt;
+      </code>
+      <p>
+	The PycoonConfigRoot and PycoonSitemap variables are optional and the values shown above are
+	also the default values. The PycoonConfigRoot directory should contain the server.xml file
+	and the <path>resources</path> directory (see <path>conf</path> in the svn trunk).
+      </p>
+    </div>
     <div id="implementation" title="Implementation">
       <p>
 	The two main tools which were assumed at the outset were the <link
@@ -72,10 +103,11 @@
 	simpler code. It is easier to construct and manipulate ElementTree data in Python than it is
 	to construct and manipulate SAX events.
       </p>
-      <div id="Component Class Hierarchy">
+      <div id="class-hierarchy" title="Component Class Hierarchy">
 	<p>
 	  This diagram shows the component hierarchy and all the currently implemented components:
 	</p>
+	<class-hierarchy>
 	<class name="component" description="Component base class">
 	  <class name="pipeline" description="The container class for components which provides 'execution' methods" />
 	  <class name="syntax_component" description="Base class of all components which handle logical processing in sitemaps">
@@ -119,6 +151,7 @@
 	    </class>
 	  </class>
 	</class>
+      </class-hierarchy>
       </div>
       <div id="class-descriptions" title="Class Descriptions">
 	<class name="component">
@@ -207,7 +240,7 @@
 		sibling which implementations can use to determine the return value. Its default
 		behaviour is simply to return True. However, components such as the <link
 		class="when">when</link> component need to override this method and the <link
-		class="uri_matcher">uri_matcher</link> overrides to improve efficientcy (once a
+		class="uri_matcher">uri_matcher</link> overrides it to improve efficientcy (once a
 		matching URI pattern has been found and its components executed, no further pipeline
 		processing is carried out).
 	      </p>
@@ -265,7 +298,7 @@
 		of name/value pairs. <identifier>child_results</identifier> is a list of parameter
 		components.  (Note: the current implementation of this function is quite naive in
 		that it performs inadequate type checking on the given child_results and relies on
-		sitemap class's syntax checking to make sure that child components will be
+		sitemap class's syntax checking to make sure that child components will actually be
 		parameters).
 	      </p>
 	    </description>
@@ -278,7 +311,7 @@
 	    <description>
 	      <p>
 		Searches all of this component's child components and returns any whose class name
-		matches the given <identifier>class_name</identifier>. It is recursive function so
+		matches the given <identifier>class_name</identifier>. It is a recursive function so
 		the <identifier>found</identifier> parameter is simply the list of matching
 		components found by the previous call.
 	      </p>
@@ -366,8 +399,74 @@
 	  <name>invokation_syntax</name>
 	  <source>pycoon/components.py</source>
 	  <description>
-	    
+	    Used to store the XML syntax rules for how a component should be used in a sitemap file.
 	  </description>
+	  <method name="__init__">
+	    <definition>__init__(self)</definition>
+	    <description>
+	      <p>
+		Class constructor. Creates empty instance properties.
+	      </p>
+	    </description>
+	  </method>
+	  <method name="validate">
+	    <definition>validate(self, parent_name, name, attrs)</definition>
+	    <returns>
+	      Returns a boolean
+	    </returns>
+	    <description>
+	      <p>
+		Checks the given XML element attributes for
+		validity. <identifier>parent_name</identifier> is the element name of the parent
+		component; <identifier>name</identifier> is the element name of the element being
+		checked; <identifier>attrs</identifier> is an
+		<identifier>xml.sax.xmlreader.AttributesImpl</identifier> instance from the sitemap
+		element being checked.
+	      </p>
+	      <p>
+		The method raises exceptions on any syntax errors in the component usage. If there are
+		no errors it returns True.
+	      </p>
+	    </description>
+	  </method>
+	  <property>
+	    <name>element_name</name>
+	    <description>
+	      The required element name for the component.
+	    </description>
+	  </property>
+	  <property>
+	    <name>allowed_parent_components</name>
+	    <description>
+	      A list of the element names of components of the components of which this component
+	      may be a child.
+	    </description>
+	  </property>
+	  <property>
+	    <name>required_attribs</name>
+	    <description>
+	      A list of the names of required XML attributes for the component.
+	    </description>
+	  </property>
+	  <property>
+	    <name>required_attrib_values</name>
+	    <description>
+	      A dictionary of name/value pairs of the required values of XML attributes of the component.
+	    </description>
+	  </property>
+	  <property>
+	    <name>optional_attribs</name>
+	    <description>
+	      A list of the names of optional XML attributes for the component.
+	    </description>
+	  </property>
+	  <property>
+	    <name>allowed_child_components</name>
+	    <description>
+	      A list of the element names of components which are allowed to be child components of
+	      this component.
+	    </description>
+	  </property>
 	</class>
 	<class name="syntax_component">
 	  <name>syntax_component</name>
@@ -599,6 +698,7 @@
 &lt;!ELEMENT otherwise (generate?,...)&gt;
 &lt;!ELEMENT aggregate (generate+)&gt;
 &lt;!ELEMENT generate (parameter*)&gt;
+&lt;!ATTLIST generate type CDATA #REQUIRED&gt;
 	  </syntax>
 	  <method name="__init__">
 	    <definition>__init__(self, parent, root_path="")</definition>
@@ -630,6 +730,107 @@
 		This function creates and populates an instance of the <link
 		class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
 		generator elements. This instance is then stored in the given server object's <link
+		class="server_config" property="component_syntaxes">component_syntaxes</link>
+		dictionary.
+	      </p>
+	    </description>
+	  </helper-func>
+	</class>
+	<class name="transformer">
+	  <name>transformer</name>
+	  <inherits>stream_component</inherits>
+	  <source>pycoon/transformers/__init__.py</source>
+	  <description>
+	    Base class for all transformer components.
+	  </description>
+	  <syntax xml:space="preserve">
+&lt;!ELEMENT match (transform?,...)&gt;
+&lt;!ELEMENT when (transform?,...)&gt;
+&lt;!ELEMENT otherwise (transform?,...)&gt;
+&lt;!ELEMENT transform (parameter*)&gt;
+&lt;!ATTLIST transform type CDATA #REQUIRED&gt;
+	  </syntax>
+	  <method name="__init__">
+	    <definition>__init__(self, parent, root_path="")</definition>
+	    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
+	    <description>
+	      <p>
+		Just calls stream_component's <link class="stream_component"
+		method="__init__">__init__</link> method and sets
+		<identifier>description</identifier> property to "Transformer base class".
+	      </p>
+	    </description>
+	  </method>
+	  <class-property>
+	    <name>role</name>
+	    <description>
+	      Value is "stream".
+	    </description>
+	  </class-property>
+	  <class-property>
+	    <name>function</name>
+	    <description>
+	      Value is "transform".
+	    </description>
+	  </class-property>
+	  <helper-func name="register_invokation_syntax">
+	    <definition>register_invokation_syntax(server)</definition>
+	    <description>
+	      <p>
+		This function creates and populates an instance of the <link
+		class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
+		transformer elements. This instance is then stored in the given server object's <link
+		class="server_config" property="component_syntaxes">component_syntaxes</link>
+		dictionary.
+	      </p>
+	    </description>
+	  </helper-func>
+	</class>
+	<class name="serializer">
+	  <name>serializer</name>
+	  <inherits>stream_component</inherits>
+	  <source>pycoon/serializers/__init__.py</source>
+	  <description>
+	    Base class for all serializer components.
+	  </description>
+	  <syntax xml:space="preserve">
+&lt;!ELEMENT match (serialize?,...)&gt;
+&lt;!ELEMENT when (serialize?,...)&gt;
+&lt;!ELEMENT otherwise (serialize?,...)&gt;
+&lt;!ELEMENT serialize&gt;
+&lt;!ATTLIST serialize type CDATA #REQUIRED&gt;
+&lt;!ATTLIST serialize mime CDATA #IMPLIED&gt;
+	  </syntax>
+	  <method name="__init__">
+	    <definition>__init__(self, parent, root_path="")</definition>
+	    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
+	    <description>
+	      <p>
+		Just calls stream_component's <link class="stream_component"
+		method="__init__">__init__</link> method and sets
+		<identifier>description</identifier> property to "Serializer base class".
+	      </p>
+	    </description>
+	  </method>
+	  <class-property>
+	    <name>role</name>
+	    <description>
+	      Value is "stream".
+	    </description>
+	  </class-property>
+	  <class-property>
+	    <name>function</name>
+	    <description>
+	      Value is "serialize".
+	    </description>
+	  </class-property>
+	  <helper-func name="register_invokation_syntax">
+	    <definition>register_invokation_syntax(server)</definition>
+	    <description>
+	      <p>
+		This function creates and populates an instance of the <link
+		class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
+		serializer elements. This instance is then stored in the given server object's <link
 		class="server_config" property="component_syntaxes">component_syntaxes</link>
 		dictionary.
 	      </p>

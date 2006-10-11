@@ -1,0 +1,1033 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Pycoon White Paper</title>
+    <meta name="author" content="Richard Lewis">
+    <meta name="date" content="2006-10-10">
+  </head>
+<body>
+<h1>Pycoon White Paper</h1>
+<small>Richard Lewis</small><hr>
+    <div id="introduction">
+<h2>Introduction</h2>
+      <p>
+	This white paper details the implementation of an XML web publishing framework written in
+	the <a href="http://www.python.org/">Python</a> programming language, based on the
+	concept of XML <a href="http://en.wikipedia.org/wiki/XML_pipeline">pipeline</a>
+	processing and similar in intention to the <a href="http://cocoon.apache.org/">Apache
+	Cocoon</a> project.
+      </p>
+      <p>
+	There were two main reasons for my choosing to attempt to write an XML web publishing
+	framework: first was that I was not happy with the Java-based approach used in Apache Cocoon
+	and its reliance on a Java Servlet engine; and second was that I felt I would benefit from
+	the technical challenge.
+      </p>
+    </div>
+    <div id="aims">
+<h2>Project Aims</h2>
+      <p>
+	The main aims of the Pycoon project are to implement an XML web publishing framework which:
+	<ul>
+	  <li>
+	    Feels very familiar to Cocoon users; uses the 'sitemap' concept and similarly named
+	    components
+	  </li>
+	  <li>
+	    Integrates well with the Apache web server
+	  </li>
+	  <li>
+	    Allows experienced Python programmers to write their own components
+	  </li>
+	  <li>
+	    Attempts to maintain a small code footprint and stays manageable
+	  </li>
+	  <li>
+	    Is reasonably light on system resources
+	  </li>
+	</ul>
+      </p>
+    </div>
+    <div id="deployment">
+<h2>Deployment</h2>
+      <p>
+	Pycoon is deployed as mod_python handler in Apache. It has been tested as a VirtualHost
+	handler, though would probably work as a handler for the whole Apache server (at the expense
+	of being able to do anything else with the server - including serving ordinary files!) and
+	may work as a directory handler but it would be necessary to use the absolute URI path in
+	matcher patterns.
+      </p>
+      <p>
+	The required Apache VirtualHost configuration should follow this format:
+      </p>
+      <pre>
+&lt;VirtualHost *&gt;
+    ServerName localhost
+    DocumentRoot /var/www
+
+    SetHandler mod_python
+    PythonPath 'sys.path+["/var/www/"]'
+
+    SetEnv PycoonConfigRoot /etc/pycoon
+    SetEnv PycoonSitemap sitemap.xm
+
+    PythonHandler pycoon
+&lt;/VirtualHost&gt;
+      </pre>
+      <p>
+	The PycoonConfigRoot and PycoonSitemap variables are optional and the values shown above are
+	also the default values. The PycoonConfigRoot directory should contain the server.xml file
+	and the resources directory (see conf in the svn trunk).
+      </p>
+    </div>
+    <div id="implementation">
+<h2>Implementation</h2>
+      <p>
+	The two main tools which were assumed at the outset were the <a href="http://www.python.org/">Python</a> programming language and the <a href="http://httpd.apache.org/">Apache</a> web server. As a result of these decisions, it
+	was logical to choose to use <a href="http://www.modpython.org/">mod_python</a> to
+	link the two technologies.
+      </p>
+      <p>
+	The concept of the 'sitemap' XML file for describing pipelines was taken from Cocoon and an
+	attempt has been made to adopt a similar sitemap syntax in Pycoon.
+      </p>
+      <p>
+	The component based architecture, as well as being a feature of Cocoon, is typical of many
+	programming projects that aim towards extensibility. The classes of components implemented
+	(including 'matchers', 'selectors', 'generators', 'transformers' and 'serializers') have
+	been chosen for their familiarity to Cocoon users but they are also practical and
+	descriptive names for the concepts they encapsulate.
+      </p>
+      <p>
+	Where Cocoon handles XML data as SAX events through its pipelines, Pycoon uses the <a href="http://http://effbot.org/zone/element-index.htm">ElementTree</a> interface to store
+	the current state of the XML pipeline and manipulate it at each stage. This may be a less
+	efficient method than SAX event streams but it does have the advantage of allowing for much
+	simpler code. It is easier to construct and manipulate ElementTree data in Python than it is
+	to construct and manipulate SAX events.
+      </p>
+      <div id="class-hierarchy">
+<h3>Component Class Hierarchy</h3>
+	<p>
+	  This diagram shows the component hierarchy and all the currently implemented components:
+	</p>
+	<div id="class-hierarchy-diagram"><ul>
+	<li>
+<a style="font-weight:bold" href="#class-component">component</a>: Component base class<ul>
+	  <li>
+<a style="font-weight:bold" href="#class-pipeline">pipeline</a>: The container class for components which provides 'execution' methods</li>
+	  <li>
+<a style="font-weight:bold" href="#class-syntax_component">syntax_component</a>: Base class of all components which handle logical processing in sitemaps<ul>
+	    <li>
+<a style="font-weight:bold" href="#class-matcher">matcher</a>: Matcher base class<ul>
+	      <li>
+<a style="font-weight:bold" href="#class-uri_matcher">uri_matcher</a>: Allows pipeline processing to be conditional on URI patterns</li>
+	      <li>
+<a style="font-weight:bold" href="#class-error_matcher">error_matcher</a>: Allows pipeline processing to be conditional on HTTP error conditions</li>
+	    </ul>
+</li>
+	    <li>
+<a style="font-weight:bold" href="#class-selector">selector</a>: Selector base class<ul>
+	      <li>
+<a style="font-weight:bold" href="#class-browser_class_selector">browser_class_selector</a>: Allows pipeline processing to be conditional on the type of browser the client is using [graphic|text|aural|braille]</li>
+	      <li>
+<a style="font-weight:bold" href="#class-browser_selector">browser_selector</a>: Allows pipeline processing to be conditional the name of the browser the client is using</li>
+	      <li>
+<a style="font-weight:bold" href="#class-request_parameter_selector">request_parameter_selector</a>: Allows pipeline processing to be conditional on the value of a request parameter (either GET or POST)</li>
+	      <li>
+<a style="font-weight:bold" href="#class-resource_exists_selector">resource_exists_selector</a>: Allows pipeline processing to be conditional on the existence of a file</li>
+	    </ul>
+</li>
+	    <li>
+<a style="font-weight:bold" href="#class-parameter">parameter</a>: Used to pass parameters to any components which require them</li>
+	    <li>
+<a style="font-weight:bold" href="#class-when">when</a>: Used to implement the conditions of selector components</li>
+	    <li>
+<a style="font-weight:bold" href="#class-otherwise">otherwise</a>: Used to implement the default condition of selector components</li>
+	  </ul>
+</li>
+	  <li>
+<a style="font-weight:bold" href="#class-stream_component">stream_component</a>: Base class for all components which handle XML data in a pipeline<ul>
+	    <li>
+<a style="font-weight:bold" href="#class-generator">generator</a>: Generator base class<ul>
+	      <li>
+<a style="font-weight:bold" href="#class-xml_generator">xml_generator</a>: Use an XML file to provide the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-http_generator">http_generator</a>: Retrieve the source XML for a pipeline using an HTTP request</li>
+	      <li>
+<a style="font-weight:bold" href="#class-xpath_generator">xpath_generator</a>: Execute an XPath expression against an XML file to provide the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-aggregate_generator">aggregate_generator</a>: The child generators' results are aggregated to provide the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-command_generator">command_generator</a>: The stdout stream from a shell command provides the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-directory_generator">directory_generator</a>: Converts a directory listing into the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-xquery_generator">xquery_generator</a>: Execute an XQuery expression against an XML database (Berkelely DB XML) to provide the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-sql_generator">sql_generator</a>: Execute an SQL query against a database to provide the source XML for a pipeline</li>
+	      <li>
+<a style="font-weight:bold" href="#class-swishe_generator">swishe_generator</a>: Execute a full-text search against a Swish-e index to provide the source XML for a pipeline</li>
+	    </ul>
+</li>
+	    <li>
+<a style="font-weight:bold" href="#class-transformer">transformer</a>: Transformer base class<ul>
+	      <li>
+<a style="font-weight:bold" href="#class-xslt_transformer">xslt_transformer</a>: Transform the pipeline XML stream using an XSLT stylesheet</li>
+	      <li>
+<a style="font-weight:bold" href="#class-command_transformer">command_transformer</a>: Transform the pipeline XML stream using a shell command</li>
+	      <li>
+<a style="font-weight:bold" href="#class-sax_handler_transformer">sax_handler_transformer</a>: Transform the pipeline XML stream using a Python SAX handler class</li>
+	    </ul>
+</li>
+	    <li>
+<a style="font-weight:bold" href="#class-serializer">serializer</a>: Serializer base class<ul>
+	      <li>
+<a style="font-weight:bold" href="#class-html_serializer">html_serializer</a>: Convert the pipeline XML stream into an HTML document</li>
+	      <li>
+<a style="font-weight:bold" href="#class-xhtml_serializer">xhtml_serializer</a>: Convert the pipeline XML stream into an XHTML document</li>
+	      <li>
+<a style="font-weight:bold" href="#class-xml_serializer">xml_serializer</a>: Convert the pipeline XML stream into an XML document</li>
+	      <li>
+<a style="font-weight:bold" href="#class-pdf_serializer">pdf_serializer</a>: Convert the pipeline XML stream (which must contain XSL-FO) into a PDF document (NOT IMPLEMENTED)</li>
+	      <li>
+<a style="font-weight:bold" href="#class-svg_serializer">svg_serializer</a>: Convert the pipeline XML stream (which must contain SVG) into an image (PARTIAL IMPLEMENTATION)</li>
+	    </ul>
+</li>
+	  </ul>
+</li>
+	</ul>
+</li>
+      </ul></div>
+      </div>
+      <div id="class-descriptions">
+<h3>Class Descriptions</h3>
+	<div class="class" id="class-component" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>component</span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/components.py</span>
+</div>
+	  <p>
+	    The component class is the base class of all pipeline components in Pycoon.
+	  </p>
+	  <div id="class-component-method-__init__">
+	    <div style="font-weight:bold">__init__(self, parent, root_path="")</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Class constructor. <span style="font-style:italic">parent</span> is the component's parent in the
+		pipeline and may be another component or a <a href="#class-pipeline">pipeline</a> or
+		<a href="#class-sitemap">sitemap</a> object. <span style="font-style:italic">root_path</span> is a
+		base path which derived components should use to resolve path names; it is an
+		optional parameter and takes the value of the parent sitemap (or server) document
+		root if not specified.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-__call__">
+	    <div style="font-weight:bold">__call__(self, req, p_sibling_result=None, child_results=[])</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a tuple whose first member is a boolean flag indicating whether the execution
+	      was successful or not and whose second member is the <span style="font-style:italic">Element</span>
+	      result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Main execution method. <span style="font-style:italic">req</span> is an Apache request
+		object. <span style="font-style:italic">p_sibling_result</span> is the
+		<span style="font-style:italic">Element</span> returned by the previous sibling component in the
+		pipeline.  <span style="font-style:italic">child_results</span> is a list of the
+		<span style="font-style:italic">Element</span> results of all the child componets which have been
+		executed so far.
+	      </p>
+	      <p>
+		This method first calls the object's <a href="#class-component-method-_descend">_descend</a> method and, if it returns
+		<span style="font-style:italic">True</span>, it loops over the component's child components and
+		calls each one's __call__ method, passing the previous child's result as the
+		<span style="font-style:italic">p_sibling_result</span> each time.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-_descend">
+	    <div style="font-weight:bold">_descend(self, req, p_sibling_result=None)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a boolean.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		<span style="font-style:italic">req</span> is an Apache request
+		object. <span style="font-style:italic">p_sibling_result</span> is the
+		<span style="font-style:italic">Element</span> returned by the previous sibling component in the
+		pipeline.
+	      </p>
+	      <p>
+		The _descend method allows derived components to give permission for their child
+		components to be executed or not. It is passed the current query context (the
+		request object) and the result of its previous sibling which implementations can use
+		to determine the return value. Its default behaviour is simply to return
+		True. However, components such as <a href="#class-matcher">matchers</a> and <a href="#class-selector">selectors</a> need to override this method.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-_continue">
+	    <div style="font-weight:bold">_continue(self, req, p_sibling_result=None)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a boolean.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		<span style="font-style:italic">req</span> is an Apache request
+		object. <span style="font-style:italic">p_sibling_result</span> is the
+		<span style="font-style:italic">Element</span> returned by the previous sibling component in the
+		pipeline.
+	      </p>
+	      <p>
+		The _continue method is similar to the <a href="#class-component-method-_descend">_descend</a> method: it allows derived components to give
+		permission for their following sibling components to be executed or not. It is
+		passed the current query context (the request object) and the result of its previous
+		sibling which implementations can use to determine the return value. Its default
+		behaviour is simply to return True. However, components such as the <a href="#class-when">when</a> component need to override this method and the <a href="#class-uri_matcher">uri_matcher</a> overrides it to improve efficientcy (once a
+		matching URI pattern has been found and its components executed, no further pipeline
+		processing is carried out).
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-_result">
+	    <div style="font-weight:bold">_result(self, req, p_sibling_result=None, child_results=[])</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a tuple whose first member is a boolean flag indicating whether the execution
+	      was successful or not and whose second member is the <span style="font-style:italic">Element</span>
+	      result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		XML data handling components should do their main work in this
+		method. <span style="font-style:italic">req</span> is an Apache request
+		object. <span style="font-style:italic">p_sibling_result</span> is the
+		<span style="font-style:italic">Element</span> returned by the previous sibling component in the
+		pipeline. <span style="font-style:italic">child_results</span> is a list of the
+		<span style="font-style:italic">Element</span> results of all this component's child componets.
+	      </p>
+	      <p>
+		The default implementation raises a <span style="font-style:italic">NotImplemented</span>
+		exception. All derived components should perform their main function in this method
+		(or at least from this method) and return a tuple whose first member is a boolean
+		indicating whether or not they were successful and whose second member, on success,
+		should be an <span style="font-style:italic">Element</span> object, or, on failure, an Apache
+		error code. (Note, however, that exceptions will be handled gracefully by Pycoon and
+		result in a descriptive HTTP 500 error.)
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-add_component">
+	    <div style="font-weight:bold">add_component(self, c, pos=None)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      The added component
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Add a child component. <span style="font-style:italic">c</span> is a component
+		object. <span style="font-style:italic">pos</span> is the position, expressed as a number, at
+		which the component should be added; by default the component is appended as the
+		last child component.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-parameter_children">
+	    <div style="font-weight:bold">parameter_children(self, child_results)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      A dictionary
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Converts <a href="#class-parameter">parameter</a> child components into a dictionary
+		of name/value pairs. <span style="font-style:italic">child_results</span> is a list of parameter
+		components.  (Note: the current implementation of this function is quite naive in
+		that it performs inadequate type checking on the given child_results and relies on
+		sitemap class's syntax checking to make sure that child components will actually be
+		parameters).
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-method-find_components">
+	    <div style="font-weight:bold">find_components(self, class_name, found=[])</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      A list of components (may be empty)
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Searches all of this component's child components and returns any whose class name
+		matches the given <span style="font-style:italic">class_name</span>. It is a recursive function so
+		the <span style="font-style:italic">found</span> parameter is simply the list of matching
+		components found by the previous call.
+	      </p>
+	      <p>
+		This function is most effectively used by the <a href="#class-pipeline">pipeline</a>
+		component as it has the most children. It is used by the pipeline component's <a href="#class-pipeline-method-handle_error">handle_error</a> method to find available
+		<a href="#class-error_matcher">error_matcher</a> components.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-component-property-parent">
+	    <div style="font-weight:bold">parent</div>
+	    <div style="margin-left:15px">
+	      The parent component of this component.
+	    </div>
+	  </div>
+	  <div id="class-component-property-sitemap">
+	    <div style="font-weight:bold">sitemap</div>
+	    <div style="margin-left:15px">
+	      The parent sitemap of this component.
+	    </div>
+	  </div>
+	  <div id="class-component-property-server">
+	    <div style="font-weight:bold">server</div>
+	    <div style="margin-left:15px">
+	      The parent server of this component.
+	    </div>
+	  </div>
+	  <div id="class-component-property-context">
+	    <div style="font-weight:bold">context</div>
+	    <div style="margin-left:15px">
+	      Either a reference to the compoent's parent sitemap or, if this is None, the
+	      component's parent server.
+	    </div>
+	  </div>
+	  <div id="class-component-property-root_path">
+	    <div style="font-weight:bold">root_path</div>
+	    <div style="margin-left:15px">
+	      The base path which should be prefixed to any filenames used by the component. By
+	      default, it takes either the sitemap or server's document root.
+	    </div>
+	  </div>
+	  <div id="class-component-property-children">
+	    <div style="font-weight:bold">children</div>
+	    <div style="margin-left:15px">
+	      A list of child components.
+	    </div>
+	  </div>
+	  <div id="class-component-property-description">
+	    <div style="font-weight:bold">description</div>
+	    <div style="margin-left:15px">
+	      A short string describing the component. In derived components, the parameters (such
+	      as URI pattern) are added to this description to improve debugging information.
+	    </div>
+	  </div>
+	  <div id="class-component-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      Should be either "stream" or "syntax". For component class the value is "none".
+	    </div>
+	  </div>
+	  <div id="class-component-class_property-function">
+	    <div style="font-weight:bold">function</div>
+	    <div style="margin-left:15px">
+	      Should be one of "matcher", "selector", "generator", "transformer", "serializer", etc.
+	      For component class the value is "none".
+	    </div>
+	  </div>
+	  <div id="class-component-helper-register_component">
+	    <div>helper function:</div>
+<div style="font-weight:bold">register_component(server, super_type, attrs)</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Loads a component class for later use by sitemaps. <span style="font-style:italic">server</span>
+		is the server object; <span style="font-style:italic">super_type</span> is one of "matcher",
+		"generator", "transformer", etc.; <span style="font-style:italic">attrs</span> is an
+		<span style="font-style:italic">xml.sax.xmlreader.AttributesImpl</span> which contains the
+		attributes supplied by the server configuration file for the component (normally
+		"name", "module" and "class").
+	      </p>
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-invokation_syntax" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>invokation_syntax</span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/components.py</span>
+</div>
+	  <p>
+	    Used to store the XML syntax rules for how a component should be used in a sitemap file.
+	  </p>
+	  <div id="class-invokation_syntax-method-__init__">
+	    <div style="font-weight:bold">__init__(self)</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Class constructor. Creates empty instance properties.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-method-validate">
+	    <div style="font-weight:bold">validate(self, parent_name, name, attrs)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a boolean
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Checks the given XML element attributes for
+		validity. <span style="font-style:italic">parent_name</span> is the element name of the parent
+		component; <span style="font-style:italic">name</span> is the element name of the element being
+		checked; <span style="font-style:italic">attrs</span> is an
+		<span style="font-style:italic">xml.sax.xmlreader.AttributesImpl</span> instance from the sitemap
+		element being checked.
+	      </p>
+	      <p>
+		The method raises exceptions on any syntax errors in the component usage. If there are
+		no errors it returns True.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-property-element_name">
+	    <div style="font-weight:bold">element_name</div>
+	    <div style="margin-left:15px">
+	      The required element name for the component.
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-property-allowed_parent_components">
+	    <div style="font-weight:bold">allowed_parent_components</div>
+	    <div style="margin-left:15px">
+	      A list of the element names of components of the components of which this component
+	      may be a child.
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-property-required_attribs">
+	    <div style="font-weight:bold">required_attribs</div>
+	    <div style="margin-left:15px">
+	      A list of the names of required XML attributes for the component.
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-property-required_attrib_values">
+	    <div style="font-weight:bold">required_attrib_values</div>
+	    <div style="margin-left:15px">
+	      A dictionary of name/value pairs of the required values of XML attributes of the component.
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-property-optional_attribs">
+	    <div style="font-weight:bold">optional_attribs</div>
+	    <div style="margin-left:15px">
+	      A list of the names of optional XML attributes for the component.
+	    </div>
+	  </div>
+	  <div id="class-invokation_syntax-property-allowed_child_components">
+	    <div style="font-weight:bold">allowed_child_components</div>
+	    <div style="margin-left:15px">
+	      A list of the element names of components which are allowed to be child components of
+	      this component.
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-syntax_component" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>syntax_component</span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-component">component</a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/components.py</span>
+</div>
+	  <p>
+	    Base class of all components which handle logical processing in sitemaps.
+	  </p>
+	  <div id="class-syntax_component-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      For syntax_component class the value is "syntax".
+	    </div>
+	  </div>
+	  <div id="class-syntax_component-method-_result">
+	    <div style="font-weight:bold">_result(self, req, p_sibling_result=None, child_results=[])</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-component-method-_result">component._result</a></span>
+</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a tuple whose first member is a boolean flag indicating whether the execution
+	      was successful or not and whose second member is the <span style="font-style:italic">Element</span>
+	      result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This default implementation for syntax components simply either returns the last
+		<span style="font-style:italic">child_results</span> <span style="font-style:italic">Element</span> (if there is
+		one) or the <span style="font-style:italic">p_sibling_result</span> along with a True success
+		flag.
+	      </p>
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-stream_component" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>stream_component</span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-component">component</a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/components.py</span>
+</div>
+	  <p>
+	    Base class for all components which handle XML data in a pipeline.
+	  </p>
+	  <div id="class-stream_component-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      For stream_component class the value is "stream".
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-pipeline" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>pipeline</span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-component">component</a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/pipeline.py</span>
+</div>
+	  <p>
+	    The container class for components which provides 'execution' methods for pipeline
+	    processing.
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+&lt;!ELEMENT pipeline (match+)&gt;
+	  </pre>
+	  <div id="class-pipeline-method-__init__">
+	    <div style="font-weight:bold">__init__(self, parent, cache_as="")</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-component-method-__init__">component.__init__</a></span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Class constructor. <span style="font-style:italic">cache_as</span> is currently not used.
+	      </p>
+	      <p>
+		The method just calls <a href="#class-component-method-__init__">component.__init__</a>
+		and sets its <span style="font-style:italic">description</span> property to "Pipeline".
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-method-force_execute">
+	    <div style="font-weight:bold">force_execute(self, output, uri)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution
+	      was successful or not; the result of the execution which is either a character stream
+	      or an HTTP error code; the MIME type of the result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Allows a pipeline to be executed without an Apache request object and without
+		returning the result to the client. <span style="font-style:italic">output</span> is a file-like
+		object and <span style="font-style:italic">uri</span> is a request URI string.
+	      </p>
+	      <p>
+		This method creates a fake request object using the give file-like object and URI
+		string and then calls the <a href="#class-pipeline-method-execute">execute</a>
+		using this object (rather than a real Apache request object). The result of the
+		execution will be written to the given file-like object and not returned to
+		the client.  It is used by the <a href="#class-interpolate_context-method-__call__">context</a> interpolation method.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-method-_descend">
+	    <div style="font-weight:bold">_descend(self, req, p_sibling_result=None)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-component-method-_descend">component._descend</a></span>
+</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a boolean.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Returns True so that child components of the pipeline will be executed.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-method-_result">
+	    <div style="font-weight:bold">_result(self, req, p_sibling_result=None, child_results=[])</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-component-method-_result">component._result</a></span>
+</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a tuple whose first member is a boolean flag indicating whether the execution
+	      was successful or not and whose second member is the <span style="font-style:italic">Element</span>
+	      result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This default implementation for pipelines simply either returns the last
+		<span style="font-style:italic">child_results</span> <span style="font-style:italic">Element</span> (if there is
+		one) or None.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-method-execute">
+	    <div style="font-weight:bold">execute(self, req)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution
+	      was successful or not; the result of the execution which is either a character stream
+	      or an HTTP error code; the MIME type of the result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Executes the pipeline. <span style="font-style:italic">req</span> is an Apache request object.
+	      </p>
+	      <p>
+		This method calls the object's inherited <a href="#class-component-method-__call__">__call__</a> method, extracts the success flag, result stream
+		and MIME type from the return value and returns all three as a tuple. It catches any
+		exceptions raised during the execution, stores the traceback in a global location
+		and returns a False success flag and an HTTP 500 error.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-method-handle_error">
+	    <div style="font-weight:bold">handle_error(self, req)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution
+	      was successful or not; the result of the execution which is either a character stream
+	      or an HTTP error code; the MIME type of the result.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Executes the pipeline but only using its <a href="#class-error_matcher">error_matcher</a> components. <span style="font-style:italic">req</span>
+		is an Apache request object whose <span style="font-style:italic">status</span> property should
+		contain the HTTP error code being handled.
+	      </p>
+	      <p>
+		This method uses the <a href="#class-component-method-find_components">component.find_components</a> method to search for all
+		<a href="#class-error_matcher">error_matcher</a> components. It executes the first
+		one which can handle the error code in the given Request object's
+		<span style="font-style:italic">status</span> property.  When an error_matcher is executed, it
+		will return a tuple whose first member is a 'success' flag which is True if the
+		execution was successful (and therefore the error has been handled) or False
+		otherwise. If the method either could not find a suitable error_matcher or if an
+		error_matcher returned False, it will return False and the error will not have been
+		handled (further error handling in the sitemap or server will then apply).
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      Value is "pipeline".
+	    </div>
+	  </div>
+	  <div id="class-pipeline-class_property-function">
+	    <div style="font-weight:bold">function</div>
+	    <div style="margin-left:15px">
+	      Value is "pipeline".
+	    </div>
+	  </div>
+	  
+	  
+	  <div id="class-pipeline-helper-register_invokation_syntax">
+	    <div>helper function:</div>
+<div style="font-weight:bold">register_invokation_syntax(server)</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This function creates and populates an instance of the <a href="#class-invokation_syntax">invokation_syntax</a> class with the syntax for
+		pipeline elements. This instance is then stored in the given server object's <a href="#class-server_config-property-component_syntaxes">component_syntaxes</a>
+		dictionary.
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-pipeline-helper-build_pipeline">
+	    <div>helper function:</div>
+<div style="font-weight:bold">build_pipeline(server, sitemap, attrs, **kw_args)</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">returns:</span><span>
+	      A pipeline object.
+	    </span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This function creates a new pipeline object from the given
+		<span style="font-style:italic">xml.sax.xmlreader.AttributesImpl</span> object (in fact, at
+		present pipeline elements use no attributes). If the pipeline is a sitemap pipeline
+		(the ordinary case) the parent <span style="font-style:italic">server</span> and
+		<span style="font-style:italic">sitemap</span> objects should be specified and the new pipeline
+		will be added to the sitemap's <a href="#class-sitemap_config-property-pipelines">pipelines</a> list. If the given
+		<span style="font-style:italic">sitemap</span> is None, then the new pipeline is added to the
+		server's <a href="#class-server_config-property-pipelines">pipelines</a> list.
+	      </p>
+	      <p>
+		The new pipeline object is returned.
+	      </p>
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-generator" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>generator</span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-stream_component">stream_component</a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/generators/__init__.py</span>
+</div>
+	  <p>
+	    Base class for all generator components.
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+&lt;!ELEMENT match (generate?,...)&gt;
+&lt;!ELEMENT when (generate?,...)&gt;
+&lt;!ELEMENT otherwise (generate?,...)&gt;
+&lt;!ELEMENT aggregate (generate+)&gt;
+&lt;!ELEMENT generate (parameter*)&gt;
+&lt;!ATTLIST generate type CDATA #REQUIRED&gt;
+	  </pre>
+	  <div id="class-generator-method-__init__">
+	    <div style="font-weight:bold">__init__(self, parent, root_path="")</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-stream_component-method-__init__">stream_component.__init__</a></span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Just calls stream_component's <a href="#class-stream_component-method-__init__">__init__</a> method and sets
+		<span style="font-style:italic">description</span> property to "Generator base class".
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-generator-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      Value is "stream".
+	    </div>
+	  </div>
+	  <div id="class-generator-class_property-function">
+	    <div style="font-weight:bold">function</div>
+	    <div style="margin-left:15px">
+	      Value is "generate".
+	    </div>
+	  </div>
+	  <div id="class-generator-helper-register_invokation_syntax">
+	    <div>helper function:</div>
+<div style="font-weight:bold">register_invokation_syntax(server)</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This function creates and populates an instance of the <a href="#class-invokation_syntax">invokation_syntax</a> class with an abstract syntax for
+		generator elements. This instance is then stored in the given server object's <a href="#class-server_config-property-component_syntaxes">component_syntaxes</a>
+		dictionary.
+	      </p>
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-transformer" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>transformer</span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-stream_component">stream_component</a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/transformers/__init__.py</span>
+</div>
+	  <p>
+	    Base class for all transformer components.
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+&lt;!ELEMENT match (transform?,...)&gt;
+&lt;!ELEMENT when (transform?,...)&gt;
+&lt;!ELEMENT otherwise (transform?,...)&gt;
+&lt;!ELEMENT transform (parameter*)&gt;
+&lt;!ATTLIST transform type CDATA #REQUIRED&gt;
+	  </pre>
+	  <div id="class-transformer-method-__init__">
+	    <div style="font-weight:bold">__init__(self, parent, root_path="")</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-stream_component-method-__init__">stream_component.__init__</a></span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Just calls stream_component's <a href="#class-stream_component-method-__init__">__init__</a> method and sets
+		<span style="font-style:italic">description</span> property to "Transformer base class".
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-transformer-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      Value is "stream".
+	    </div>
+	  </div>
+	  <div id="class-transformer-class_property-function">
+	    <div style="font-weight:bold">function</div>
+	    <div style="margin-left:15px">
+	      Value is "transform".
+	    </div>
+	  </div>
+	  <div id="class-transformer-helper-register_invokation_syntax">
+	    <div>helper function:</div>
+<div style="font-weight:bold">register_invokation_syntax(server)</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This function creates and populates an instance of the <a href="#class-invokation_syntax">invokation_syntax</a> class with an abstract syntax for
+		transformer elements. This instance is then stored in the given server object's <a href="#class-server_config-property-component_syntaxes">component_syntaxes</a>
+		dictionary.
+	      </p>
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-serializer" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span>serializer</span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-stream_component">stream_component</a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace">pycoon/serializers/__init__.py</span>
+</div>
+	  <p>
+	    Base class for all serializer components.
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+&lt;!ELEMENT match (serialize?,...)&gt;
+&lt;!ELEMENT when (serialize?,...)&gt;
+&lt;!ELEMENT otherwise (serialize?,...)&gt;
+&lt;!ELEMENT serialize&gt;
+&lt;!ATTLIST serialize type CDATA #REQUIRED&gt;
+&lt;!ATTLIST serialize mime CDATA #IMPLIED&gt;
+	  </pre>
+	  <div id="class-serializer-method-__init__">
+	    <div style="font-weight:bold">__init__(self, parent, root_path="")</div>
+	    <div style="margin-left:15px">
+<span style="font-weight:bold">overrides:</span><span><a href="#class-stream_component-method-__init__">stream_component.__init__</a></span>
+</div>
+	    <div style="margin-left:15px">
+	      <p>
+		Just calls stream_component's <a href="#class-stream_component-method-__init__">__init__</a> method and sets
+		<span style="font-style:italic">description</span> property to "Serializer base class".
+	      </p>
+	    </div>
+	  </div>
+	  <div id="class-serializer-class_property-role">
+	    <div style="font-weight:bold">role</div>
+	    <div style="margin-left:15px">
+	      Value is "stream".
+	    </div>
+	  </div>
+	  <div id="class-serializer-class_property-function">
+	    <div style="font-weight:bold">function</div>
+	    <div style="margin-left:15px">
+	      Value is "serialize".
+	    </div>
+	  </div>
+	  <div id="class-serializer-helper-register_invokation_syntax">
+	    <div>helper function:</div>
+<div style="font-weight:bold">register_invokation_syntax(server)</div>
+	    <div style="margin-left:15px">
+	      <p>
+		This function creates and populates an instance of the <a href="#class-invokation_syntax">invokation_syntax</a> class with an abstract syntax for
+		serializer elements. This instance is then stored in the given server object's <a href="#class-server_config-property-component_syntaxes">component_syntaxes</a>
+		dictionary.
+	      </p>
+	    </div>
+	  </div>
+	</div>
+	<div class="class" id="class-" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span></span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-"></a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace"></span>
+</div>
+	  <p>
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+	  </pre>
+	  
+	  
+	</div>
+	<div class="class" id="class-" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span></span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-"></a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace"></span>
+</div>
+	  <p>
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+	  </pre>
+	  
+	  
+	</div>
+
+
+	<div class="class" id="class-" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
+<div style="font-weight:bold">Class</div>
+	  <div>
+<span style="font-weight:bold">name:</span><span></span>
+</div>
+	  <div>
+<span style="font-weight:bold">inherits:</span><span><a href="#class-"></a></span>
+</div>
+	  <div>
+<span style="font-weight:bold">source:</span><span style="font-family:monospace"></span>
+</div>
+	  <p>
+	  </p>
+	  <div style="font-weight:bold">syntax:</div>
+<pre>
+	  </pre>
+	  
+	  
+	</div>
+      </div>
+    </div>
+  </body>
+</html>
