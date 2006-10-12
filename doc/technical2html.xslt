@@ -2,11 +2,15 @@
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-<xsl:output method="html" />
+<xsl:output method="xml"
+	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+	    indent="yes"
+	    encoding="utf-8" />
 
 <xsl:template match="/">
 
-<html>
+<html lang="en" xml:lang="en">
   <xsl:apply-templates select="/document/head" />
   <xsl:apply-templates select="/document/body" />
 </html>
@@ -17,6 +21,9 @@
 
 <head>
   <xsl:apply-templates />
+  <style type="text/css">
+td{vertical-align:top;padding:3px}
+  </style>
 </head>
 
 </xsl:template>
@@ -41,7 +48,10 @@
 
 <xsl:template match="head" mode="display">
   <h1><xsl:value-of select="/document/head/title" /></h1>
-  <small><xsl:value-of select="/document/head/author" /></small>
+  <p>
+    <small style="display:block"><xsl:value-of select="/document/head/author" /></small>
+    <small style="display:block"><xsl:value-of select="/document/head/date" /></small>
+  </p>
   <hr />
 </xsl:template>
 
@@ -89,7 +99,7 @@
   <a href="{@href}"><xsl:apply-templates /></a>
 </xsl:template>
 
-<xsl:template match="link[@class and not(@method) and not(@property)]">
+<xsl:template match="link[@class and count(@*)=1]">
   <a href="#class-{@class}"><xsl:apply-templates /></a>
 </xsl:template>
 
@@ -101,8 +111,16 @@
   <a href="#class-{@class}-property-{@property}"><xsl:apply-templates /></a>
 </xsl:template>
 
+<xsl:template match="link[@class and @class-property]">
+  <a href="#class-{@class}-class_property-{@class-property}"><xsl:apply-templates /></a>
+</xsl:template>
+
+<xsl:template match="link[@class and @helper-func]">
+  <a href="#class-{@class}-helper_func-{@helper-func}"><xsl:apply-templates /></a>
+</xsl:template>
+
 <xsl:template match="class-hierarchy">
-  <div id="class-hierarchy-diagram">
+  <div id="{@name}-class-hierarchy-diagram">
     <ul>
       <xsl:apply-templates />
     </ul>
@@ -121,31 +139,33 @@
 </xsl:template>
 
 <xsl:template match="class[not(@description)]">
-  <div class="class" id="class-{@name}" style="border-top:1px solid #000000;border-bottom:1px solid #000000">
-    <div style="font-weight:bold">Class</div>
-    <xsl:apply-templates />
+  <div class="class" id="class-{@name}" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px">
+    <xsl:apply-templates select="name" />
+    <xsl:if test="count(source|inherits) &gt; 0">
+      <table>
+	<xsl:apply-templates select="source|inherits" />
+      </table>
+    </xsl:if>
+    <xsl:apply-templates select="*[name()!='name' and name()!='source' and name()!='inherits']" />
   </div>
 </xsl:template>
 
 <xsl:template match="class/name">
-  <div>
-    <span style="font-weight:bold">name:</span>
-    <span><xsl:apply-templates /></span>
-  </div>
+  <div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px"><xsl:apply-templates /></div>
 </xsl:template>
 
 <xsl:template match="class/source">
-  <div>
-    <span style="font-weight:bold">source:</span>
-    <span style="font-family:monospace"><xsl:apply-templates /></span>
-  </div>
+  <tr>
+    <td style="font-weight:bold">source</td>
+    <td style="font-family:monospace;background-color:#FFF0D8"><xsl:apply-templates /></td>
+  </tr>
 </xsl:template>
 
 <xsl:template match="class/inherits">
-  <div>
-    <span style="font-weight:bold">inherits:</span>
-    <span><a href="#class-{.}"><xsl:apply-templates /></a></span>
-  </div>
+  <tr>
+    <td style="font-weight:bold">inherits</td>
+    <td style="background-color:#FFF0D8"><a href="#class-{.}"><xsl:apply-templates /></a></td>
+  </tr>
 </xsl:template>
 
 <xsl:template match="class/description">
@@ -155,15 +175,21 @@
 </xsl:template>
 
 <xsl:template match="syntax">
-<div style="font-weight:bold">syntax:</div>
+<div style="font-weight:bold">syntax</div>
 <pre>
 <xsl:apply-templates />
 </pre>
 </xsl:template>
 
 <xsl:template match="method">
-  <div id="class-{ancestor::class/@name}-method-{@name}">
-    <xsl:apply-templates />
+  <div id="class-{ancestor::class/@name}-method-{@name}" style="margin-bottom:5px;background-color:#E2F6FF">
+    <xsl:apply-templates select="definition" />
+    <xsl:if test="count(overrides|returns) &gt; 0">
+      <table style="margin-left:15px">
+	<xsl:apply-templates select="overrides|returns" />
+      </table>
+    </xsl:if>
+    <xsl:apply-templates select="*[name()!='definition' and name()!='overrides' and name()!='returns']" />
   </div>
 </xsl:template>
 
@@ -172,17 +198,17 @@
 </xsl:template>
 
 <xsl:template match="method/returns">
-  <div style="margin-left:15px">
-    <span style="font-weight:bold">returns:</span>
-    <span><xsl:apply-templates /></span>
-  </div>
+  <tr>
+    <td style="font-weight:bold">returns</td>
+    <td style="background-color:#FFF0D8"><xsl:apply-templates /></td>
+  </tr>
 </xsl:template>
 
 <xsl:template match="method/overrides">
-  <div style="margin-left:15px">
-    <span style="font-weight:bold">overrides:</span>
-    <span><xsl:apply-templates /></span>
-  </div>
+  <tr>
+    <td style="font-weight:bold">overrides</td>
+    <td style="background-color:#FFF0D8"><xsl:apply-templates /></td>
+  </tr>
 </xsl:template>
 
 <xsl:template match="method/description">
@@ -192,7 +218,7 @@
 </xsl:template>
 
 <xsl:template match="property">
-  <div id="class-{ancestor::class/@name}-property-{name}">
+  <div id="class-{ancestor::class/@name}-property-{name}" style="margin-bottom:5px;background-color:#FCFFAA">
     <xsl:apply-templates />
   </div>
 </xsl:template>
@@ -208,13 +234,14 @@
 </xsl:template>
 
 <xsl:template match="class-property">
-  <div id="class-{ancestor::class/@name}-class_property-{name}">
+  <div id="class-{ancestor::class/@name}-class_property-{name}" style="margin-bottom:5px;background-color:#FFEBE6">
     <xsl:apply-templates />
   </div>
 </xsl:template>
 
 <xsl:template match="class-property/name">
   <div style="font-weight:bold"><xsl:apply-templates /></div>
+  <div style="margin-left:15px;margin-top:5px;font-style:italic">class property</div>
 </xsl:template>
 
 <xsl:template match="class-property/description">
@@ -224,19 +251,21 @@
 </xsl:template>
 
 <xsl:template match="helper-func">
-  <div id="class-{ancestor::class/@name}-helper-{@name}">
+  <div id="class-{ancestor::class/@name}-helper_func-{@name}" style="margin-bottom:5px;background-color:#E0DEFF">
     <xsl:apply-templates />
   </div>
 </xsl:template>
 
 <xsl:template match="helper-func/definition">
-  <div>helper function:</div>
-  <div style="font-weight:bold"><xsl:apply-templates /></div>
+  <div style="font-weight:bold">
+    <xsl:apply-templates />
+  </div>
+  <div style="margin-left:15px;margin-top:5px;font-style:italic">helper function</div>
 </xsl:template>
 
 <xsl:template match="helper-func/returns">
   <div style="margin-left:15px">
-    <span style="font-weight:bold">returns:</span>
+    <span style="font-weight:bold">returns</span>
     <span><xsl:apply-templates /></span>
   </div>
 </xsl:template>
