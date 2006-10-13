@@ -169,7 +169,12 @@ td{vertical-align:top;padding:3px}
 	<li><a style="font-weight:bold" href="#class-server_config">server_config</a>: Holds information for a Pycoon instance</li>
 	<li><a style="font-weight:bold" href="#class-server_config_parse">server_config_parse</a>: A SAX handler which reads a server configuration file</li>
 	<li><a style="font-weight:bold" href="#class-invokation_syntax">invokation_syntax</a>: Stores the syntax required to use a component in a sitemap file</li>
-	<li><a style="font-weight:bold" href="#class-interpolation_syntax">interpolation_syntax</a>: Provides a method to interpret special {} delimited portions of component attribute values in sitemap files</li>
+	<li><a style="font-weight:bold" href="#class-interpolation_syntax">interpolation_syntax</a>: Provides a method to interpret special {} delimited portions of component attribute values in sitemap files<ul>
+	  <li><a style="font-weight:bold" href="#class-interpolate_pattern_match_number">interpolate_pattern_match_number</a>: Interprets the '{$n}' syntax, where the number 'n' is the n'th '*' denoted portion of the URI</li>
+	  <li><a style="font-weight:bold" href="#class-interpolate_uri">interpolate_uri</a>: Interprets the '{uri:...}' syntax</li>
+	  <li><a style="font-weight:bold" href="#class-interpolate_context">interpolate_context</a>: Interpolate_context interprets the '{context:...}' syntax, where '...' should be a URI which will be handled by the sitemap and its result will be returned</li>
+	  <li><a style="font-weight:bold" href="#class-interpolate_traceback">interpolate_traceback</a>: Interprets the '{traceback}' syntax and returns the current traceback as a string</li>
+	</ul></li>
       </ul></div>
       </div>
       <div id="class-descriptions"><h3>Class Descriptions</h3>
@@ -416,7 +421,7 @@ td{vertical-align:top;padding:3px}
 	    <div style="margin-left:15px">
 	      For syntax_component class the value is "syntax".
 	    </div>
-	  </div><div id="class-syntax_component-method-__init__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__init__(self, parent, root_path="")</div><table style="margin-left:15px"><tr><td style="font-weight:bold">overrides</td><td style="background-color:#FFF0D8"><a href="#class-component-method-_result">component.__init__</a></td></tr></table><div style="margin-left:15px">
+	  </div><div id="class-syntax_component-method-__init__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__init__(self, parent, root_path="")</div><table style="margin-left:15px"><tr><td style="font-weight:bold">overrides</td><td style="background-color:#FFF0D8"><a href="#class-component-method-__init__">component.__init__</a></td></tr></table><div style="margin-left:15px">
 	      <p>
 		Calls <a href="#class-component-method-_result">component.__init__</a> and sets
 		<a href="#class-syntax_component-property-description">description</a> property to
@@ -434,6 +439,78 @@ td{vertical-align:top;padding:3px}
 		flag.
 	      </p>
 	    </div></div></div>
+	<div class="class" id="class-matcher" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">matcher</div><table><tr><td style="font-weight:bold">inherits</td><td style="background-color:#FFF0D8"><a href="#class-syntax_component">syntax_component</a></td></tr><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">pycoon/matchers/__init__.py</td></tr></table><p>
+	    Base class for matcher components.
+	  </p><div style="font-weight:bold">syntax</div><pre>
+&lt;!ELEMENT pipeline (match*)&gt;
+&lt;!ELEMENT match (select*,aggregate*,generate*,transform*,serialize?)&gt;
+&lt;!ATTLIST match type CDATA #REQUIRED&gt;
+	  </pre><div id="class-matcher-method-__init__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__init__(self, parent, root_path="")</div><table style="margin-left:15px"><tr><td style="font-weight:bold">overrides</td><td style="background-color:#FFF0D8"><a href="#class-syntax_component-method-_result">syntax_component.__init__</a></td></tr></table><div style="margin-left:15px">
+	      <p>
+		Calls <a href="#class-syntax_component-method-_result">syntax_component.__init__</a> and sets <a href="#class-matcher-property-description">description</a> property to "Matcher bass class".
+	      </p>
+	    </div></div></div>
+	<div class="class" id="class-selector" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">selector</div><table><tr><td style="font-weight:bold">inherits</td><td style="background-color:#FFF0D8"><a href="#class-syntax_component">syntax_component</a></td></tr><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">pycoon/selectors/__init__.py</td></tr></table><p>
+	    Base class for selector components.
+	  </p><div style="font-weight:bold">syntax</div><pre>
+&lt;!ELEMENT match (select*,...)&gt;
+&lt;!ELEMENT aggregate (select*,...)&gt;
+&lt;!ELEMENT select (when+,otherwise?)&gt;
+&lt;!ATTLIST select type CDATA #REQUIRED&gt;
+&lt;!ATTLIST select method (exclusive|inclusive) #IMPLIED "exclusive"&gt;
+&lt;!ELEMENT when (generate*,transform*,serialize?)&gt;
+&lt;!ATTLIST when test CDATA #REQUIRED&gt;
+&lt;!ELEMENT otherwise (generate*,transform*,serialize?)&gt;
+	  </pre><div id="class-selector-method-__init__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__init__(self, parent, method="exclusive", root_path="")</div><table style="margin-left:15px"><tr><td style="font-weight:bold">overrides</td><td style="background-color:#FFF0D8"><a href="#class-syntax_component-method-_result">syntax_component.__init__</a></td></tr></table><div style="margin-left:15px">
+	      <p>
+		Calls <a href="#class-syntax_component-method-_result">syntax_component.__init__</a> and sets <a href="#class-selector-property-description">description</a> property to "Selector bass
+		class". <span style="font-style:italic">method</span> defines how child <a href="#class-when">when</a> components will be treated: "exclusive" means that once a
+		matching <span style="font-style:italic">when</span> has been found, the selector will stop and
+		return its result; "inclusive" means that every child
+		<span style="font-style:italic">when</span> component will be tested and each one that matches
+		will apply.
+	      </p>
+	    </div></div><div id="class-selector-method-when_func" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">when_func(self, req, conditions)</div><table style="margin-left:15px"><tr><td style="font-weight:bold">returns</td><td style="background-color:#FFF0D8">
+	      Returns a boolean.
+	    </td></tr></table><div style="margin-left:15px">
+	      <p>
+		Used to implement the selector's logic. <span style="font-style:italic">req</span> is an Apache
+		request object; <span style="font-style:italic">conditions</span> is a list of strings which are
+		given in the <span style="font-style:italic">test</span> attribute of a child <a href="#class-when">when</a> element.
+	      </p>
+	      <p>
+		The default behaviour of this method is to raise the <span style="font-style:italic">NoImplemented</span>
+		exception. Derived components should return <span style="font-style:italic">True</span> if the condition matches,
+		or <span style="font-style:italic">False</span> otherwise.
+	      </p>
+	    </div></div><div id="class-selector-method-_result" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">_result(self, req, p_sibling_result=None, child_results=[])</div><table style="margin-left:15px"><tr><td style="font-weight:bold">overrides</td><td style="background-color:#FFF0D8"><a href="#class-component-method-_result">component._result</a></td></tr><tr><td style="font-weight:bold">returns</td><td style="background-color:#FFF0D8">
+	      Returns a tuple whose first member is a boolean flag indicating whether the execution
+	      was successful or not and whose second member is the <span style="font-style:italic">Element</span>
+	      result.
+	    </td></tr></table><div style="margin-left:15px">
+	      <p>
+		If the component's <a href="#class-selector-property-method">method</a> property
+		is "exclusive", the method either returns the last
+		<span style="font-style:italic">child_results</span> element (if its not None) or the
+		<span style="font-style:italic">p_sibling_result</span>.
+	      </p>
+	      <p>
+		If the <a href="#class-selector-property-method">method</a> property is
+		"inclusive" and the <span style="font-style:italic">child_results</span> list it not empty, each
+		<span style="font-style:italic">child_results</span> element is aggregated into a parent element
+		called "inclusive-select". If the <span style="font-style:italic">child_results</span> list is
+		empty then the <span style="font-style:italic">p_sibling_result</span> is returned instead.
+	      </p>
+	    </div></div><div id="class-selector-property-method" style="margin-bottom:5px;background-color:#FCFFAA">
+	    <div style="font-weight:bold">method</div>
+	    <div style="margin-left:15px">
+	      Takes either the value "exclusive" (the default) or "inclusive"; "exclusive" means
+	      that once a matching <span style="font-style:italic">when</span> has been found, the selector will
+	      stop and return its result; "inclusive" means that every child
+	      <span style="font-style:italic">when</span> component will be tested and each one that matches will
+	      apply.
+	    </div>
+	  </div></div>
 	<div class="class" id="class-stream_component" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">stream_component</div><table><tr><td style="font-weight:bold">inherits</td><td style="background-color:#FFF0D8"><a href="#class-component">component</a></td></tr><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">pycoon/components.py</td></tr></table><p>
 	    Base class for all components which handle XML data in a pipeline.
 	  </p><div id="class-stream_component-method-__init__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__init__(self, parent, root_path="")</div><table style="margin-left:15px"><tr><td style="font-weight:bold">overrides</td><td style="background-color:#FFF0D8"><a href="#class-component-method-_result">component.__init__</a></td></tr></table><div style="margin-left:15px">
@@ -671,7 +748,7 @@ td{vertical-align:top;padding:3px}
 	      </p>
 	    </div>
 	  </div></div>
-	<div class="class" id="class-server_config" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">server_config</div><table><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">src/pycoon/server.py</td></tr></table><p>
+	<div class="class" id="class-server_config" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">server_config</div><table><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">pycoon/server.py</td></tr></table><p>
 	    Holds the configuration information of a running Pycoon instance including available
 	    component classes for building pipelines, data source initialisation methods and the
 	    default error handling pipelines. It persists between requests by being created as a
@@ -808,7 +885,7 @@ td{vertical-align:top;padding:3px}
 	      between sevrer_config and sitemap_config objects.
 	    </div>
 	  </div></div>
-	<div class="class" id="class-sitemap_config" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">sitemap_config</div><table><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">src/pycoon/sitemap.py</td></tr></table><p>
+	<div class="class" id="class-sitemap_config" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">sitemap_config</div><table><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">pycoon/sitemap.py</td></tr></table><p>
 	    The sitemap class holds configuration information for a Pycoon sitemap along with the
 	    <a href="#class-pipeline">pipeline</a> objects, any related database connections and
 	    provides the primary interface for handling requests.
@@ -911,7 +988,96 @@ td{vertical-align:top;padding:3px}
 	      A list of <a href="#class-pipeline">pipeline</a> objects.
 	    </div>
 	  </div></div>
-	
+	<div class="class" id="class-interpolation_syntax" style="border-top:1px solid #000000;border-bottom:1px solid #000000;margin-top:5px"><div style="font-size:120%;font-style:italic;margin-top:10px;margin-bottom:10px">interpolation_syntax</div><table><tr><td style="font-weight:bold">source</td><td style="font-family:monospace;background-color:#FFF0D8">pycoon/interpolation.py</td></tr></table><p>
+	    Base class for all interpolation classes.
+	  </p><div id="class-interpolation_syntax-method-__init__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__init__(self, pattern, component=None)</div>
+	      <p>
+		Class constructor. <span style="font-style:italic">pattern</span> is a regular expression string
+		used to match the syntax of {} delimited expressions in component attribute
+		values. <span style="font-style:italic">component</span> is a <a href="#class-sitemap_config">sitemap</a> or <a href="#class-server_config">server</a>
+		instance.
+	      </p>
+	    </div><div id="class-interpolation_syntax-method-_match" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">_match(self, instruction)</div><table style="margin-left:15px"><tr><td style="font-weight:bold">returns</td><td style="background-color:#FFF0D8">
+	      Returns a boolean.
+	    </td></tr></table><div style="margin-left:15px">
+	      <p>
+		Matches a string against a pattern. <span style="font-style:italic">instruction</span> is the
+		contents of a {} delimited interpolation instruction from a component attribute
+		value; it will have been extracted by the <a href="#class-interpolation_syntax-helper_func-interpolate">interpolate</a> function.
+	      </p>
+	      <p>
+		This method just calls the <a href="#class-interpolation_syntax-property-pattern">pattern</a> property's match() method with the given
+		<span style="font-style:italic">instruction</span> and returns True if it matches, or False if it
+		doesn't.
+	      </p>
+	    </div></div><div id="class-interpolation_syntax-method-__call__" style="margin-bottom:5px;background-color:#E2F6FF"><div style="font-weight:bold">__call__(self, instruction, uri_matcher, context)</div><table style="margin-left:15px"><tr><td style="font-weight:bold">returns</td><td style="background-color:#FFF0D8">
+	      Returns a 2-tuple which consists of a boolean flag which is True if the given
+	      <span style="font-style:italic">instruction</span> matched the object's pattern; and a string
+	      containing the result of performing the interpolation.
+	    </td></tr></table><div style="margin-left:15px">
+	      <p>
+		Performs the interpolation. <span style="font-style:italic">instruction</span> is the text from
+		inside the {} delimited instruction in the component attribute value;
+		<span style="font-style:italic">uri_matcher</span> is the calling object's parent <a href="#class-uri_matcher">uri_matcher</a> (or <a href="#class-error_matcher">error_matcher</a>) component;
+		<span style="font-style:italic">context</span> is either a <a href="#class-sitemap_config">sitemap</a> or <a href="#class-server_config">server</a>.
+	      </p>
+	      <p>
+		This is where derived components should implement their functionality. The default behaviour
+		raises a <span style="font-style:italic">NotImplemented</span> exception.
+	      </p>
+	    </div></div><div id="class-interpolation_syntax-property-pattern" style="margin-bottom:5px;background-color:#FCFFAA">
+	    <div style="font-weight:bold">pattern</div>
+	    <div style="margin-left:15px">
+	      A compiled regular expression object used to match the syntax of {} delimited
+	      expressions in component attribute values.
+	    </div>
+	  </div><div id="class-interpolation_syntax-property-component" style="margin-bottom:5px;background-color:#FCFFAA">
+	    <div style="font-weight:bold">component</div>
+	    <div style="margin-left:15px">
+	      a <a href="#class-sitemap_config">sitemap</a> or <a href="#class-server_config">server</a> instance.
+	    </div>
+	  </div><div id="class-interpolation_syntax-helper_func-register_interpolation_syntax" style="margin-bottom:5px;background-color:#E0DEFF">
+	    <div style="font-weight:bold">register_interpolation_syntax(server, syntax, name)</div><div style="margin-left:15px;margin-top:5px;font-style:italic">helper function</div>
+	    <div style="margin-left:15px">
+	      <span style="font-style:italic">server</span> is a <a href="#class-server_config">server_config</a>
+	      instance; <span style="font-style:italic">syntax</span> is an <a href="#class-interpolation_syntax">interpolation_syntax</a> instance;
+	      <span style="font-style:italic">name</span> is a name for the interpolation syntax. The function
+	      adds the given <span style="font-style:italic"> interpolation_syntax</span> to the server's <a href="#class-server_config-property-interpolation_syntaxes">interpolation_syntaxes</a>
+	      dictionary using the given <span style="font-style:italic">name</span> as an index.
+	    </div>
+	  </div><div id="class-interpolation_syntax-helper_func-interpolate" style="margin-bottom:5px;background-color:#E0DEFF">
+	    <div style="font-weight:bold">interpolate(component, string_arg, as_filename=False, root_path="")</div><div style="margin-left:15px;margin-top:5px;font-style:italic">helper function</div>
+	    <div style="margin-left:15px"><span style="font-weight:bold">returns</span><span>
+	      Returns the interpolated string.
+	    </span></div>
+	    <div style="margin-left:15px">
+	      <p>
+		Takes a component attribute value, interprets the special {} delimited syntax and
+		returns the interpolated string. <span style="font-style:italic">component</span> is the componet
+		object which called the function; <span style="font-style:italic">string_arg</span> is the
+		component attribute value which includes the {} delimited instructions;
+		<span style="font-style:italic">as_filename</span> is a boolean which, when True, will cause the
+		function to return an absolute file path by prepending the value of
+		<span style="font-style:italic">root_path</span> to the result; if
+		<span style="font-style:italic">root_path</span> is not supplied, the give
+		<span style="font-style:italic">component</span>'s <a href="#class-component-property-root_path">root_path</a> is used.
+	      </p>
+	      <p>
+		First, this function attempts to find the given <span style="font-style:italic">component</span>'s
+		parent <a href="#class-uri_matcher">uri_matcher</a> or <a href="#class-error_matcher">error_matcher</a>. If it can't find one, it raises an
+		exception. (The uri_matcher is needed in order to retrieve information about the
+		request URI.) Next it initialises the result string with the
+		<span style="font-style:italic">root_path</span> (if <span style="font-style:italic">as_filename</span> was
+		True). Next it loops over the characters in the given
+		<span style="font-style:italic">string_as</span>. If a character is outside a {}, it is simply
+		added to the result string.  When it finds characters inside a pair of {}s, it
+		begins looping over the available <a href="#class-server_config-property-interpolation_syntaxes">interpolation_syntaxes</a>. When it finds one
+		which matches the given syntax, it inserts its result into the return string in
+		place of the {} delimited instruction. If it doesn't find a matching
+		interpolation_syntax, the {} delimited instruction is replaced with nothing.
+	      </p>
+	    </div>
+	  </div></div>
       </div>
       
     </div>

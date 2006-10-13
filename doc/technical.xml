@@ -169,7 +169,12 @@
 	<class name="server_config" description="Holds information for a Pycoon instance" />
 	<class name="server_config_parse" description="A SAX handler which reads a server configuration file" />
 	<class name="invokation_syntax" description="Stores the syntax required to use a component in a sitemap file" />
-	<class name="interpolation_syntax" description="Provides a method to interpret special {} delimited portions of component attribute values in sitemap files" />
+	<class name="interpolation_syntax" description="Provides a method to interpret special {} delimited portions of component attribute values in sitemap files">
+	  <class name="interpolate_pattern_match_number" description="Interprets the '{$n}' syntax, where the number 'n' is the n'th '*' denoted portion of the URI" />
+	  <class name="interpolate_uri" description="Interprets the '{uri:...}' syntax" />
+	  <class name="interpolate_context" description="Interpolate_context interprets the '{context:...}' syntax, where '...' should be a URI which will be handled by the sitemap and its result will be returned" />
+	  <class name="interpolate_traceback" description="Interprets the '{traceback}' syntax and returns the current traceback as a string" />
+	</class>
       </class-hierarchy>
       </div>
       <div id="class-descriptions" title="Class Descriptions">
@@ -502,7 +507,7 @@
 	  </class-property>
 	  <method name="__init__">
 	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="component" method="_result">component.__init__</link></overrides>
+	    <overrides><link class="component" method="__init__">component.__init__</link></overrides>
 	    <description>
 	      <p>
 		Calls <link class="component" method="_result">component.__init__</link> and sets
@@ -528,6 +533,118 @@
 	      </p>
 	    </description>
 	  </method>
+	</class>
+	<class name="matcher">
+	  <name>matcher</name>
+	  <inherits>syntax_component</inherits>
+	  <source>pycoon/matchers/__init__.py</source>
+	  <description>
+	    Base class for matcher components.
+	  </description>
+	  <syntax>
+&lt;!ELEMENT pipeline (match*)&gt;
+&lt;!ELEMENT match (select*,aggregate*,generate*,transform*,serialize?)&gt;
+&lt;!ATTLIST match type CDATA #REQUIRED&gt;
+	  </syntax>
+	  <method name="__init__">
+	    <definition>__init__(self, parent, root_path="")</definition>
+	    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
+	    <description>
+	      <p>
+		Calls <link class="syntax_component"
+		method="_result">syntax_component.__init__</link> and sets <link class="matcher"
+		property="description">description</link> property to "Matcher bass class".
+	      </p>
+	    </description>
+	  </method>
+	</class>
+	<class name="selector">
+	  <name>selector</name>
+	  <inherits>syntax_component</inherits>
+	  <source>pycoon/selectors/__init__.py</source>
+	  <description>
+	    Base class for selector components.
+	  </description>
+	  <syntax>
+&lt;!ELEMENT match (select*,...)&gt;
+&lt;!ELEMENT aggregate (select*,...)&gt;
+&lt;!ELEMENT select (when+,otherwise?)&gt;
+&lt;!ATTLIST select type CDATA #REQUIRED&gt;
+&lt;!ATTLIST select method (exclusive|inclusive) #IMPLIED "exclusive"&gt;
+&lt;!ELEMENT when (generate*,transform*,serialize?)&gt;
+&lt;!ATTLIST when test CDATA #REQUIRED&gt;
+&lt;!ELEMENT otherwise (generate*,transform*,serialize?)&gt;
+	  </syntax>
+	  <method name="__init__">
+	    <definition>__init__(self, parent, method="exclusive", root_path="")</definition>
+	    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
+	    <description>
+	      <p>
+		Calls <link class="syntax_component"
+		method="_result">syntax_component.__init__</link> and sets <link class="selector"
+		property="description">description</link> property to "Selector bass
+		class". <identifier>method</identifier> defines how child <link
+		class="when">when</link> components will be treated: "exclusive" means that once a
+		matching <identifier>when</identifier> has been found, the selector will stop and
+		return its result; "inclusive" means that <em>every</em> child
+		<identifier>when</identifier> component will be tested and each one that matches
+		will apply.
+	      </p>
+	    </description>
+	  </method>
+	  <method name="when_func">
+	    <definition>when_func(self, req, conditions)</definition>
+	    <returns>
+	      Returns a boolean.
+	    </returns>
+	    <description>
+	      <p>
+		Used to implement the selector's logic. <identifier>req</identifier> is an Apache
+		request object; <identifier>conditions</identifier> is a list of strings which are
+		given in the <identifier>test</identifier> attribute of a child <link
+		class="when">when</link> element.
+	      </p>
+	      <p>
+		The default behaviour of this method is to raise the <identifier>NoImplemented</identifier>
+		exception. Derived components should return <identifier>True</identifier> if the condition matches,
+		or <identifier>False</identifier> otherwise.
+	      </p>
+	    </description>
+	  </method>
+	  <method name="_result">
+	    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
+	    <overrides><link class="component" method="_result">component._result</link></overrides>
+	    <returns>
+	      Returns a tuple whose first member is a boolean flag indicating whether the execution
+	      was successful or not and whose second member is the <identifier>Element</identifier>
+	      result.
+	    </returns>
+	    <description>
+	      <p>
+		If the component's <link class="selector" property="method">method</link> property
+		is "exclusive", the method either returns the last
+		<identifier>child_results</identifier> element (if its not None) or the
+		<identifier>p_sibling_result</identifier>.
+	      </p>
+	      <p>
+		If the <link class="selector" property="method">method</link> property is
+		"inclusive" and the <identifier>child_results</identifier> list it not empty, each
+		<identifier>child_results</identifier> element is aggregated into a parent element
+		called "inclusive-select". If the <identifier>child_results</identifier> list is
+		empty then the <identifier>p_sibling_result</identifier> is returned instead.
+	      </p>
+	    </description>
+	  </method>
+	  <property>
+	    <name>method</name>
+	    <description>
+	      Takes either the value "exclusive" (the default) or "inclusive"; "exclusive" means
+	      that once a matching <identifier>when</identifier> has been found, the selector will
+	      stop and return its result; "inclusive" means that <em>every</em> child
+	      <identifier>when</identifier> component will be tested and each one that matches will
+	      apply.
+	    </description>
+	  </property>
 	</class>
 	<class name="stream_component">
 	  <name>stream_component</name>
@@ -880,7 +997,7 @@
 	</class>
 	<class name="server_config">
 	  <name>server_config</name>
-	  <source>src/pycoon/server.py</source>
+	  <source>pycoon/server.py</source>
 	  <description>
 	    Holds the configuration information of a running Pycoon instance including available
 	    component classes for building pipelines, data source initialisation methods and the
@@ -1056,7 +1173,7 @@
 	</class>
 	<class name="sitemap_config">
 	  <name>sitemap_config</name>
-	  <source>src/pycoon/sitemap.py</source>
+	  <source>pycoon/sitemap.py</source>
 	  <description>
 	    The sitemap class holds configuration information for a Pycoon sitemap along with the
 	    <link class="pipeline">pipeline</link> objects, any related database connections and
@@ -1189,17 +1306,130 @@
 	    </description>
 	  </property>
 	</class>
-	<!--<class name="">
-	  <name></name>
-	  <inherits></inherits>
-	  <source></source>
+	<class name="interpolation_syntax">
+	  <name>interpolation_syntax</name>
+	  <source>pycoon/interpolation.py</source>
 	  <description>
+	    Base class for all interpolation classes.
 	  </description>
-	  <syntax>
-	  </syntax>
-	  <notes>
-	  </notes>
-	</class>-->
+	  <method name="__init__">
+	    <definition>__init__(self, pattern, component=None)</definition>
+	    <decsription>
+	      <p>
+		Class constructor. <identifier>pattern</identifier> is a regular expression string
+		used to match the syntax of {} delimited expressions in component attribute
+		values. <identifier>component</identifier> is a <link
+		class="sitemap_config">sitemap</link> or <link class="server_config">server</link>
+		instance.
+	      </p>
+	    </decsription>
+	  </method>
+	  <method name="_match">
+	    <definition>_match(self, instruction)</definition>
+	    <returns>
+	      Returns a boolean.
+	    </returns>
+	    <description>
+	      <p>
+		Matches a string against a pattern. <identifier>instruction</identifier> is the
+		contents of a {} delimited interpolation instruction from a component attribute
+		value; it will have been extracted by the <link class="interpolation_syntax"
+		helper-func="interpolate">interpolate</link> function.
+	      </p>
+	      <p>
+		This method just calls the <link class="interpolation_syntax"
+		property="pattern">pattern</link> property's match() method with the given
+		<identifier>instruction</identifier> and returns True if it matches, or False if it
+		doesn't.
+	      </p>
+	    </description>
+	  </method>
+	  <method name="__call__">
+	    <definition>__call__(self, instruction, uri_matcher, context)</definition>
+	    <returns>
+	      Returns a 2-tuple which consists of a boolean flag which is True if the given
+	      <identifier>instruction</identifier> matched the object's pattern; and a string
+	      containing the result of performing the interpolation.
+	    </returns>
+	    <description>
+	      <p>
+		Performs the interpolation. <identifier>instruction</identifier> is the text from
+		inside the {} delimited instruction in the component attribute value;
+		<identifier>uri_matcher</identifier> is the calling object's parent <link
+		class="uri_matcher">uri_matcher</link> (or <link
+		class="error_matcher">error_matcher</link>) component;
+		<identifier>context</identifier> is either a <link
+		class="sitemap_config">sitemap</link> or <link class="server_config">server</link>.
+	      </p>
+	      <p>
+		This is where derived components should implement their functionality. The default behaviour
+		raises a <identifier>NotImplemented</identifier> exception.
+	      </p>
+	    </description>
+	  </method>
+	  <property>
+	    <name>pattern</name>
+	    <description>
+	      A compiled regular expression object used to match the syntax of {} delimited
+	      expressions in component attribute values.
+	    </description>
+	  </property>
+	  <property>
+	    <name>component</name>
+	    <description>
+	      a <link class="sitemap_config">sitemap</link> or <link
+	      class="server_config">server</link> instance.
+	    </description>
+	  </property>
+	  <helper-func name="register_interpolation_syntax">
+	    <definition>register_interpolation_syntax(server, syntax, name)</definition>
+	    <description>
+	      <identifier>server</identifier> is a <link class="server_config">server_config</link>
+	      instance; <identifier>syntax</identifier> is an <link
+	      class="interpolation_syntax">interpolation_syntax</link> instance;
+	      <identifier>name</identifier> is a name for the interpolation syntax. The function
+	      adds the given <identifier> interpolation_syntax</identifier> to the server's <link
+	      class="server_config" property="interpolation_syntaxes">interpolation_syntaxes</link>
+	      dictionary using the given <identifier>name</identifier> as an index.
+	    </description>
+	  </helper-func>
+	  <helper-func name="interpolate">
+	    <definition>interpolate(component, string_arg, as_filename=False, root_path="")</definition>
+	    <returns>
+	      Returns the interpolated string.
+	    </returns>
+	    <description>
+	      <p>
+		Takes a component attribute value, interprets the special {} delimited syntax and
+		returns the interpolated string. <identifier>component</identifier> is the componet
+		object which called the function; <identifier>string_arg</identifier> is the
+		component attribute value which includes the {} delimited instructions;
+		<identifier>as_filename</identifier> is a boolean which, when True, will cause the
+		function to return an absolute file path by prepending the value of
+		<identifier>root_path</identifier> to the result; if
+		<identifier>root_path</identifier> is not supplied, the give
+		<identifier>component</identifier>'s <link class="component"
+		property="root_path">root_path</link> is used.
+	      </p>
+	      <p>
+		First, this function attempts to find the given <identifier>component</identifier>'s
+		parent <link class="uri_matcher">uri_matcher</link> or <link
+		class="error_matcher">error_matcher</link>. If it can't find one, it raises an
+		exception. (The uri_matcher is needed in order to retrieve information about the
+		request URI.) Next it initialises the result string with the
+		<identifier>root_path</identifier> (if <identifier>as_filename</identifier> was
+		True). Next it loops over the characters in the given
+		<identifier>string_as</identifier>. If a character is outside a {}, it is simply
+		added to the result string.  When it finds characters inside a pair of {}s, it
+		begins looping over the available <link class="server_config"
+		property="interpolation_syntaxes">interpolation_syntaxes</link>. When it finds one
+		which matches the given syntax, it inserts its result into the return string in
+		place of the {} delimited instruction. If it doesn't find a matching
+		interpolation_syntax, the {} delimited instruction is replaced with nothing.
+	      </p>
+	    </description>
+	  </helper-func>
+	</class>
       </div>
       <!--<div id="request-processing" title="Processing a Request">
 	<p>
