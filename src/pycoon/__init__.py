@@ -139,12 +139,23 @@ def handler(req):
             sitemap_filename = env_dict['PycoonSitemap']
         else:
             sitemap_filename = "sitemap.xml"
-        
-        sitemap.server_name = use_server_name
-        sitemap_config_parse("file://%s/%s" % (use_document_root, sitemap_filename), sitemap)
-        if server.log_up_down:
-            server.error_log.write("Successfully loaded sitemap configuration, \"%s\", for \"%s\"" %\
-                                   (sitemap_filename, use_server_name))
+
+        try:
+            sitemap.server_name = use_server_name
+            sitemap_config_parse("file://%s/%s" % (use_document_root, sitemap_filename), sitemap)
+            if server.log_up_down:
+                server.error_log.write("Successfully loaded sitemap configuration, \"%s\", for \"%s\"" %\
+                                       (sitemap_filename, use_server_name))
+        except:
+            req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+            
+            server.EXCEPTION = sys.exc_info()
+
+            (success, status) = server.handle_error(req, apache.HTTP_INTERNAL_SERVER_ERROR)
+            if success:
+                return status
+            else:
+                return apache.HTTP_INTERNAL_SERVER_ERROR
 
     # handle the request
     (success, status) = sitemap.handle(req)

@@ -36,6 +36,7 @@
       <selector name="browser" module="pycoon.selectors.browser_selector" class="browser_selector" />
       <selector name="resource-exists" module="pycoon.selectors.resource_exists_selector" class="resource_exists_selector" />
       <selector name="request-parameter" module="pycoon.selectors.request_parameter_selector" class="request_parameter_selector" />
+      <selector name="request-header" module="pycoon.selectors.request_header_selector" class="request_header_selector" />
     </selectors>
     <generators>
       <generator name="file" module="pycoon.generators.xml_generator" class="xml_generator" />
@@ -47,11 +48,13 @@
       <generator name="http" module="pycoon.generators.http_generator" class="http_generator" />
       <generator name="sql" module="pycoon.generators.sql_generator" class="sql_generator" backend="mysql" />
       <generator name="directory-list" module="pycoon.generators.directory_generator" class="directory_generator" />
+      <generator name="request" module="pycoon.generators.request_generator" class="request_generator" />
     </generators>
     <transformers>
       <transformer name="xslt" module="pycoon.transformers.xslt_transformer" class="xslt_transformer" />
       <transformer name="command" module="pycoon.transformers.command_transformer" class="command_transformer" />
       <transformer name="sax-handler" module="pycoon.transformers.sax_handler_transformer" class="sax_handler_transformer" />
+      <transformer name="etree" module="pycoon.transformers.etree_transformer" class="etree_transformer" />
     </transformers>
     <serializers>
       <serializer name="xml" module="pycoon.serializers.xml_serializer" class="xml_serializer" />

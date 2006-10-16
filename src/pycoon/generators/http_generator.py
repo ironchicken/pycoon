@@ -85,8 +85,8 @@ class http_generator(generator):
             else:
                 raise GeneratorError("http_generator: request \"%s\" returned error code: %s" % (uri, response.status))
 
-        except httplib.HTTPException, e:
-            raise GeneratorError("http_generator: exception occured during HTTP request: \"%\"" % str(e))
+        except (httplib.HTTPException, httplib.socket.gaierror), e:
+            raise GeneratorError("http_generator: exception occured during HTTP request: \"%s\"" % str(e))
         
         except lxml.etree.XMLSyntaxError, e:
             raise GeneratorError("http_generator: syntax error in XML source, \"%s\": \"%s\"" %\

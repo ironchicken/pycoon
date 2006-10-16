@@ -85,7 +85,7 @@ class error_matcher(matcher):
 
         if str(req.status) == str(self.error_code):
             self.parse_uri(req)
-            
+
             return True
         else:
             return False

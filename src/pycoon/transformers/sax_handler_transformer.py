@@ -9,7 +9,7 @@ from pycoon.components import invokation_syntax, ComponentError
 import os
 import lxml.etree
 from StringIO import StringIO
-from xml.sax import parseString
+from xml.sax import parseString, SAXException
 
 def register_invokation_syntax(server):
     """
@@ -39,11 +39,15 @@ class sax_handler_transformer(transformer):
         sax_handler_transformer constructor.
 
         @module: name of the module in which the SAX handler is implemented
-        @handler: SAX handler class name
+        @handler: SAX handler class name. This class should be derived from xml.sax.handler.ContentHandler
+        and should provide a 'set_parameters(params)' method, a 'result_tree' property or a
+        'result_stream' property, one of which should contain the result as either an Element object or
+        an XML string. The pycoon.helpers module provides a pycoon_sax_handler base class which should be
+        used to create SAX handlers for this component.
         """
 
         try:
-            self.handler = __import__(module, globals(), locals(), module.split(".")[-1])()
+            self.handler = __import__(module, globals(), locals(), module.split(".")[-1]).__dict__[handler]()
         except ImportError:
             raise ComponentError("Could not import sax_handler_transform handler class \"%s\" (from module \"%s\")" % (handler, module))
 
@@ -66,7 +70,12 @@ class sax_handler_transformer(transformer):
         
             parseString(lxml.etree.tostring(p_sibling_result), self.handler)
 
-            return (True, lxml.etree.parse(StringIO(self.handler.ostream)).getroot())
+            if isinstance(self.handler.result_tree, lxml.etree._Element):
+                return (True, self.handler.result_tree)
+            elif self.handler.result_stream != "<?xml version=\"1.0\"?>":
+                return (True, lxml.etree.parse(StringIO(self.handler.result_stream)).getroot())
+            else:
+                raise TransformerError("sax_handler_transformer: SAX handler has not produced a result.")
         except SAXException, e:
             raise TransformerError("sax_handler_transformer: SAX transformation caused an exception: \"%s\"" % str(e))
         except lxml.etree.XMLSyntaxError, e:
