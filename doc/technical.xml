@@ -125,6 +125,7 @@
 	      <class name="browser_class_selector" description="Allows pipeline processing to be conditional on the type of browser the client is using [graphic|text|aural|braille]" />
 	      <class name="browser_selector" description="Allows pipeline processing to be conditional the name of the browser the client is using" />
 	      <class name="request_parameter_selector" description="Allows pipeline processing to be conditional on the value of a request parameter (either GET or POST)" />
+	      <class name="request_header_selector" description="Allows pipeline processing to be conditional on the value of a request header" />
 	      <class name="resource_exists_selector" description="Allows pipeline processing to be conditional on the existence of a file" />
 	    </class>
 	    <class name="parameter" description="Used to pass parameters to any components which require them" />
@@ -141,6 +142,7 @@
 	      <class name="aggregate_generator" description="The child generators' results are aggregated to provide the source XML for a pipeline" />
 	      <class name="command_generator" description="The stdout stream from a shell command provides the source XML for a pipeline" />
 	      <class name="directory_generator" description="Converts a directory listing into the source XML for a pipeline" />
+	      <class name="request_generator" description="Encodes the given request headers as the XML source for a pipeline" />
 	      <class name="xquery_generator" description="Execute an XQuery expression against an XML database (Berkelely DB XML) to provide the source XML for a pipeline" />
 	      <class name="sql_generator" description="Execute an SQL query against a database to provide the source XML for a pipeline" />
 	      <class name="swishe_generator" description="Execute a full-text search against a Swish-e index to provide the source XML for a pipeline" />
@@ -149,6 +151,7 @@
 	      <class name="xslt_transformer" description="Transform the pipeline XML stream using an XSLT stylesheet" />
 	      <class name="command_transformer" description="Transform the pipeline XML stream using a shell command" />
 	      <class name="sax_handler_transformer" description="Transform the pipeline XML stream using a Python SAX handler class" />
+	      <class name="etree_transformer" description="Transform the pipeline XML stream using Python code which directly manipulates the ElementTree" />
 	    </class>
 	    <class name="serializer" description="Serializer base class">
 	      <class name="html_serializer" description="Convert the pipeline XML stream into an HTML document" />

@@ -76,6 +76,39 @@
     <serialize type="xhtml" />
   </match>
 
+  <match type="uri" pattern="/request">
+    <generate type="request" />
+    <serialize type="xml" />
+  </match>
+
+  <match type="uri" pattern="/request-header">
+    <select type="request-header" header="Accept-Language">
+      <when test="en">
+	<generate type="http" src="http://www.google.com/" content="html" />
+      </when>
+      <when test="ja">
+	<generate type="http" src="http://www.google.co.jp/" content="html" />
+      </when>
+      <otherwise>
+	<throw error-code="404" />
+      </otherwise>
+    </select>
+    <serialize type="xhtml" />
+  </match>
+
+  <match type="uri" pattern="/special-transforms" required-parameters="method">
+    <generate type="file" src="data.xml" />
+    <select type="request-parameter" parameter="method">
+      <when test="sax">
+	<transform type="sax-handler" module="transforms" handler="test_sax_handler" />
+      </when>
+      <when test="etree">
+	<transform type="etree" module="transforms" code-object="test_etree_transform" />
+      </when>
+    </select>
+    <serialize type="xml" />
+  </match>
+
   <match type="uri" pattern="/*">
     <generate type="file" src="data.xml" />
     <transform type="xslt" src="data2html.xslt">

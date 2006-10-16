@@ -9,6 +9,7 @@ the Pycoon system.
 
 import re, string, datetime
 from htmlentitydefs import entitydefs
+from xml.sax.handler import ContentHandler
 
 class fake_apache:
     """
@@ -53,9 +54,31 @@ class fake_table(object):
     def has_key(self, key):
         return self.dictionary.has_key(string.upper(key))
 
+    def items(self):
+        return self.dictionary.items()
+
+    def values(self):
+        return self.dictionary.values()
+
+    def keys(self):
+        return self.dictionary.keys()
+
     def add(self, key, val):
         self.__setitem__(key, val)
-    
+
+class pycoon_sax_handler(ContentHandler):
+    """
+    Used as a base class for user-defined classes intented to be used with the sax_handler_transformer.
+    """
+
+    def __init__(self):
+        self.result_tree = None
+        self.result_stream = "<?xml version=\"1.0\"?>"
+        ContentHandler.__init__(self)
+
+    def set_parameters(self, params):
+        self.parameters = params
+
 def uri_pattern2regex(pattern):
     """
     Converts the given URI pattern string into a Python regular expression object.

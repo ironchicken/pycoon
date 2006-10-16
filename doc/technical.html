@@ -125,6 +125,7 @@ td{vertical-align:top;padding:3px}
 	      <li><a style="font-weight:bold" href="#class-browser_class_selector">browser_class_selector</a>: Allows pipeline processing to be conditional on the type of browser the client is using [graphic|text|aural|braille]</li>
 	      <li><a style="font-weight:bold" href="#class-browser_selector">browser_selector</a>: Allows pipeline processing to be conditional the name of the browser the client is using</li>
 	      <li><a style="font-weight:bold" href="#class-request_parameter_selector">request_parameter_selector</a>: Allows pipeline processing to be conditional on the value of a request parameter (either GET or POST)</li>
+	      <li><a style="font-weight:bold" href="#class-request_header_selector">request_header_selector</a>: Allows pipeline processing to be conditional on the value of a request header</li>
 	      <li><a style="font-weight:bold" href="#class-resource_exists_selector">resource_exists_selector</a>: Allows pipeline processing to be conditional on the existence of a file</li>
 	    </ul></li>
 	    <li><a style="font-weight:bold" href="#class-parameter">parameter</a>: Used to pass parameters to any components which require them</li>
@@ -141,6 +142,7 @@ td{vertical-align:top;padding:3px}
 	      <li><a style="font-weight:bold" href="#class-aggregate_generator">aggregate_generator</a>: The child generators' results are aggregated to provide the source XML for a pipeline</li>
 	      <li><a style="font-weight:bold" href="#class-command_generator">command_generator</a>: The stdout stream from a shell command provides the source XML for a pipeline</li>
 	      <li><a style="font-weight:bold" href="#class-directory_generator">directory_generator</a>: Converts a directory listing into the source XML for a pipeline</li>
+	      <li><a style="font-weight:bold" href="#class-request_generator">request_generator</a>: Encodes the given request headers as the XML source for a pipeline</li>
 	      <li><a style="font-weight:bold" href="#class-xquery_generator">xquery_generator</a>: Execute an XQuery expression against an XML database (Berkelely DB XML) to provide the source XML for a pipeline</li>
 	      <li><a style="font-weight:bold" href="#class-sql_generator">sql_generator</a>: Execute an SQL query against a database to provide the source XML for a pipeline</li>
 	      <li><a style="font-weight:bold" href="#class-swishe_generator">swishe_generator</a>: Execute a full-text search against a Swish-e index to provide the source XML for a pipeline</li>
@@ -149,6 +151,7 @@ td{vertical-align:top;padding:3px}
 	      <li><a style="font-weight:bold" href="#class-xslt_transformer">xslt_transformer</a>: Transform the pipeline XML stream using an XSLT stylesheet</li>
 	      <li><a style="font-weight:bold" href="#class-command_transformer">command_transformer</a>: Transform the pipeline XML stream using a shell command</li>
 	      <li><a style="font-weight:bold" href="#class-sax_handler_transformer">sax_handler_transformer</a>: Transform the pipeline XML stream using a Python SAX handler class</li>
+	      <li><a style="font-weight:bold" href="#class-etree_transformer">etree_transformer</a>: Transform the pipeline XML stream using Python code which directly manipulates the ElementTree</li>
 	    </ul></li>
 	    <li><a style="font-weight:bold" href="#class-serializer">serializer</a>: Serializer base class<ul>
 	      <li><a style="font-weight:bold" href="#class-html_serializer">html_serializer</a>: Convert the pipeline XML stream into an HTML document</li>
