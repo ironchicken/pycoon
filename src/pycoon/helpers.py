@@ -66,6 +66,19 @@ class fake_table(object):
     def add(self, key, val):
         self.__setitem__(key, val)
 
+class fake_util(object):
+    """
+    Used to allow command line testing of sitemaps which include a <rediect> component
+    (which relies on the mod_python.util.redirect function).
+    """
+
+    def redirect(self, req, uri, permanent=False, text=None):
+        print "REDIRECT: %s" % uri
+        if permanent:
+            return 301
+        else:
+            return 302
+        
 class pycoon_sax_handler(ContentHandler):
     """
     Used as a base class for user-defined classes intented to be used with the sax_handler_transformer.

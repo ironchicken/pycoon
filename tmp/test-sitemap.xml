@@ -109,17 +109,22 @@
     <serialize type="xml" />
   </match>
 
+  <match type="uri" pattern="/google">
+    <redirect uri="http://www.google.co.uk/" />
+  </match>
+
   <match type="uri" pattern="/*">
     <generate type="file" src="data.xml" />
-    <transform type="xslt" src="data2html.xslt">
-      <parameter name="uri" value="{$1}" />
-    </transform>
     <select type="browser-class">
       <when test="graphic">
+	<transform type="xslt" src="data2html.xslt">
+	  <parameter name="uri" value="{$1}" />
+	</transform>
 	<serialize type="xhtml" mime="text/html" />
       </when>
       <otherwise>
-	<serialize type="html" mime="text/html" />
+	<transform type="xslt" src="data2text.xslt" />
+	<serialize type="text" mime="text/plain" />
       </otherwise>
     </select>
   </match>

@@ -26,6 +26,7 @@
       <component name="when" module="pycoon.selectors.when_element" class="when" />
       <component name="otherwise" module="pycoon.selectors.otherwise_element" class="otherwise" />
       <component name="throw" module="pycoon.throw" class="throw" />
+      <component name="redirect" module="pycoon.redirect" class="redirect" />
     </built-in>
     <matchers>
       <matcher name="uri" module="pycoon.matchers.uri_matcher" class="uri_matcher" />
@@ -60,6 +61,7 @@
       <serializer name="xml" module="pycoon.serializers.xml_serializer" class="xml_serializer" />
       <serializer name="html" module="pycoon.serializers.html_serializer" class="html_serializer" />
       <serializer name="xhtml" module="pycoon.serializers.xhtml_serializer" class="xhtml_serializer" />
+      <serializer name="text" module="pycoon.serializers.text_serializer" class="text_serializer" />
       <serializer name="svg" module="pycoon.serializers.svg_serializer" class="svg_serializer" />
       <serializer name="pdf" module="pycoon.serializers.pdf_serializer" class="pdf_serializer" />
     </serializers>
