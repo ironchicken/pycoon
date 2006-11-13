@@ -10,7 +10,7 @@
 
 <xsl:template match="/">
 
-<html lang="en" xml:lang="en">
+<html lang="{/document/head/language}" xml:lang="{/document/head/language}">
   <xsl:apply-templates select="/document/head" />
   <xsl:apply-templates select="/document/body" />
 </html>
@@ -39,18 +39,27 @@ td{vertical-align:top;padding:3px}
   </xsl:element>
 </xsl:template>
 
-<xsl:template match="head/date">
+<xsl:template match="head/created">
   <xsl:element name="meta">
-    <xsl:attribute name="name">date</xsl:attribute>
+    <xsl:attribute name="name">created</xsl:attribute>
     <xsl:attribute name="content"><xsl:apply-templates /></xsl:attribute>
   </xsl:element>
 </xsl:template>
+
+<xsl:template match="head/modified">
+  <xsl:element name="meta">
+    <xsl:attribute name="name">modified</xsl:attribute>
+    <xsl:attribute name="content"><xsl:apply-templates /></xsl:attribute>
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="head/language" />
 
 <xsl:template match="head" mode="display">
   <h1><xsl:value-of select="/document/head/title" /></h1>
   <p>
     <small style="display:block"><xsl:value-of select="/document/head/author" /></small>
-    <small style="display:block"><xsl:value-of select="/document/head/date" /></small>
+    <small style="display:block">Modified: <xsl:value-of select="/document/head/modified" /></small>
   </p>
   <hr />
 </xsl:template>

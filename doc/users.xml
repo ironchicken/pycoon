@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<document>
+
+<head>
+  <title>Pycoon User Documentation</title>
+  <author email="richardlewis@fastmail.co.uk">Richard Lewis</author>
+  <language>en</language>
+  <created>2006-11-12</created>
+  <modified>2006-11-12</modified>
+</head>
+
+<body>
+
+<div id="home" title="Pycoon" display="page" modified="2006-11-12">
+  <p>
+    Pycoon is an XML web publishing framework. It allows you to store your content as semantically
+    marked up data in one place, store your style rules in another place and have the style applied
+    to the content dynamically in response to HTTP requests. The common term for this is "separation
+    of concerns".
+  </p>
+  <p>
+    Note, however, that Pycoon is <em>not</em> a content management system in the common sense as,
+    while it allows the preparation of content and style to be carried out separately, it provides
+    no facility for ordinary users to edit content. Rather, it is intended that content should be
+    produced by users with some knowledge of working with XML (though content could, of course, be
+    produced with a third-party, user-friendly tool).
+  </p>
+  <p>
+    It is written in Python and runs inside the Apache web server using mod_python. It is intended
+    that Pycoon should feel very familiar to users of the Apache Cocoon web publishing framework and
+    was conceived as a light-weight alternative to this tool.
+  </p>
+  <p>
+    Pycoon is still a new project and currently lacks production stability as well as a number of
+    key features.  Most notably it currently provides no caching mechanism and cannot convert XSL-FO
+    documents to the PDF format. However, site designers working on small, non-critical projects and
+    who are interested in XML-based site design and separation of concerns are encourage to try it
+    out and to get in touch with any comments or suggestions!
+  </p>
+  <list>
+    <item>
+      Please see the <link href="/docs/getting-started">Getting Started</link> page for a guide to
+      installation and configuration.
+    </item>
+    <item>
+      See the <link href="/docs/components">Components Documenation</link> for a description of the
+      components available in Pycoon.
+    </item>
+    <item>
+      See the <link href="/docs/technical">Technical Documentation</link> for a description of how
+      the Pycoon code works.
+    </item>
+  </list>
+</div>
+
+<div id="getting-started" title="Getting Started" display="page" modified="2006-11-12">
+
+<p>
+  This page details the installation procedure and the configuration of a Pycoon website.
+</p>
+
+<div id="installation" title="Installation" display="block">
+  <p>
+    These software components are pre-requisites for a Pycoon installation:
+  </p>
+  <list>
+    <item>
+      <link href="http://httpd.apache.org/">Apache</link> web server
+    </item>
+    <item>
+      <link href="http://www.python.org/">Python</link> programming language interpreter
+    </item>
+    <item>
+      <link href="http://www.modpython.org/">mod_python</link> Apache module
+    </item>
+    <item>
+      <link href="http://codespeak.net/lxml/">lxml</link> ElementTree implementation
+    </item>
+    <item>
+      <link href="http://utidylib.berlios.de/">uTidyLib</link> HTML formatting library
+    </item>
+  </list>
+  
+</div>
+
+</div>
+
+<div id="concepts" title="Concepts" display="page" modified="2006-11-12">
+
+</div>
+
+<div id="components" title="Components" display="page" modified="2006-11-12">
+
+<p>
+  There are currently five categories of component in Pycoon:
+</p>
+
+<list style="definition">
+  <item title="matchers">
+    provide the top-level selection of components used to handle a request; cheifly matching URI
+    patterns;
+  </item>
+  <item title="selectors">
+    provide more fine-grained component selection within pipelines;
+  </item>
+  <item title="geneartors">
+    provides sources of XML content for pipelines;
+  </item>
+  <item title="transformers">
+    allows transformation of XML content within pipelines;
+  </item>
+  <item title="serializers">
+    allows XML content in pipelines to be rendered as user-client readable content such as HTML or
+    JPEG.
+  </item>
+</list>
+
+<div id="generators" display="none">
+  <div id="file_generator" class="component" title="&lt;generate type='file'" display="page" modified="2006-11-12">
+    <p>
+      The file generator allows an ordinary XML document stored in a file to be used to supply
+      content to a pipeline.
+    </p>
+    <div class="syntax" title="Syntax">
+    </div>
+  </div>
+</div>
+
+</div>
+
+</body>
+
+</document>

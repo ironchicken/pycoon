@@ -1,63 +1,67 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
 <document>
-  <head>
-    <title>Pycoon White Paper</title>
-    <author email="richardlewis@fastmail.co.uk">Richard Lewis</author>
-    <date>2006-10-10</date>
-  </head>
-  <body>
-    <div id="introduction" title="Introduction">
-      <p>
-	This white paper details the implementation of an XML web publishing framework written in
-	the <link href="http://www.python.org/">Python</link> programming language, based on the
-	concept of XML <link href="http://en.wikipedia.org/wiki/XML_pipeline">pipeline</link>
-	processing and similar in intention to the <link href="http://cocoon.apache.org/">Apache
-	Cocoon</link> project.
-      </p>
-      <p>
-	There were two main reasons for my choosing to attempt to write an XML web publishing
-	framework: first was that I was not happy with the Java-based approach used in Apache Cocoon
-	and its reliance on a Java Servlet engine; and second was that I felt I would benefit from
-	the technical challenge.
-      </p>
-    </div>
-    <div id="aims" title="Project Aims">
-      <p>
-	The main aims of the Pycoon project are to implement an XML web publishing framework which:
-      </p>
-      <list>
-	<item>
-	  Feels very familiar to Cocoon users; uses the 'sitemap' concept and similarly named
-	  components
-	</item>
-	<item>
-	  Integrates well with the Apache web server
-	</item>
-	<item>
-	  Allows experienced Python programmers to write their own components
-	</item>
-	<item>
-	  Attempts to maintain a small code footprint and stays manageable
-	</item>
-	<item>
-	  Is reasonably light on system resources
-	</item>
-      </list>
-    </div>
-    <div id="deployment" title="Deployment">
-      <p>
-	Pycoon is deployed as mod_python handler in Apache. It has been tested as a VirtualHost
-	handler, though would probably work as a handler for the whole Apache server (at the expense
-	of being able to do anything else with the server - including serving ordinary files!) and
-	may work as a directory handler but it would be necessary to use the absolute URI path in
-	matcher patterns.
-      </p>
-      <p>
-	The required Apache VirtualHost configuration should follow this format:
-      </p>
-      <code xml:space="preserve">
-&lt;VirtualHost *&gt;
+
+<head>
+  <title>Pycoon White Paper</title>
+  <author email="richardlewis@fastmail.co.uk">Richard Lewis</author>
+  <language>en</language>
+  <created>2006-10-10</created>
+  <modified>2006-11-12</modified>
+</head>
+
+<body>
+
+<div id="introduction" title="Introduction">
+  <p>
+    This white paper details the implementation of an XML web publishing framework written in the
+    <link href="http://www.python.org/">Python</link> programming language, based on the concept of
+    XML <link href="http://en.wikipedia.org/wiki/XML_pipeline">pipeline</link> processing and
+    similar in intention to the <link href="http://cocoon.apache.org/">Apache Cocoon</link> project.
+  </p>
+  <p>
+    There were two main reasons for my choosing to attempt to write an XML web publishing framework:
+    first was that I was not happy with the Java-based approach used in Apache Cocoon and its
+    reliance on a Java Servlet engine; and second was that I felt I would benefit from the technical
+    challenge.
+  </p>
+</div>
+
+<div id="aims" title="Project Aims">
+  <p>
+    The main aims of the Pycoon project are to implement an XML web publishing framework which:
+  </p>
+  <list>
+    <item>
+      Feels very familiar to Cocoon users; uses the 'sitemap' concept and similarly named components
+    </item>
+    <item>
+      Integrates well with the Apache web server
+    </item>
+    <item>
+      Allows experienced Python programmers to write their own components
+    </item>
+    <item>
+      Attempts to maintain a small code footprint and stays manageable
+    </item>
+    <item>
+      Is reasonably light on system resources
+    </item>
+  </list>
+</div>
+
+<div id="deployment" title="Deployment">
+  <p>
+    Pycoon is deployed as mod_python handler in Apache. It has been tested as a VirtualHost handler,
+    though would probably work as a handler for the whole Apache server (at the expense of being
+    able to do anything else with the server - including serving ordinary files!) and may work as a
+    directory handler but it would be necessary to use the absolute URI path in matcher patterns.
+  </p>
+  <p>
+    The required Apache VirtualHost configuration should follow this format:
+  </p>
+  <code xml:space="preserve">
+    &lt;VirtualHost *&gt;
     ServerName localhost
     DocumentRoot /var/www
 
@@ -68,1384 +72,1561 @@
     SetEnv PycoonSitemap sitemap.xm
 
     PythonHandler pycoon
-&lt;/VirtualHost&gt;
-      </code>
-      <p>
-	The PycoonConfigRoot and PycoonSitemap variables are optional and the values shown above are
-	also the default values. The PycoonConfigRoot directory should contain the server.xml file
-	and the <path>resources</path> directory (see <path>conf</path> in the svn trunk).
-      </p>
-      <p>
-	The server.xml file contains the configuration information for the Pycoon server, including:
-	logging level; server owner details; caching options (though caching is not yet
-	implemented); available pipeline components; and some default pipelines intended to be used
-	for error handling.
-      </p>
-    </div>
-    <div id="implementation" title="Implementation">
-      <p>
-	The two main tools which were assumed at the outset were the <link
-	href="http://www.python.org/">Python</link> programming language and the <link
-	href="http://httpd.apache.org/">Apache</link> web server. As a result of these decisions, it
-	was logical to choose to use <link href="http://www.modpython.org/">mod_python</link> to
-	link the two technologies.
-      </p>
-      <p>
-	The concept of the 'sitemap' XML file for describing pipelines was taken from Cocoon and an
-	attempt has been made to adopt a similar sitemap syntax in Pycoon.
-      </p>
-      <p>
-	The component based architecture, as well as being a feature of Cocoon, is typical of many
-	programming projects that aim towards extensibility. The classes of components implemented
-	(including 'matchers', 'selectors', 'generators', 'transformers' and 'serializers') have
-	been chosen for their familiarity to Cocoon users but they are also practical and
-	descriptive names for the concepts they encapsulate.
-      </p>
-      <p>
-	Where Cocoon handles XML data as SAX events through its pipelines, Pycoon uses the <link
-	href="http://http://effbot.org/zone/element-index.htm">ElementTree</link> interface to store
-	the current state of the XML pipeline and manipulate it at each stage. This may be a less
-	efficient method than SAX event streams but it does have the advantage of allowing for much
-	simpler code. It is easier to construct and manipulate ElementTree data in Python than it is
-	to construct and manipulate SAX events.
-      </p>
-      <div id="class-hierarchy" title="Component Class Hierarchy">
-	<p>
-	  This diagram shows the component hierarchy and all the currently implemented components:
-	</p>
-	<class-hierarchy name="component">
-	<class name="component" description="Component base class">
-	  <class name="pipeline" description="The container class for components which provides 'execution' methods" />
-	  <class name="syntax_component" description="Base class of all components which handle logical processing in sitemaps">
-	    <class name="matcher" description="Matcher base class">
-	      <class name="uri_matcher" description="Allows pipeline processing to be conditional on URI patterns" />
-	      <class name="error_matcher" description="Allows pipeline processing to be conditional on HTTP error conditions" />
-	    </class>
-	    <class name="selector" description="Selector base class">
-	      <class name="browser_class_selector" description="Allows pipeline processing to be conditional on the type of browser the client is using [graphic|text|aural|braille]" />
-	      <class name="browser_selector" description="Allows pipeline processing to be conditional the name of the browser the client is using" />
-	      <class name="request_parameter_selector" description="Allows pipeline processing to be conditional on the value of a request parameter (either GET or POST)" />
-	      <class name="request_header_selector" description="Allows pipeline processing to be conditional on the value of a request header" />
-	      <class name="resource_exists_selector" description="Allows pipeline processing to be conditional on the existence of a file" />
-	    </class>
-	    <class name="parameter" description="Used to pass parameters to any components which require them" />
-	    <class name="when" description="Used to implement the conditions of selector components" />
-	    <class name="otherwise" description="Used to implement the default condition of selector components" />
-	    <class name="throw" description="Causes an HTTP error code" />
-	  </class>
-	  <class name="stream_component" description="Base class for all components which handle XML data in a pipeline">
-	    <class name="read" description="Returns an ordinary file (without any XML processing)" />
-	    <class name="generator" description="Generator base class">
-	      <class name="xml_generator" description="Use an XML file to provide the source XML for a pipeline" />
-	      <class name="http_generator" description="Retrieve the source XML for a pipeline using an HTTP request" />
-	      <class name="xpath_generator" description="Execute an XPath expression against an XML file to provide the source XML for a pipeline" />
-	      <class name="aggregate_generator" description="The child generators' results are aggregated to provide the source XML for a pipeline" />
-	      <class name="command_generator" description="The stdout stream from a shell command provides the source XML for a pipeline" />
-	      <class name="directory_generator" description="Converts a directory listing into the source XML for a pipeline" />
-	      <class name="request_generator" description="Encodes the given request headers as the XML source for a pipeline" />
-	      <class name="xquery_generator" description="Execute an XQuery expression against an XML database (Berkelely DB XML) to provide the source XML for a pipeline" />
-	      <class name="sql_generator" description="Execute an SQL query against a database to provide the source XML for a pipeline" />
-	      <class name="swishe_generator" description="Execute a full-text search against a Swish-e index to provide the source XML for a pipeline" />
-	    </class>
-	    <class name="transformer" description="Transformer base class">
-	      <class name="xslt_transformer" description="Transform the pipeline XML stream using an XSLT stylesheet" />
-	      <class name="command_transformer" description="Transform the pipeline XML stream using a shell command" />
-	      <class name="sax_handler_transformer" description="Transform the pipeline XML stream using a Python SAX handler class" />
-	      <class name="etree_transformer" description="Transform the pipeline XML stream using Python code which directly manipulates the ElementTree" />
-	    </class>
-	    <class name="serializer" description="Serializer base class">
-	      <class name="html_serializer" description="Convert the pipeline XML stream into an HTML document" />
-	      <class name="xhtml_serializer" description="Convert the pipeline XML stream into an XHTML document" />
-	      <class name="xml_serializer" description="Convert the pipeline XML stream into an XML document" />
-	      <class name="pdf_serializer" description="Convert the pipeline XML stream (which must contain XSL-FO) into a PDF document (NOT IMPLEMENTED)" />
-	      <class name="svg_serializer" description="Convert the pipeline XML stream (which must contain SVG) into an image (PARTIAL IMPLEMENTATION)" />
-	    </class>
-	  </class>
-	</class>
-      </class-hierarchy>
-      <p>
-	These are the non-component classes used in Pycoon:
-      </p>
-      <class-hierarchy name="non-component">
-	<class name="sitemap_config" description="The container class for pipelines" />
-	<class name="sitemap_config_parse" description="A SAX handler which reads a sitemap file" />
-	<class name="server_config" description="Holds information for a Pycoon instance" />
-	<class name="server_config_parse" description="A SAX handler which reads a server configuration file" />
-	<class name="invokation_syntax" description="Stores the syntax required to use a component in a sitemap file" />
-	<class name="interpolation_syntax" description="Provides a method to interpret special {} delimited portions of component attribute values in sitemap files">
-	  <class name="interpolate_pattern_match_number" description="Interprets the '{$n}' syntax, where the number 'n' is the n'th '*' denoted portion of the URI" />
-	  <class name="interpolate_uri" description="Interprets the '{uri:...}' syntax" />
-	  <class name="interpolate_context" description="Interpolate_context interprets the '{context:...}' syntax, where '...' should be a URI which will be handled by the sitemap and its result will be returned" />
-	  <class name="interpolate_traceback" description="Interprets the '{traceback}' syntax and returns the current traceback as a string" />
-	</class>
-      </class-hierarchy>
-      </div>
-      <div id="class-descriptions" title="Class Descriptions">
-	<class name="component">
-	  <name>component</name>
-	  <source>pycoon/components.py</source>
-	  <description>
-	    The component class is the base class of all pipeline components in Pycoon.
-	  </description>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <description>
-	      <p>
-		Class constructor. <identifier>parent</identifier> is the component's parent in the
-		pipeline and may be another component or a <link class="pipeline">pipeline</link> or
-		<link class="sitemap">sitemap</link> object. <identifier>root_path</identifier> is a
-		base path which derived components should use to resolve path names; it is an
-		optional parameter and takes the value of the parent sitemap (or server) document
-		root if not specified.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="__call__">
-	    <definition>__call__(self, req, p_sibling_result=None, child_results=[])</definition>
-	    <returns>
-	      Returns a tuple whose first member is a boolean flag indicating whether the execution
-	      was successful or not and whose second member is the <identifier>Element</identifier>
-	      result.
-	    </returns>
-	    <description>
-	      <p>
-		Main execution method. <identifier>req</identifier> is an Apache request
-		object. <identifier>p_sibling_result</identifier> is the
-		<identifier>Element</identifier> returned by the previous sibling component in the
-		pipeline.  <identifier>child_results</identifier> is a list of the
-		<identifier>Element</identifier> results of all the child componets which have been
-		executed so far.
-	      </p>
-	      <p>
-		This method first calls the object's <link class="component"
-		method="_descend">_descend</link> method and, if it returns
-		<identifier>True</identifier>, it loops over the component's child components and
-		calls each one's __call__ method, passing the previous child's result as the
-		<identifier>p_sibling_result</identifier> each time.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_descend">
-	    <definition>_descend(self, req, p_sibling_result=None)</definition>
-	    <returns>
-	      Returns a boolean.
-	    </returns>
-	    <description>
-	      <p>
-		<identifier>req</identifier> is an Apache request
-		object. <identifier>p_sibling_result</identifier> is the
-		<identifier>Element</identifier> returned by the previous sibling component in the
-		pipeline.
-	      </p>
-	      <p>
-		The _descend method allows derived components to give permission for their child
-		components to be executed or not. It is passed the current query context (the
-		request object) and the result of its previous sibling which implementations can use
-		to determine the return value. Its default behaviour is simply to return
-		True. However, components such as <link class="matcher">matchers</link> and <link
-		class="selector">selectors</link> need to override this method.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_continue">
-	    <definition>_continue(self, req, p_sibling_result=None)</definition>
-	    <returns>
-	      Returns a boolean.
-	    </returns>
-	    <description>
-	      <p>
-		<identifier>req</identifier> is an Apache request
-		object. <identifier>p_sibling_result</identifier> is the
-		<identifier>Element</identifier> returned by the previous sibling component in the
-		pipeline.
-	      </p>
-	      <p>
-		The _continue method is similar to the <link class="component"
-		method="_descend">_descend</link> method: it allows derived components to give
-		permission for their following sibling components to be executed or not. It is
-		passed the current query context (the request object) and the result of its previous
-		sibling which implementations can use to determine the return value. Its default
-		behaviour is simply to return True. However, components such as the <link
-		class="when">when</link> component need to override this method and the <link
-		class="uri_matcher">uri_matcher</link> overrides it to improve efficientcy (once a
-		matching URI pattern has been found and its components executed, no further pipeline
-		processing is carried out).
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_result">
-	    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
-	    <returns>
-	      Returns a tuple whose first member is a boolean flag indicating whether the execution
-	      was successful or not and whose second member is the <identifier>Element</identifier>
-	      result.
-	    </returns>
-	    <description>
-	      <p>
-		XML data handling components should do their main work in this
-		method. <identifier>req</identifier> is an Apache request
-		object. <identifier>p_sibling_result</identifier> is the
-		<identifier>Element</identifier> returned by the previous sibling component in the
-		pipeline. <identifier>child_results</identifier> is a list of the
-		<identifier>Element</identifier> results of all this component's child componets.
-	      </p>
-	      <p>
-		The default implementation raises a <identifier>NotImplemented</identifier>
-		exception. All derived components should perform their main function in this method
-		(or at least from this method) and return a tuple whose first member is a boolean
-		indicating whether or not they were successful and whose second member, on success,
-		should be an <identifier>Element</identifier> object, or, on failure, an Apache
-		error code. (Note, however, that exceptions will be handled gracefully by Pycoon and
-		result in a descriptive HTTP 500 error.)
-	      </p>
-	    </description>
-	  </method>
-	  <method name="add_component">
-	    <definition>add_component(self, c, pos=None)</definition>
-	    <returns>
-	      The added component
-	    </returns>
-	    <description>
-	      <p>
-		Add a child component. <identifier>c</identifier> is a component
-		object. <identifier>pos</identifier> is the position, expressed as a number, at
-		which the component should be added; by default the component is appended as the
-		last child component.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="parameter_children">
-	    <definition>parameter_children(self, child_results)</definition>
-	    <returns>
-	      A dictionary
-	    </returns>
-	    <description>
-	      <p>
-		Converts <link class="parameter">parameter</link> child components into a dictionary
-		of name/value pairs. <identifier>child_results</identifier> is a list of parameter
-		components.  (Note: the current implementation of this function is quite naive in
-		that it performs inadequate type checking on the given child_results and relies on
-		sitemap class's syntax checking to make sure that child components will actually be
-		parameters).
-	      </p>
-	    </description>
-	  </method>
-	  <method name="find_components">
-	    <definition>find_components(self, class_name, found=[])</definition>
-	    <returns>
-	      A list of components (may be empty)
-	    </returns>
-	    <description>
-	      <p>
-		Searches all of this component's child components and returns any whose class name
-		matches the given <identifier>class_name</identifier>. It is a recursive function so
-		the <identifier>found</identifier> parameter is simply the list of matching
-		components found by the previous call.
-	      </p>
-	      <p>
-		This function is most effectively used by the <link class="pipeline">pipeline</link>
-		component as it has the most children. It is used by the pipeline component's <link
-		class="pipeline" method="handle_error">handle_error</link> method to find available
-		<link class="error_matcher">error_matcher</link> components.
-	      </p>
-	    </description>
-	  </method>
-	  <property>
-	    <name>parent</name>
-	    <description>
-	      The parent component of this component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>sitemap</name>
-	    <description>
-	      The parent sitemap of this component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>server</name>
-	    <description>
-	      The parent server of this component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>context</name>
-	    <description>
-	      Either a reference to the compoent's parent sitemap or, if this is None, the
-	      component's parent server.
-	    </description>
-	  </property>
-	  <property>
-	    <name>root_path</name>
-	    <description>
-	      The base path which should be prefixed to any filenames used by the component. By
-	      default, it takes either the sitemap or server's document root.
-	    </description>
-	  </property>
-	  <property>
-	    <name>children</name>
-	    <description>
-	      A list of child components.
-	    </description>
-	  </property>
-	  <property>
-	    <name>description</name>
-	    <description>
-	      A short string describing the component. In derived components, the parameters (such
-	      as URI pattern) are added to this description to improve debugging information.
-	    </description>
-	  </property>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      Should be either "stream" or "syntax". For component class the value is "none".
-	    </description>
-	  </class-property>
-	  <class-property>
-	    <name>function</name>
-	    <description>
-	      Should be one of "matcher", "selector", "generator", "transformer", "serializer", etc.
-	      For component class the value is "none".
-	    </description>
-	  </class-property>
-	  <helper-func name="register_component">
-	    <definition>register_component(server, super_type, attrs)</definition>
-	    <description>
-	      <p>
-		Loads a component class for later use by sitemaps. <identifier>server</identifier>
-		is the server object; <identifier>super_type</identifier> is one of "matcher",
-		"generator", "transformer", etc.; <identifier>attrs</identifier> is an
-		<identifier>xml.sax.xmlreader.AttributesImpl</identifier> which contains the
-		attributes supplied by the server configuration file for the component (normally
-		"name", "module" and "class").
-	      </p>
-	    </description>
-	  </helper-func>
-	</class>
-	<class name="invokation_syntax">
-	  <name>invokation_syntax</name>
-	  <source>pycoon/components.py</source>
-	  <description>
-	    Used to store the XML syntax rules for how a component should be used in a sitemap file.
-	  </description>
-	  <method name="__init__">
-	    <definition>__init__(self)</definition>
-	    <description>
-	      <p>
-		Class constructor. Creates empty instance properties.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="validate">
-	    <definition>validate(self, parent_name, name, attrs)</definition>
-	    <returns>
-	      Returns a boolean
-	    </returns>
-	    <description>
-	      <p>
-		Checks the given XML element attributes for
-		validity. <identifier>parent_name</identifier> is the element name of the parent
-		component; <identifier>name</identifier> is the element name of the element being
-		checked; <identifier>attrs</identifier> is an
-		<identifier>xml.sax.xmlreader.AttributesImpl</identifier> instance from the sitemap
-		element being checked.
-	      </p>
-	      <p>
-		The method raises exceptions on any syntax errors in the component usage. If there are
-		no errors it returns True.
-	      </p>
-	    </description>
-	  </method>
-	  <property>
-	    <name>element_name</name>
-	    <description>
-	      The required element name for the component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>allowed_parent_components</name>
-	    <description>
-	      A list of the element names of components of the components of which this component
-	      may be a child.
-	    </description>
-	  </property>
-	  <property>
-	    <name>required_attribs</name>
-	    <description>
-	      A list of the names of required XML attributes for the component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>required_attrib_values</name>
-	    <description>
-	      A dictionary of name/value pairs of the required values of XML attributes of the component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>optional_attribs</name>
-	    <description>
-	      A list of the names of optional XML attributes for the component.
-	    </description>
-	  </property>
-	  <property>
-	    <name>allowed_child_components</name>
-	    <description>
-	      A list of the element names of components which are allowed to be child components of
-	      this component.
-	    </description>
-	  </property>
-	</class>
-	<class name="syntax_component">
-	  <name>syntax_component</name>
-	  <inherits>component</inherits>
-	  <source>pycoon/components.py</source>
-	  <description>
-	    Base class of all components which handle logical processing in sitemaps.
-	  </description>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      For syntax_component class the value is "syntax".
-	    </description>
-	  </class-property>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="component" method="__init__">component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Calls <link class="component" method="_result">component.__init__</link> and sets
-		<link class="syntax_component" property="description">description</link> property to
-		"Syntax component base class".
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_result">
-	    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
-	    <overrides><link class="component" method="_result">component._result</link></overrides>
-	    <returns>
-	      Returns a tuple whose first member is a boolean flag indicating whether the execution
-	      was successful or not and whose second member is the <identifier>Element</identifier>
-	      result.
-	    </returns>
-	    <description>
-	      <p>
-		This default implementation for syntax components simply either returns the last
-		<identifier>child_results</identifier> <identifier>Element</identifier> (if there is
-		one) or the <identifier>p_sibling_result</identifier> along with a True success
-		flag.
-	      </p>
-	    </description>
-	  </method>
-	</class>
-	<class name="matcher">
-	  <name>matcher</name>
-	  <inherits>syntax_component</inherits>
-	  <source>pycoon/matchers/__init__.py</source>
-	  <description>
-	    Base class for matcher components.
-	  </description>
-	  <syntax>
-&lt;!ELEMENT pipeline (match*)&gt;
-&lt;!ELEMENT match (select*,aggregate*,generate*,transform*,serialize?)&gt;
-&lt;!ATTLIST match type CDATA #REQUIRED&gt;
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Calls <link class="syntax_component"
-		method="_result">syntax_component.__init__</link> and sets <link class="matcher"
-		property="description">description</link> property to "Matcher bass class".
-	      </p>
-	    </description>
-	  </method>
-	</class>
-	<class name="selector">
-	  <name>selector</name>
-	  <inherits>syntax_component</inherits>
-	  <source>pycoon/selectors/__init__.py</source>
-	  <description>
-	    Base class for selector components.
-	  </description>
-	  <syntax>
-&lt;!ELEMENT match (select*,...)&gt;
-&lt;!ELEMENT aggregate (select*,...)&gt;
-&lt;!ELEMENT select (when+,otherwise?)&gt;
-&lt;!ATTLIST select type CDATA #REQUIRED&gt;
-&lt;!ATTLIST select method (exclusive|inclusive) #IMPLIED "exclusive"&gt;
-&lt;!ELEMENT when (generate*,transform*,serialize?)&gt;
-&lt;!ATTLIST when test CDATA #REQUIRED&gt;
-&lt;!ELEMENT otherwise (generate*,transform*,serialize?)&gt;
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, method="exclusive", root_path="")</definition>
-	    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Calls <link class="syntax_component"
-		method="_result">syntax_component.__init__</link> and sets <link class="selector"
-		property="description">description</link> property to "Selector bass
-		class". <identifier>method</identifier> defines how child <link
-		class="when">when</link> components will be treated: "exclusive" means that once a
-		matching <identifier>when</identifier> has been found, the selector will stop and
-		return its result; "inclusive" means that <em>every</em> child
-		<identifier>when</identifier> component will be tested and each one that matches
-		will apply.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="when_func">
-	    <definition>when_func(self, req, conditions)</definition>
-	    <returns>
-	      Returns a boolean.
-	    </returns>
-	    <description>
-	      <p>
-		Used to implement the selector's logic. <identifier>req</identifier> is an Apache
-		request object; <identifier>conditions</identifier> is a list of strings which are
-		given in the <identifier>test</identifier> attribute of a child <link
-		class="when">when</link> element.
-	      </p>
-	      <p>
-		The default behaviour of this method is to raise the <identifier>NoImplemented</identifier>
-		exception. Derived components should return <identifier>True</identifier> if the condition matches,
-		or <identifier>False</identifier> otherwise.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_result">
-	    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
-	    <overrides><link class="component" method="_result">component._result</link></overrides>
-	    <returns>
-	      Returns a tuple whose first member is a boolean flag indicating whether the execution
-	      was successful or not and whose second member is the <identifier>Element</identifier>
-	      result.
-	    </returns>
-	    <description>
-	      <p>
-		If the component's <link class="selector" property="method">method</link> property
-		is "exclusive", the method either returns the last
-		<identifier>child_results</identifier> element (if its not None) or the
-		<identifier>p_sibling_result</identifier>.
-	      </p>
-	      <p>
-		If the <link class="selector" property="method">method</link> property is
-		"inclusive" and the <identifier>child_results</identifier> list it not empty, each
-		<identifier>child_results</identifier> element is aggregated into a parent element
-		called "inclusive-select". If the <identifier>child_results</identifier> list is
-		empty then the <identifier>p_sibling_result</identifier> is returned instead.
-	      </p>
-	    </description>
-	  </method>
-	  <property>
-	    <name>method</name>
-	    <description>
-	      Takes either the value "exclusive" (the default) or "inclusive"; "exclusive" means
-	      that once a matching <identifier>when</identifier> has been found, the selector will
-	      stop and return its result; "inclusive" means that <em>every</em> child
-	      <identifier>when</identifier> component will be tested and each one that matches will
-	      apply.
-	    </description>
-	  </property>
-	</class>
-	<class name="stream_component">
-	  <name>stream_component</name>
-	  <inherits>component</inherits>
-	  <source>pycoon/components.py</source>
-	  <description>
-	    Base class for all components which handle XML data in a pipeline.
-	  </description>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="component" method="_result">component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Calls <link class="component" method="_result">component.__init__</link> and sets
-		<link class="stream_component" property="description">description</link> property to
-		"Streamed component base class".
-	      </p>
-	    </description>
-	  </method>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      For stream_component class the value is "stream".
-	    </description>
-	  </class-property>
-	</class>
-	<class name="pipeline">
-	  <name>pipeline</name>
-	  <inherits>component</inherits>
-	  <source>pycoon/pipeline.py</source>
-	  <description>
-	    The container class for components which provides 'execution' methods for pipeline
-	    processing.
-	  </description>
-	  <syntax xml:space="preserve">
-&lt;!ELEMENT pipeline (match+)&gt;
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, cache_as="")</definition>
-	    <overrides><link class="component" method="__init__">component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Class constructor. <identifier>cache_as</identifier> is currently not used.
-	      </p>
-	      <p>
-		The method just calls <link class="component" method="__init__">component.__init__</link>
-		and sets its <identifier>description</identifier> property to "Pipeline".
-	      </p>
-	    </description>
-	  </method>
-	  <method name="force_execute">
-	    <definition>force_execute(self, output, uri)</definition>
-	    <returns>
-	      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution
-	      was successful or not; the result of the execution which is either a character stream
-	      or an HTTP error code; the MIME type of the result.
-	    </returns>
-	    <description>
-	      <p>
-		Allows a pipeline to be executed without an Apache request object and without
-		returning the result to the client. <identifier>output</identifier> is a file-like
-		object and <identifier>uri</identifier> is a request URI string.
-	      </p>
-	      <p>
-		This method creates a fake request object using the give file-like object and URI
-		string and then calls the <link class="pipeline" method="execute">execute</link>
-		using this object (rather than a real Apache request object). The result of the
-		execution will be written to the given file-like object and <em>not</em> returned to
-		the client.  It is used by the <link class="interpolate_context"
-		method="__call__">context</link> interpolation method.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_descend">
-	    <definition>_descend(self, req, p_sibling_result=None)</definition>
-	    <overrides><link class="component" method="_descend">component._descend</link></overrides>
-	    <returns>
-	      Returns a boolean.
-	    </returns>
-	    <description>
-	      <p>
-		Returns True so that child components of the pipeline will be executed.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="_result">
-	    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
-	    <overrides><link class="component" method="_result">component._result</link></overrides>
-	    <returns>
-	      Returns a tuple whose first member is a boolean flag indicating whether the execution
-	      was successful or not and whose second member is the <identifier>Element</identifier>
-	      result.
-	    </returns>
-	    <description>
-	      <p>
-		This default implementation for pipelines simply either returns the last
-		<identifier>child_results</identifier> <identifier>Element</identifier> (if there is
-		one) or None.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="execute">
-	    <definition>execute(self, req)</definition>
-	    <returns>
-	      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution
-	      was successful or not; the result of the execution which is either a character stream
-	      or an HTTP error code; the MIME type of the result.
-	    </returns>
-	    <description>
-	      <p>
-		Executes the pipeline. <identifier>req</identifier> is an Apache request object.
-	      </p>
-	      <p>
-		This method calls the object's inherited <link class="component"
-		method="__call__">__call__</link> method, extracts the success flag, result stream
-		and MIME type from the return value and returns all three as a tuple. It catches any
-		exceptions raised during the execution, stores the traceback in a global location
-		and returns a False success flag and an HTTP 500 error.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="handle_error">
-	    <definition>handle_error(self, req)</definition>
-	    <returns>
-	      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution
-	      was successful or not; the result of the execution which is either a character stream
-	      or an HTTP error code; the MIME type of the result.
-	    </returns>
-	    <description>
-	      <p>
-		Executes the pipeline but only using its <link
-		class="error_matcher">error_matcher</link> components. <identifier>req</identifier>
-		is an Apache request object whose <identifier>status</identifier> property should
-		contain the HTTP error code being handled.
-	      </p>
-	      <p>
-		This method uses the <link class="component"
-		method="find_components">component.find_components</link> method to search for all
-		<link class="error_matcher">error_matcher</link> components. It executes the first
-		one which can handle the error code in the given Request object's
-		<identifier>status</identifier> property.  When an error_matcher is executed, it
-		will return a tuple whose first member is a 'success' flag which is True if the
-		execution was successful (and therefore the error has been handled) or False
-		otherwise. If the method either could not find a suitable error_matcher or if an
-		error_matcher returned False, it will return False and the error will not have been
-		handled (further error handling in the sitemap or server will then apply).
-	      </p>
-	    </description>
-	  </method>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      Value is "pipeline".
-	    </description>
-	  </class-property>
-	  <class-property>
-	    <name>function</name>
-	    <description>
-	      Value is "pipeline".
-	    </description>
-	  </class-property>
-	  <notes>
-	  </notes>
-	  <helper-func name="register_invokation_syntax">
-	    <definition>register_invokation_syntax(server)</definition>
-	    <description>
-	      <p>
-		This function creates and populates an instance of the <link
-		class="invokation_syntax">invokation_syntax</link> class with the syntax for
-		pipeline elements. This instance is then stored in the given server object's <link
-		class="server_config" property="component_syntaxes">component_syntaxes</link>
-		dictionary.
-	      </p>
-	    </description>
-	  </helper-func>
-	  <helper-func name="build_pipeline">
-	    <definition>build_pipeline(server, sitemap, attrs, **kw_args)</definition>
-	    <returns>
-	      A pipeline object.
-	    </returns>
-	    <description>
-	      <p>
-		This function creates a new pipeline object from the given
-		<identifier>xml.sax.xmlreader.AttributesImpl</identifier> object (in fact, at
-		present pipeline elements use no attributes). If the pipeline is a sitemap pipeline
-		(the ordinary case) the parent <identifier>server</identifier> and
-		<identifier>sitemap</identifier> objects should be specified and the new pipeline
-		will be added to the sitemap's <link class="sitemap_config"
-		property="pipelines">pipelines</link> list. If the given
-		<identifier>sitemap</identifier> is None, then the new pipeline is added to the
-		server's <link class="server_config" property="pipelines">pipelines</link> list.
-	      </p>
-	      <p>
-		The new pipeline object is returned.
-	      </p>
-	    </description>
-	  </helper-func>
-	</class>
-	<class name="generator">
-	  <name>generator</name>
-	  <inherits>stream_component</inherits>
-	  <source>pycoon/generators/__init__.py</source>
-	  <description>
-	    Base class for all generator components.
-	  </description>
-	  <syntax xml:space="preserve">
-&lt;!ELEMENT match (generate?,...)&gt;
-&lt;!ELEMENT when (generate?,...)&gt;
-&lt;!ELEMENT otherwise (generate?,...)&gt;
-&lt;!ELEMENT aggregate (generate+)&gt;
-&lt;!ELEMENT generate (parameter*)&gt;
-&lt;!ATTLIST generate type CDATA #REQUIRED&gt;
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Just calls stream_component's <link class="stream_component"
-		method="__init__">__init__</link> method and sets
-		<identifier>description</identifier> property to "Generator base class".
-	      </p>
-	    </description>
-	  </method>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      Value is "stream".
-	    </description>
-	  </class-property>
-	  <class-property>
-	    <name>function</name>
-	    <description>
-	      Value is "generate".
-	    </description>
-	  </class-property>
-	  <helper-func name="register_invokation_syntax">
-	    <definition>register_invokation_syntax(server)</definition>
-	    <description>
-	      <p>
-		This function creates and populates an instance of the <link
-		class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
-		generator elements. This instance is then stored in the given server object's <link
-		class="server_config" property="component_syntaxes">component_syntaxes</link>
-		dictionary.
-	      </p>
-	    </description>
-	  </helper-func>
-	</class>
-	<class name="transformer">
-	  <name>transformer</name>
-	  <inherits>stream_component</inherits>
-	  <source>pycoon/transformers/__init__.py</source>
-	  <description>
-	    Base class for all transformer components.
-	  </description>
-	  <syntax xml:space="preserve">
-&lt;!ELEMENT match (transform?,...)&gt;
-&lt;!ELEMENT when (transform?,...)&gt;
-&lt;!ELEMENT otherwise (transform?,...)&gt;
-&lt;!ELEMENT transform (parameter*)&gt;
-&lt;!ATTLIST transform type CDATA #REQUIRED&gt;
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Just calls stream_component's <link class="stream_component"
-		method="__init__">__init__</link> method and sets
-		<identifier>description</identifier> property to "Transformer base class".
-	      </p>
-	    </description>
-	  </method>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      Value is "stream".
-	    </description>
-	  </class-property>
-	  <class-property>
-	    <name>function</name>
-	    <description>
-	      Value is "transform".
-	    </description>
-	  </class-property>
-	  <helper-func name="register_invokation_syntax">
-	    <definition>register_invokation_syntax(server)</definition>
-	    <description>
-	      <p>
-		This function creates and populates an instance of the <link
-		class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
-		transformer elements. This instance is then stored in the given server object's <link
-		class="server_config" property="component_syntaxes">component_syntaxes</link>
-		dictionary.
-	      </p>
-	    </description>
-	  </helper-func>
-	</class>
-	<class name="serializer">
-	  <name>serializer</name>
-	  <inherits>stream_component</inherits>
-	  <source>pycoon/serializers/__init__.py</source>
-	  <description>
-	    Base class for all serializer components.
-	  </description>
-	  <syntax xml:space="preserve">
-&lt;!ELEMENT match (serialize?,...)&gt;
-&lt;!ELEMENT when (serialize?,...)&gt;
-&lt;!ELEMENT otherwise (serialize?,...)&gt;
-&lt;!ELEMENT serialize&gt;
-&lt;!ATTLIST serialize type CDATA #REQUIRED&gt;
-&lt;!ATTLIST serialize mime CDATA #IMPLIED&gt;
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent, root_path="")</definition>
-	    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
-	    <description>
-	      <p>
-		Just calls stream_component's <link class="stream_component"
-		method="__init__">__init__</link> method and sets
-		<identifier>description</identifier> property to "Serializer base class".
-	      </p>
-	    </description>
-	  </method>
-	  <class-property>
-	    <name>role</name>
-	    <description>
-	      Value is "stream".
-	    </description>
-	  </class-property>
-	  <class-property>
-	    <name>function</name>
-	    <description>
-	      Value is "serialize".
-	    </description>
-	  </class-property>
-	  <helper-func name="register_invokation_syntax">
-	    <definition>register_invokation_syntax(server)</definition>
-	    <description>
-	      <p>
-		This function creates and populates an instance of the <link
-		class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
-		serializer elements. This instance is then stored in the given server object's <link
-		class="server_config" property="component_syntaxes">component_syntaxes</link>
-		dictionary.
-	      </p>
-	    </description>
-	  </helper-func>
-	</class>
-	<class name="server_config">
-	  <name>server_config</name>
-	  <source>pycoon/server.py</source>
-	  <description>
-	    Holds the configuration information of a running Pycoon instance including available
-	    component classes for building pipelines, data source initialisation methods and the
-	    default error handling pipelines. It persists between requests by being created as a
-	    global object in the handler module.
-	  </description>
-	  <method name="__init__">
-	    <definition>__init__(self)</definition>
-	    <description>
-	      <p>
-		Class constructor. Creates all the object properties and populates them with default
-		or empty values. Also registers the built in <link
-		class="interpolation_syntax">interpolation_syntax</link> objects.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="get_new_component">
-	    <definition>get_new_component(self, el_name, parent, attrs, root_path)</definition>
-	    <returns>
-	      a new component object.
-	    </returns>
-	    <description>
-	      <p>
-		Creates a new component object from the given
-		parameters. <identifier>el_name</identifier> is the element name given in a sitemap
-		file to declare the component; <identifier>parent</identifier> is the element name
-		of the parent element in the sitemap file; <identifier>attrs</identifier> is an
-		<identifier>xml.sax.Attributes</identifier> instance which contains the attributes
-		given in the sitemap file to declare the component;
-		<identifier>root_path</identifier> is either the sitemap or server document root
-		depending on whether the component is part of a sitemap pipeline (the ordinary case)
-		or a server pipeline.
-	      </p>
-	      <p>
-		This method attempts to find a component class in the <link class="server_config"
-		property="components">components</link> dictionary which matches the given element
-		name. If one matches and the given <identifier>attrs</identifier> provide a valid
-		declaration, then a new instance of the component class is created with the given
-		parameters and returned.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="handler_error">
-	    <definition>handle_error(self, req, error_code)</definition>
-	    <returns>
-	      a 2-tuple whose first memeber is a boolean flag which is True if the error was
-	      successfully handled or False otherwise and whose second memeber is
-	      <identifier>apache.DONE</identifier>.
-	    </returns>
-	    <description>
-	      <p>
-		Attempts to handle an HTTP error condition. <identifier>req</identifier> is an
-		Apache request object; <identifier>error_code</identifier> is an HTTP error code.
-	      </p>
-	      <p>
-		This method loops through the server's <link class="server_config"
-		property="pipelines">pipelines</link> and calls each one's <link class="pipeline"
-		method="handle_error">handle_error</link> method until one of them successfully
-		handles the error. If none of the pipelines handles the error then it is simply left
-		unhandled by returning the error code to the client but with no error page.
-	      </p>
-	    </description>
-	  </method>
-	  <property>
-	    <name>log_up_down</name>
-	    <description>
-	      A boolean value which is True if logging of the server startup and shutdown has been
-	      enabled.
-	    </description>
-	  </property>
-	  <property>
-	    <name>log_errors</name>
-	    <description>
-	      A boolean value which is True if logging of error handling has been enabled.
-	    </description>
-	  </property>
-	  <property>
-	    <name>log_requests</name>
-	    <description>
-	      A boolean value which is True if logging of request handling has been enabled.
-	    </description>
-	  </property>
-	  <property>
-	    <name>log_debug</name>
-	    <description>
-	      A boolean value which is True if logging of debugging information has been enabled.
-	    </description>
-	  </property>
-	  <property>
-	    <name>EXCEPTION</name>
-	    <description>
-	      Holds the exception information and traceback when an exception occured during
-	      pipeline processing.
-	    </description>
-	  </property>
-	  <property>
-	    <name>component_super_types</name>
-	    <description>
-	      A list of the allowed container element names for declaring available components in
-	      the server configuration file: ["built-in", "matchers", "selectors", "authenticators",
-	      "generators", "transformers", "serializers"].
-	    </description>
-	  </property>
-	  <property>
-	    <name>component_types</name>
-	    <description>
-	      A list of the allowed element names for declaring available components in the server
-	      configuration file: ["component", "matcher", "selector", "generator", "transformer",
-	      "serializer"]
-	    </description>
-	  </property>
-	  <property>
-	    <name>components</name>
-	    <description>
-	      A dictionary of available component classes; indexed using the 2-tuple: (function
-	      [generate|transform|...], required value of 'type' attribute).
-	    </description>
-	  </property>
-	  <property>
-	    <name>component_enames</name>
-	    <description>
-	      A list of the available components' element names.
-	    </description>
-	  </property>
-	  <property>
-	    <name>component_syntaxes</name>
-	    <description>
-	      A dictionary of <link class="invokation_syntax">invokation_syntax</link> objects for
-	      the available components; indexed using the 2-tuple: (function
-	      [generate|transform|...], required value of 'type' attribute).
-	    </description>
-	  </property>
-	  <property>
-	    <name>interpolation_syntaxes</name>
-	    <description>
-	      A dictionary of <link class="interpolation_syntax">interpolation_syntax</link>
-	      objects; indexed by name.
-	    </description>
-	  </property>
-	  <property>
-	    <name>pipelines</name>
-	    <description>
-	      A list of <link class="pipeline">pipeline</link> objects; these are where the server
-	      defines its default error handlers.
-	    </description>
-	  </property>
-	  <property>
-	    <name>access_log</name>
-	    <description>
-	      A file-like object which allows writing to the Apache access log. NOT IMPLEMENTED.
-	    </description>
-	  </property>
-	  <property>
-	    <name>error_log</name>
-	    <description>
-	      A file-like object which allows writing to the Apache error log.
-	    </description>
-	  </property>
-	  <property>
-	    <name>config_root</name>
-	    <description>
-	      The absolute path specified in the Apache VirtualHost directive as the PycoonConfigRoot.
-	    </description>
-	  </property>
-	  <property>
-	    <name>document_root</name>
-	    <description>
-	      This property mirros the <link class="server_config"
-	      property="config_root">config_root</link> and allows a certain amount of polymorphism
-	      between sevrer_config and sitemap_config objects.
-	    </description>
-	  </property>
-	</class>
-	<class name="sitemap_config">
-	  <name>sitemap_config</name>
-	  <source>pycoon/sitemap.py</source>
-	  <description>
-	    The sitemap class holds configuration information for a Pycoon sitemap along with the
-	    <link class="pipeline">pipeline</link> objects, any related database connections and
-	    provides the primary interface for handling requests.
-	  </description>
-	  <syntax>
-&lt;!ELEMENT site-map (components?, pipelines)&gt;
-&lt;!ATTLIST site-map document-root CDATA #REQUIRED&gt;
-&lt;!ELEMENT components (data-source*)&gt;
-&lt;!ELEMENT data-source EMPTY&gt;
-&lt;!ATTLIST data-source type CDATA #REQUIRED&gt;
-&lt;!ATTLIST data-source name CDATA #REQUIRED&gt;
-&lt;!ATTLIST data-source src CDATA #REQUIRED&gt;
-&lt;!ELEMENT pipelines (pipeline+)&gt;
-&lt;!ELEMENT pipeline (match+)&gt;
-...
-	  </syntax>
-	  <method name="__init__">
-	    <definition>__init__(self, parent)</definition>
-	    <description>
-	      <p>
-		Class constructor. Creates all the object properties and populates them with default
-		or empty values.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="handle">
-	    <definition>handle(self, req)</definition>
-	    <returns>
-	      Returns a 2-tuple which consists of: a boolean flag indicating whether the request was
-	      successfully handled or not; and an apache error/status code.
-	    </returns>
-	    <description>
-	      <p>
-		Attempts to handle the given request. <identifier>req</identifier> is an Apache
-		request object.
-	      </p>
-	      <p>
-		This method loops over the available <link class="sitemap_config"
-		property="pipelines">pipelines</link> and calls each one's <link class="pipeline"
-		method="execute">execute</link> method. If the method returns True, the returned
-		result it written to the client. If it returns True, but the returned result is
-		empty, it means that the pipeline did not match; in this case the next pipeline is
-		tried. If it returns False, it means there was an error processing the pipeline and
-		the <link class="sitemap_config" method="handle_error">handle_error</link> method is
-		called. If the loop terminates without a matching pipeline having been found, the
-		<link class="sitemap_config" method="handle_error">handle_error</link> method is
-		called with an <identifier>apache.HTTP_NOT_FOUND</identifier> status.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="handle_error">
-	    <definition>handle_error(self, req, error_code)</definition>
-	    <returns>
-	      Returns a 2-tuple which consists of: a boolean flag indicating whether the error was
-	      successfully handled or not; and an apache error/status code which should be
-	      <identifier>apache.DONE</identifier> if the error was handled, or the given
-	      <identifier>error_code</identifier> if not.
-	    </returns>
-	    <description>
-	      <p>
-		Attempts to handle an HTTP error. <identifier>req</identifier> is an Apache request
-		object; <identifier>error_code</identifier> is an HTTP error code.
-	      </p>
-	      <p>
-		This method loops over the available <link class="sitemap_config"
-		property="pipelines">pipelines</link> and calls each one's <link class="pipeline"
-		method="handle_error">handle_error</link> method. If the error handler returns True,
-		the returned result is written to the client and the method returns the tuple
-		(<identifier>True</identifier>, <identifier>apache.DONE</identifier>). If the loop
-		terminates without a matching error handler having been found, the method returns
-		False, along with the given <identifier>error_code</identifier>.
-	      </p>
-	    </description>
-	  </method>
-	  <property>
-	    <name>parent</name>
-	    <description>
-	      The sitemap object's parent <link class="server_config">server_config</link> (this
-	      name allows simple polypmorphism between sitemap and server objects)
-	    </description>
-	  </property>
-	  <property>
-	    <name>server</name>
-	    <description>
-	      The sitemap object's parent <link class="server_config">server_config</link>
-	    </description>
-	  </property>
-	  <property>
-	    <name>server_name</name>
-	    <description>
-	      The name of the VirtualHost on which the handler is running
-	    </description>
-	  </property>
-	  <property>
-	    <name>document_root</name>
-	    <description>
-	      The absolute path which is used by default by all the sitemap components when
-	      retrieving local resources; it is set with the site-map element's
-	      <identifier>document-root</identifier> attribute
-	    </description>
-	  </property>
-	  <property>
-	    <name>data_sources</name>
-	    <description>
-	      A dictionary of database connection objects; indexed by database name. This dictionary
-	      is populated using the <identifier>init_datasource_*(sitemap, attrs)</identifier>
-	      functions provided by generator modules which require database connections. These
-	      functions are called by the <link class="component"
-	      helper-func="register_component">register_component</link> function and the selection
-	      of which function to call is made using the <identifier>backend</identifier> attribute
-	      of the generator's declaration in the server.xml configuration file. The class of
-	      connection objects themsevles depends on the database being connected to. Ideally,
-	      where a generator has one than one backend, the connection object interfaces should be
-	      compatible (e.g. DBI).
-	    </description>
-	  </property>
-	  <property>
-	    <name>ds_mods</name>
-	    <description>
-	      A dictionary of modules or classes needed to establish database connections. This
-	      dictionary is populated using the <link class="component"
-	      helper-func="register_component">register_component</link> and indexed by module name.
-	    </description>
-	  </property>
-	  <property>
-	    <name>pipelines</name>
-	    <description>
-	      A list of <link class="pipeline">pipeline</link> objects.
-	    </description>
-	  </property>
-	</class>
-	<class name="interpolation_syntax">
-	  <name>interpolation_syntax</name>
-	  <source>pycoon/interpolation.py</source>
-	  <description>
-	    Base class for all interpolation classes.
-	  </description>
-	  <method name="__init__">
-	    <definition>__init__(self, pattern, component=None)</definition>
-	    <decsription>
-	      <p>
-		Class constructor. <identifier>pattern</identifier> is a regular expression string
-		used to match the syntax of {} delimited expressions in component attribute
-		values. <identifier>component</identifier> is a <link
-		class="sitemap_config">sitemap</link> or <link class="server_config">server</link>
-		instance.
-	      </p>
-	    </decsription>
-	  </method>
-	  <method name="_match">
-	    <definition>_match(self, instruction)</definition>
-	    <returns>
-	      Returns a boolean.
-	    </returns>
-	    <description>
-	      <p>
-		Matches a string against a pattern. <identifier>instruction</identifier> is the
-		contents of a {} delimited interpolation instruction from a component attribute
-		value; it will have been extracted by the <link class="interpolation_syntax"
-		helper-func="interpolate">interpolate</link> function.
-	      </p>
-	      <p>
-		This method just calls the <link class="interpolation_syntax"
-		property="pattern">pattern</link> property's match() method with the given
-		<identifier>instruction</identifier> and returns True if it matches, or False if it
-		doesn't.
-	      </p>
-	    </description>
-	  </method>
-	  <method name="__call__">
-	    <definition>__call__(self, instruction, uri_matcher, context)</definition>
-	    <returns>
-	      Returns a 2-tuple which consists of a boolean flag which is True if the given
-	      <identifier>instruction</identifier> matched the object's pattern; and a string
-	      containing the result of performing the interpolation.
-	    </returns>
-	    <description>
-	      <p>
-		Performs the interpolation. <identifier>instruction</identifier> is the text from
-		inside the {} delimited instruction in the component attribute value;
-		<identifier>uri_matcher</identifier> is the calling object's parent <link
-		class="uri_matcher">uri_matcher</link> (or <link
-		class="error_matcher">error_matcher</link>) component;
-		<identifier>context</identifier> is either a <link
-		class="sitemap_config">sitemap</link> or <link class="server_config">server</link>.
-	      </p>
-	      <p>
-		This is where derived components should implement their functionality. The default behaviour
-		raises a <identifier>NotImplemented</identifier> exception.
-	      </p>
-	    </description>
-	  </method>
-	  <property>
-	    <name>pattern</name>
-	    <description>
-	      A compiled regular expression object used to match the syntax of {} delimited
-	      expressions in component attribute values.
-	    </description>
-	  </property>
-	  <property>
-	    <name>component</name>
-	    <description>
-	      a <link class="sitemap_config">sitemap</link> or <link
-	      class="server_config">server</link> instance.
-	    </description>
-	  </property>
-	  <helper-func name="register_interpolation_syntax">
-	    <definition>register_interpolation_syntax(server, syntax, name)</definition>
-	    <description>
-	      <identifier>server</identifier> is a <link class="server_config">server_config</link>
-	      instance; <identifier>syntax</identifier> is an <link
-	      class="interpolation_syntax">interpolation_syntax</link> instance;
-	      <identifier>name</identifier> is a name for the interpolation syntax. The function
-	      adds the given <identifier> interpolation_syntax</identifier> to the server's <link
-	      class="server_config" property="interpolation_syntaxes">interpolation_syntaxes</link>
-	      dictionary using the given <identifier>name</identifier> as an index.
-	    </description>
-	  </helper-func>
-	  <helper-func name="interpolate">
-	    <definition>interpolate(component, string_arg, as_filename=False, root_path="")</definition>
-	    <returns>
-	      Returns the interpolated string.
-	    </returns>
-	    <description>
-	      <p>
-		Takes a component attribute value, interprets the special {} delimited syntax and
-		returns the interpolated string. <identifier>component</identifier> is the componet
-		object which called the function; <identifier>string_arg</identifier> is the
-		component attribute value which includes the {} delimited instructions;
-		<identifier>as_filename</identifier> is a boolean which, when True, will cause the
-		function to return an absolute file path by prepending the value of
-		<identifier>root_path</identifier> to the result; if
-		<identifier>root_path</identifier> is not supplied, the give
-		<identifier>component</identifier>'s <link class="component"
-		property="root_path">root_path</link> is used.
-	      </p>
-	      <p>
-		First, this function attempts to find the given <identifier>component</identifier>'s
-		parent <link class="uri_matcher">uri_matcher</link> or <link
-		class="error_matcher">error_matcher</link>. If it can't find one, it raises an
-		exception. (The uri_matcher is needed in order to retrieve information about the
-		request URI.) Next it initialises the result string with the
-		<identifier>root_path</identifier> (if <identifier>as_filename</identifier> was
-		True). Next it loops over the characters in the given
-		<identifier>string_as</identifier>. If a character is outside a {}, it is simply
-		added to the result string.  When it finds characters inside a pair of {}s, it
-		begins looping over the available <link class="server_config"
-		property="interpolation_syntaxes">interpolation_syntaxes</link>. When it finds one
-		which matches the given syntax, it inserts its result into the return string in
-		place of the {} delimited instruction. If it doesn't find a matching
-		interpolation_syntax, the {} delimited instruction is replaced with nothing.
-	      </p>
-	    </description>
-	  </helper-func>
-	</class>
-      </div>
-      <!--<div id="request-processing" title="Processing a Request">
-	<p>
-	  When Apache receives a request which will be handled by Pycoon, this is the flow of execution:
-	</p>
-	<flow id="execution">
-	  <call module="pycoon" method="handler">
-	    <call class="sitemap" method="handle">
+    &lt;/VirtualHost&gt;
+  </code>
+  <p>
+    The PycoonConfigRoot and PycoonSitemap variables are optional and the values shown above are
+    also the default values. The PycoonConfigRoot directory should contain the server.xml file and
+    the <path>resources</path> directory (see <path>conf</path> in the svn trunk).
+  </p>
+  <p>
+    The server.xml file contains the configuration information for the Pycoon server, including:
+    logging level; server owner details; caching options (though caching is not yet implemented);
+    available pipeline components; and some default pipelines intended to be used for error
+    handling.
+  </p>
+</div>
 
-	    </call>
-	  </call>
-	</flow>
-      </div>-->
-    </div>
-  </body>
+<div id="implementation" title="Implementation">
+  <p>
+    The two main tools which were assumed at the outset were the <link
+    href="http://www.python.org/">Python</link> programming language and the <link
+    href="http://httpd.apache.org/">Apache</link> web server. As a result of these decisions, it was
+    logical to choose to use <link href="http://www.modpython.org/">mod_python</link> to link the
+    two technologies.
+  </p>
+  <p>
+    The concept of the 'sitemap' XML file for describing pipelines was taken from Cocoon and an
+    attempt has been made to adopt a similar sitemap syntax in Pycoon.
+  </p>
+  <p>
+    The component based architecture, as well as being a feature of Cocoon, is typical of many
+    programming projects that aim towards extensibility. The classes of components implemented
+    (including 'matchers', 'selectors', 'generators', 'transformers' and 'serializers') have been
+    chosen for their familiarity to Cocoon users but they are also practical and descriptive names
+    for the concepts they encapsulate.
+  </p>
+  <p>
+    Where Cocoon handles XML data as SAX events through its pipelines, Pycoon uses the <link
+    href="http://http://effbot.org/zone/element-index.htm">ElementTree</link> interface (though with
+    the <link href="http://codespeak.net/lxml/">lxml</link> implementation) to store the current
+    state of the XML pipeline and manipulate it at each stage. This may be a less efficient method
+    than SAX event streams, especially for larger quantities of data, but it does have the advantage
+    of allowing for much simpler code; it is easier to construct and manipulate ElementTree data in
+    Python than it is to construct and manipulate SAX events.
+  </p>
+
+<div id="class-hierarchy" title="Component Class Hierarchy">
+  <p>
+    This diagram shows the component hierarchy and all the currently implemented components:
+  </p>
+
+  <class-hierarchy name="component">
+    <class name="component" description="Component base class">
+      <class name="pipeline" description="The container class for components which provides 'execution' methods" />
+      <class name="syntax_component" description="Base class of all components which handle logical processing in sitemaps">
+	<class name="matcher" description="Matcher base class">
+	  <class name="uri_matcher" description="Allows pipeline processing to be conditional on URI patterns" />
+	  <class name="error_matcher" description="Allows pipeline processing to be conditional on HTTP error conditions" />
+	</class>
+	<class name="selector" description="Selector base class">
+	  <class name="browser_class_selector" description="Allows pipeline processing to be conditional on the type of browser the client is using [graphic|text|aural|braille]" />
+	  <class name="browser_selector" description="Allows pipeline processing to be conditional the name of the browser the client is using" />
+	  <class name="request_parameter_selector" description="Allows pipeline processing to be conditional on the value of a request parameter (either GET or POST)" />
+	  <class name="request_header_selector" description="Allows pipeline processing to be conditional on the value of a request header" />
+	  <class name="resource_exists_selector" description="Allows pipeline processing to be conditional on the existence of a file" />
+	</class>
+	<class name="parameter" description="Used to pass parameters to any components which require them" />
+	<class name="when" description="Used to implement the conditions of selector components" />
+	<class name="otherwise" description="Used to implement the default condition of selector components" />
+	<class name="throw" description="Causes an HTTP error code" />
+	<class name="redirect" description="Causes the request to be redirected to another URI" />
+      </class>
+      <class name="stream_component" description="Base class for all components which handle XML data in a pipeline">
+	<class name="read" description="Returns an ordinary file (without any XML processing)" />
+	<class name="generator" description="Generator base class">
+	  <class name="xml_generator" description="Use an XML file to provide the source XML for a pipeline" />
+	  <class name="http_generator" description="Retrieve the source XML for a pipeline using an HTTP request" />
+	  <class name="xpath_generator" description="Execute an XPath expression against an XML file to provide the source XML for a pipeline" />
+	  <class name="aggregate_generator" description="The child generators' results are aggregated to provide the source XML for a pipeline" />
+	  <class name="command_generator" description="The stdout stream from a shell command provides the source XML for a pipeline" />
+	  <class name="directory_generator" description="Converts a directory listing into the source XML for a pipeline" />
+	  <class name="request_generator" description="Encodes the given request headers as the XML source for a pipeline" />
+	  <class name="xquery_generator" description="Execute an XQuery expression against an XML database (Berkelely DB XML) to provide the source XML for a pipeline" />
+	  <class name="sql_generator" description="Execute an SQL query against a database to provide the source XML for a pipeline" />
+	  <class name="swishe_generator" description="Execute a full-text search against a Swish-e index to provide the source XML for a pipeline" />
+	</class>
+	<class name="transformer" description="Transformer base class">
+	  <class name="xslt_transformer" description="Transform the pipeline XML stream using an XSLT stylesheet" />
+	  <class name="command_transformer" description="Transform the pipeline XML stream using a shell command" />
+	  <class name="sax_handler_transformer" description="Transform the pipeline XML stream using a Python SAX handler class" />
+	  <class name="etree_transformer" description="Transform the pipeline XML stream using Python code which directly manipulates the ElementTree" />
+	</class>
+	<class name="serializer" description="Serializer base class">
+	  <class name="html_serializer" description="Convert the pipeline XML stream into an HTML document" />
+	  <class name="xhtml_serializer" description="Convert the pipeline XML stream into an XHTML document" />
+	  <class name="xml_serializer" description="Convert the pipeline XML stream into an XML document" />
+	  <class name="text_serializer" description="Convert the pipeline XML stream into a plain text document" />
+	  <class name="pdf_serializer" description="Convert the pipeline XML stream (which must contain XSL-FO) into a PDF document (NOT IMPLEMENTED)" />
+	  <class name="svg_serializer" description="Convert the pipeline XML stream (which must contain SVG) into an image (PARTIAL IMPLEMENTATION)" />
+	</class>
+      </class>
+    </class>
+  </class-hierarchy>
+
+  <p>
+    These are the non-component classes used in Pycoon:
+  </p>
+
+  <class-hierarchy name="non-component">
+    <class name="sitemap_config" description="The container class for pipelines" />
+    <class name="sitemap_config_parse" description="A SAX handler which reads a sitemap file" />
+    <class name="server_config" description="Holds information for a Pycoon instance" />
+    <class name="server_config_parse" description="A SAX handler which reads a server configuration file" />
+    <class name="invokation_syntax" description="Stores the syntax required to use a component in a sitemap file" />
+    <class name="interpolation_syntax" description="Provides a method to interpret special {} delimited portions of component attribute values in sitemap files">
+      <class name="interpolate_pattern_match_number" description="Interprets the '{$n}' syntax, where the number 'n' is the n'th '*' denoted portion of the URI" />
+      <class name="interpolate_uri" description="Interprets the '{uri:...}' syntax" />
+      <class name="interpolate_context" description="Interpolate_context interprets the '{context:...}' syntax, where '...' should be a URI which will be handled by the sitemap and its result will be returned" />
+      <class name="interpolate_traceback" description="Interprets the '{traceback}' syntax and returns the current traceback as a string" />
+    </class>
+  </class-hierarchy>
+</div>
+
+<div id="class-descriptions" title="Class Descriptions">
+  
+<class name="component">
+  <name>component</name>
+  <source>pycoon/components.py</source>
+  <description>
+    The component class is the base class of all pipeline components in Pycoon.
+  </description>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <description>
+      <p>
+	Class constructor. <identifier>parent</identifier> is the component's parent in the pipeline
+	and may be another component or a <link class="pipeline">pipeline</link> or <link
+	class="sitemap">sitemap</link> object. <identifier>root_path</identifier> is a base path
+	which derived components should use to resolve path names; it is an optional parameter and
+	takes the value of the parent sitemap (or server) document root if not specified.
+      </p>
+    </description>
+  </method>
+  <method name="__call__">
+    <definition>__call__(self, req, p_sibling_result=None, child_results=[])</definition>
+    <returns>
+      Returns a tuple whose first member is a boolean flag indicating whether the execution was
+      successful or not and whose second member is the <identifier>Element</identifier> result.
+    </returns>
+    <description>
+      <p>
+	Main execution method. <identifier>req</identifier> is an Apache request
+	object. <identifier>p_sibling_result</identifier> is the <identifier>Element</identifier>
+	returned by the previous sibling component in the pipeline.
+	<identifier>child_results</identifier> is a list of the <identifier>Element</identifier>
+	results of all the child componets which have been executed so far.
+      </p>
+      <p>
+	This method first calls the object's <link class="component"
+	method="_descend">_descend</link> method and, if it returns <identifier>True</identifier>,
+	it loops over the component's child components and calls each one's __call__ method, passing
+	the previous child's result as the <identifier>p_sibling_result</identifier> each time.
+      </p>
+    </description>
+  </method>
+  <method name="_descend">
+    <definition>_descend(self, req, p_sibling_result=None)</definition>
+    <returns>
+      Returns a boolean.
+    </returns>
+    <description>
+      <p>
+	<identifier>req</identifier> is an Apache request
+	object. <identifier>p_sibling_result</identifier> is the <identifier>Element</identifier>
+	returned by the previous sibling component in the pipeline.
+      </p>
+      <p>
+	The _descend method allows derived components to give permission for their child components
+	to be executed or not. It is passed the current query context (the request object) and the
+	result of its previous sibling which implementations can use to determine the return
+	value. Its default behaviour is simply to return True. However, components such as <link
+	class="matcher">matchers</link> and <link class="selector">selectors</link> need to override
+	this method.
+      </p>
+    </description>
+  </method>
+  <method name="_continue">
+    <definition>_continue(self, req, p_sibling_result=None)</definition>
+    <returns>
+      Returns a boolean.
+    </returns>
+    <description>
+      <p>
+	<identifier>req</identifier> is an Apache request
+	object. <identifier>p_sibling_result</identifier> is the <identifier>Element</identifier>
+	returned by the previous sibling component in the pipeline.
+      </p>
+      <p>
+	The _continue method is similar to the <link class="component"
+	method="_descend">_descend</link> method: it allows derived components to give permission
+	for their following sibling components to be executed or not. It is passed the current query
+	context (the request object) and the result of its previous sibling which implementations
+	can use to determine the return value. Its default behaviour is simply to return
+	True. However, components such as the <link class="when">when</link> component need to
+	override this method and the <link class="uri_matcher">uri_matcher</link> overrides it to
+	improve efficientcy (once a matching URI pattern has been found and its components executed,
+	no further pipeline processing is carried out).
+      </p>
+    </description>
+  </method>
+  <method name="_result">
+    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
+    <returns>
+      Returns a tuple whose first member is a boolean flag indicating whether the execution was
+      successful or not and whose second member is the <identifier>Element</identifier> result.
+    </returns>
+    <description>
+      <p>
+	XML data handling components should do their main work in this
+	method. <identifier>req</identifier> is an Apache request
+	object. <identifier>p_sibling_result</identifier> is the <identifier>Element</identifier>
+	returned by the previous sibling component in the
+	pipeline. <identifier>child_results</identifier> is a list of the
+	<identifier>Element</identifier> results of all this component's child componets.
+      </p>
+      <p>
+	The default implementation raises a <identifier>NotImplemented</identifier> exception. All
+	derived components should perform their main function in this method (or at least from this
+	method) and return a tuple whose first member is a boolean indicating whether or not they
+	were successful and whose second member, on success, should be an
+	<identifier>Element</identifier> object, or, on failure, an Apache error code. (Note,
+	however, that exceptions will be handled gracefully by Pycoon and result in a descriptive
+	HTTP 500 error.)
+      </p>
+    </description>
+  </method>
+  <method name="add_component">
+    <definition>add_component(self, c, pos=None)</definition>
+    <returns>
+      The added component
+    </returns>
+    <description>
+      <p>
+	Add a child component. <identifier>c</identifier> is a component
+	object. <identifier>pos</identifier> is the position, expressed as a number, at which the
+	component should be added; by default the component is appended as the last child component.
+      </p>
+    </description>
+  </method>
+  <method name="parameter_children">
+    <definition>parameter_children(self, child_results)</definition>
+    <returns>
+      A dictionary
+    </returns>
+    <description>
+      <p>
+	Converts <link class="parameter">parameter</link> child components into a dictionary of
+	name/value pairs. <identifier>child_results</identifier> is a list of parameter components.
+	(Note: the current implementation of this function is quite naive in that it performs
+	inadequate type checking on the given child_results and relies on sitemap class's syntax
+	checking to make sure that child components will actually be parameters).
+      </p>
+    </description>
+  </method>
+  <method name="find_components">
+    <definition>find_components(self, class_name, found=[])</definition>
+    <returns>
+      A list of components (may be empty)
+    </returns>
+    <description>
+      <p>
+	Searches all of this component's child components and returns any whose class name matches
+	the given <identifier>class_name</identifier>. It is a recursive function so the
+	<identifier>found</identifier> parameter is simply the list of matching components found by
+	the previous call.
+      </p>
+      <p>
+	This function is most effectively used by the <link class="pipeline">pipeline</link>
+	component as it has the most children. It is used by the pipeline component's <link
+	class="pipeline" method="handle_error">handle_error</link> method to find available <link
+	class="error_matcher">error_matcher</link> components.
+      </p>
+    </description>
+  </method>
+  <property>
+    <name>parent</name>
+    <description>
+      The parent component of this component.
+    </description>
+  </property>
+  <property>
+    <name>sitemap</name>
+    <description>
+      The parent sitemap of this component.
+    </description>
+  </property>
+  <property>
+    <name>server</name>
+    <description>
+      The parent server of this component.
+    </description>
+  </property>
+  <property>
+    <name>context</name>
+    <description>
+      Either a reference to the compoent's parent sitemap or, if this is None, the component's
+      parent server.
+    </description>
+  </property>
+  <property>
+    <name>root_path</name>
+    <description>
+      The base path which should be prefixed to any filenames used by the component. By default, it
+      takes either the sitemap or server's document root.
+    </description>
+  </property>
+  <property>
+    <name>children</name>
+    <description>
+      A list of child components.
+    </description>
+  </property>
+  <property>
+    <name>description</name>
+    <description>
+      A short string describing the component. In derived components, the parameters (such as URI
+      pattern) are added to this description to improve debugging information.
+    </description>
+  </property>
+  <class-property>
+    <name>role</name>
+    <description>
+      Should be either "stream" or "syntax". For component class the value is "none".
+    </description>
+  </class-property>
+  <class-property>
+    <name>function</name>
+    <description>
+      Should be one of "matcher", "selector", "generator", "transformer", "serializer", etc.  For
+      component class the value is "none".
+    </description>
+  </class-property>
+  <helper-func name="register_component">
+    <definition>register_component(server, super_type, attrs)</definition>
+    <description>
+      <p>
+	Loads a component class for later use by sitemaps. <identifier>server</identifier> is the
+	server object; <identifier>super_type</identifier> is one of "matcher", "generator",
+	"transformer", etc.; <identifier>attrs</identifier> is an
+	<identifier>xml.sax.xmlreader.AttributesImpl</identifier> which contains the attributes
+	supplied by the server configuration file for the component (normally "name", "module" and
+	"class").
+      </p>
+    </description>
+  </helper-func>
+</class>
+
+<class name="invokation_syntax">
+  <name>invokation_syntax</name>
+  <source>pycoon/components.py</source>
+  <description>
+    Used to store the XML syntax rules for how a component should be used in a sitemap file.
+  </description>
+  <method name="__init__">
+    <definition>__init__(self)</definition>
+    <description>
+      <p>
+	Class constructor. Creates empty instance properties.
+      </p>
+    </description>
+  </method>
+  <method name="validate">
+    <definition>validate(self, parent_name, name, attrs)</definition>
+    <returns>
+      Returns a boolean
+    </returns>
+    <description>
+      <p>
+	Checks the given XML element attributes for validity. <identifier>parent_name</identifier>
+	is the element name of the parent component; <identifier>name</identifier> is the element
+	name of the element being checked; <identifier>attrs</identifier> is an
+	<identifier>xml.sax.xmlreader.AttributesImpl</identifier> instance from the sitemap element
+	being checked.
+      </p>
+      <p>
+	The method raises exceptions on any syntax errors in the component usage. If there are no
+	errors it returns True.
+      </p>
+    </description>
+  </method>
+  <property>
+    <name>element_name</name>
+    <description>
+      The required element name for the component.
+    </description>
+  </property>
+  <property>
+    <name>allowed_parent_components</name>
+    <description>
+      A list of the element names of components of the components of which this component may be a
+      child.
+    </description>
+  </property>
+  <property>
+    <name>required_attribs</name>
+    <description>
+      A list of the names of required XML attributes for the component.
+    </description>
+  </property>
+  <property>
+    <name>required_attrib_values</name>
+    <description>
+      A dictionary of name/value pairs of the required values of XML attributes of the component.
+    </description>
+  </property>
+  <property>
+    <name>optional_attribs</name>
+    <description>
+      A list of the names of optional XML attributes for the component.
+    </description>
+  </property>
+  <property>
+    <name>allowed_child_components</name>
+    <description>
+      A list of the element names of components which are allowed to be child components of this
+      component.
+    </description>
+  </property>
+</class>
+
+<class name="syntax_component">
+  <name>syntax_component</name>
+  <inherits>component</inherits>
+  <source>pycoon/components.py</source>
+  <description>
+    Base class of all components which handle logical processing in sitemaps.
+  </description>
+  <class-property>
+    <name>role</name>
+    <description>
+      For syntax_component class the value is "syntax".
+    </description>
+  </class-property>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <overrides><link class="component" method="__init__">component.__init__</link></overrides>
+    <description>
+      <p>
+	Calls <link class="component" method="_result">component.__init__</link> and sets <link
+	class="syntax_component" property="description">description</link> property to "Syntax
+	component base class".
+      </p>
+    </description>
+  </method>
+  <method name="_result">
+    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
+    <overrides><link class="component" method="_result">component._result</link></overrides>
+    <returns>
+      Returns a tuple whose first member is a boolean flag indicating whether the execution was
+      successful or not and whose second member is the <identifier>Element</identifier> result.
+    </returns>
+    <description>
+      <p>
+	This default implementation for syntax components simply either returns the last
+	<identifier>child_results</identifier> <identifier>Element</identifier> (if there is one) or
+	the <identifier>p_sibling_result</identifier> along with a True success flag.
+      </p>
+    </description>
+  </method>
+</class>
+
+<class name="matcher">
+  <name>matcher</name>
+  <inherits>syntax_component</inherits>
+  <source>pycoon/matchers/__init__.py</source>
+  <description>
+    Base class for matcher components.
+  </description>
+  <syntax>
+    &lt;!ELEMENT pipeline (match*)&gt;
+    &lt;!ELEMENT match (select*,aggregate*,generate*,transform*,serialize?)&gt;
+    &lt;!ATTLIST match type CDATA #REQUIRED&gt;
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
+    <description>
+      <p>
+	Calls <link class="syntax_component" method="_result">syntax_component.__init__</link> and
+	sets <link class="matcher" property="description">description</link> property to "Matcher
+	bass class".
+      </p>
+    </description>
+  </method>
+</class>
+
+<class name="selector">
+  <name>selector</name>
+  <inherits>syntax_component</inherits>
+  <source>pycoon/selectors/__init__.py</source>
+  <description>
+    Base class for selector components.
+  </description>
+  <syntax>
+    &lt;!ELEMENT match (select*,...)&gt;
+    &lt;!ELEMENT aggregate (select*,...)&gt;
+    &lt;!ELEMENT select (when+,otherwise?)&gt;
+    &lt;!ATTLIST select type CDATA #REQUIRED&gt;
+    &lt;!ATTLIST select method (exclusive|inclusive) #IMPLIED "exclusive"&gt;
+    &lt;!ELEMENT when (generate*,transform*,serialize?)&gt;
+    &lt;!ATTLIST when test CDATA #REQUIRED&gt;
+    &lt;!ELEMENT otherwise (generate*,transform*,serialize?)&gt;
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent, method="exclusive", root_path="")</definition>
+    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
+    <description>
+      <p>
+	Calls <link class="syntax_component" method="_result">syntax_component.__init__</link> and
+	sets <link class="selector" property="description">description</link> property to "Selector
+	bass class". <identifier>method</identifier> defines how child <link
+	class="when">when</link> components will be treated: "exclusive" means that once a matching
+	<identifier>when</identifier> has been found, the selector will stop and return its result;
+	"inclusive" means that <em>every</em> child <identifier>when</identifier> component will be
+	tested and each one that matches will apply.
+      </p>
+    </description>
+  </method>
+  <method name="when_func">
+    <definition>when_func(self, req, conditions)</definition>
+    <returns>
+      Returns a boolean.
+    </returns>
+    <description>
+      <p>
+	Used to implement the selector's logic. <identifier>req</identifier> is an Apache request
+	object; <identifier>conditions</identifier> is a list of strings which are given in the
+	<identifier>test</identifier> attribute of a child <link class="when">when</link> element.
+      </p>
+      <p>
+	The default behaviour of this method is to raise the <identifier>NoImplemented</identifier>
+	exception. Derived components should return <identifier>True</identifier> if the condition
+	matches, or <identifier>False</identifier> otherwise.
+      </p>
+    </description>
+  </method>
+  <method name="_result">
+    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
+    <overrides><link class="component" method="_result">component._result</link></overrides>
+    <returns>
+      Returns a tuple whose first member is a boolean flag indicating whether the execution was
+      successful or not and whose second member is the <identifier>Element</identifier> result.
+    </returns>
+    <description>
+      <p>
+	If the component's <link class="selector" property="method">method</link> property is
+	"exclusive", the method either returns the last <identifier>child_results</identifier>
+	element (if its not None) or the <identifier>p_sibling_result</identifier>.
+      </p>
+      <p>
+	If the <link class="selector" property="method">method</link> property is "inclusive" and
+	the <identifier>child_results</identifier> list it not empty, each
+	<identifier>child_results</identifier> element is aggregated into a parent element called
+	"inclusive-select". If the <identifier>child_results</identifier> list is empty then the
+	<identifier>p_sibling_result</identifier> is returned instead.
+      </p>
+    </description>
+  </method>
+  <property>
+    <name>method</name>
+    <description>
+      Takes either the value "exclusive" (the default) or "inclusive"; "exclusive" means that once a
+      matching <identifier>when</identifier> has been found, the selector will stop and return its
+      result; "inclusive" means that <em>every</em> child <identifier>when</identifier> component
+      will be tested and each one that matches will apply.
+    </description>
+  </property>
+</class>
+
+<class name="stream_component">
+  <name>stream_component</name>
+  <inherits>component</inherits>
+  <source>pycoon/components.py</source>
+  <description>
+    Base class for all components which handle XML data in a pipeline.
+  </description>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <overrides><link class="component" method="_result">component.__init__</link></overrides>
+    <description>
+      <p>
+	Calls <link class="component" method="_result">component.__init__</link> and sets <link
+	class="stream_component" property="description">description</link> property to "Streamed
+	component base class".
+      </p>
+    </description>
+  </method>
+  <class-property>
+    <name>role</name>
+    <description>
+      For stream_component class the value is "stream".
+    </description>
+  </class-property>
+</class>
+
+<class name="pipeline">
+  <name>pipeline</name>
+  <inherits>component</inherits>
+  <source>pycoon/pipeline.py</source>
+  <description>
+    The container class for components which provides 'execution' methods for pipeline processing.
+  </description>
+  <syntax xml:space="preserve">
+    &lt;!ELEMENT pipeline (match+)&gt;
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent, cache_as="")</definition>
+    <overrides><link class="component" method="__init__">component.__init__</link></overrides>
+    <description>
+      <p>
+	Class constructor. <identifier>cache_as</identifier> is currently not used.
+      </p>
+      <p>
+	The method just calls <link class="component" method="__init__">component.__init__</link>
+	and sets its <identifier>description</identifier> property to "Pipeline".
+      </p>
+    </description>
+  </method>
+  <method name="force_execute">
+    <definition>force_execute(self, output, uri)</definition>
+    <returns>
+      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution was
+      successful or not; the result of the execution which is either a character stream or an HTTP
+      error code; the MIME type of the result.
+    </returns>
+    <description>
+      <p>
+	Allows a pipeline to be executed without an Apache request object and without returning the
+	result to the client. <identifier>output</identifier> is a file-like object and
+	<identifier>uri</identifier> is a request URI string.
+      </p>
+      <p>
+	This method creates a fake request object using the give file-like object and URI string and
+	then calls the <link class="pipeline" method="execute">execute</link> using this object
+	(rather than a real Apache request object). The result of the execution will be written to
+	the given file-like object and <em>not</em> returned to the client.  It is used by the <link
+	class="interpolate_context" method="__call__">context</link> interpolation method.
+      </p>
+    </description>
+  </method>
+  <method name="_descend">
+    <definition>_descend(self, req, p_sibling_result=None)</definition>
+    <overrides><link class="component" method="_descend">component._descend</link></overrides>
+    <returns>
+      Returns a boolean.
+    </returns>
+    <description>
+      <p>
+	Returns True so that child components of the pipeline will be executed.
+      </p>
+    </description>
+  </method>
+  <method name="_result">
+    <definition>_result(self, req, p_sibling_result=None, child_results=[])</definition>
+    <overrides><link class="component" method="_result">component._result</link></overrides>
+    <returns>
+      Returns a tuple whose first member is a boolean flag indicating whether the execution was
+      successful or not and whose second member is the <identifier>Element</identifier> result.
+    </returns>
+    <description>
+      <p>
+	This default implementation for pipelines simply either returns the last
+	<identifier>child_results</identifier> <identifier>Element</identifier> (if there is one) or
+	None.
+      </p>
+    </description>
+  </method>
+  <method name="execute">
+    <definition>execute(self, req)</definition>
+    <returns>
+      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution was
+      successful or not; the result of the execution which is either a character stream or an HTTP
+      error code; the MIME type of the result.
+    </returns>
+    <description>
+      <p>
+	Executes the pipeline. <identifier>req</identifier> is an Apache request object.
+      </p>
+      <p>
+	This method calls the object's inherited <link class="component"
+	method="__call__">__call__</link> method, extracts the success flag, result stream and MIME
+	type from the return value and returns all three as a tuple. It catches any exceptions
+	raised during the execution, stores the traceback in a global location and returns a False
+	success flag and an HTTP 500 error.
+      </p>
+    </description>
+  </method>
+  <method name="handle_error">
+    <definition>handle_error(self, req)</definition>
+    <returns>
+      Returns a 3-tuple which consists of: a boolean flag indicating whether the execution was
+      successful or not; the result of the execution which is either a character stream or an HTTP
+      error code; the MIME type of the result.
+    </returns>
+    <description>
+      <p>
+	Executes the pipeline but only using its <link class="error_matcher">error_matcher</link>
+	components. <identifier>req</identifier> is an Apache request object whose
+	<identifier>status</identifier> property should contain the HTTP error code being handled.
+      </p>
+      <p>
+	This method uses the <link class="component"
+	method="find_components">component.find_components</link> method to search for all <link
+	class="error_matcher">error_matcher</link> components. It executes the first one which can
+	handle the error code in the given Request object's <identifier>status</identifier>
+	property.  When an error_matcher is executed, it will return a tuple whose first member is a
+	'success' flag which is True if the execution was successful (and therefore the error has
+	been handled) or False otherwise. If the method either could not find a suitable
+	error_matcher or if an error_matcher returned False, it will return False and the error will
+	not have been handled (further error handling in the sitemap or server will then apply).
+      </p>
+    </description>
+  </method>
+  <class-property>
+    <name>role</name>
+    <description>
+      Value is "pipeline".
+    </description>
+  </class-property>
+  <class-property>
+    <name>function</name>
+    <description>
+      Value is "pipeline".
+    </description>
+  </class-property>
+  <notes>
+  </notes>
+  <helper-func name="register_invokation_syntax">
+    <definition>register_invokation_syntax(server)</definition>
+    <description>
+      <p>
+	This function creates and populates an instance of the <link
+	class="invokation_syntax">invokation_syntax</link> class with the syntax for pipeline
+	elements. This instance is then stored in the given server object's <link
+	class="server_config" property="component_syntaxes">component_syntaxes</link> dictionary.
+      </p>
+    </description>
+  </helper-func>
+  <helper-func name="build_pipeline">
+    <definition>build_pipeline(server, sitemap, attrs, **kw_args)</definition>
+    <returns>
+      A pipeline object.
+    </returns>
+    <description>
+      <p>
+	This function creates a new pipeline object from the given
+	<identifier>xml.sax.xmlreader.AttributesImpl</identifier> object (in fact, at present
+	pipeline elements use no attributes). If the pipeline is a sitemap pipeline (the ordinary
+	case) the parent <identifier>server</identifier> and <identifier>sitemap</identifier>
+	objects should be specified and the new pipeline will be added to the sitemap's <link
+	class="sitemap_config" property="pipelines">pipelines</link> list. If the given
+	<identifier>sitemap</identifier> is None, then the new pipeline is added to the server's
+	<link class="server_config" property="pipelines">pipelines</link> list.
+      </p>
+      <p>
+	The new pipeline object is returned.
+      </p>
+    </description>
+  </helper-func>
+</class>
+
+<class name="generator">
+  <name>generator</name>
+  <inherits>stream_component</inherits>
+  <source>pycoon/generators/__init__.py</source>
+  <description>
+    Base class for all generator components.
+  </description>
+  <syntax xml:space="preserve">
+    &lt;!ELEMENT match (generate?,...)&gt;
+    &lt;!ELEMENT when (generate?,...)&gt;
+    &lt;!ELEMENT otherwise (generate?,...)&gt;
+    &lt;!ELEMENT aggregate (generate+)&gt;
+    &lt;!ELEMENT generate (parameter*)&gt;
+    &lt;!ATTLIST generate type CDATA #REQUIRED&gt;
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
+    <description>
+      <p>
+	Just calls stream_component's <link class="stream_component"
+	method="__init__">__init__</link> method and sets <identifier>description</identifier>
+	property to "Generator base class".
+      </p>
+    </description>
+  </method>
+  <class-property>
+    <name>role</name>
+    <description>
+      Value is "stream".
+    </description>
+  </class-property>
+  <class-property>
+    <name>function</name>
+    <description>
+      Value is "generate".
+    </description>
+  </class-property>
+  <helper-func name="register_invokation_syntax">
+    <definition>register_invokation_syntax(server)</definition>
+    <description>
+      <p>
+	This function creates and populates an instance of the <link
+	class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
+	generator elements. This instance is then stored in the given server object's <link
+	class="server_config" property="component_syntaxes">component_syntaxes</link> dictionary.
+      </p>
+    </description>
+  </helper-func>
+  <helper-func name="init_datasource">
+    <definition>init_datasource[_*](sitemap, attrs)</definition>
+    <description>
+      <p>
+	Generator modules may provide init_datasource functions if they need to connect to a
+	database.  The function names should either be just "init_datasource" or, if multiple
+	database servers could be used (e.g. SQL generator could use MySQL, Postgres, etc.), then
+	multiple functions should be defined and the function name should have the database name
+	appended to the end, e.g. "init_datasource_mysql".  The appended portion of the name
+	(e.g. "mysql") must then be provided as the value of the "backend" attribute in the server
+	configuration XML file where the generator is defined.
+      </p>
+      <p>
+	The method will usually return a cursor-like object providing a connection to the database.
+	[It is important for component developers to note that the corresponding generator's <link
+	class="generator" method="_result">_result</link> method will probably expect a uniform
+	interface to databases to be returned by this function, otherwise it will have to provide
+	different code for every type of database available. If it is not possible to provide a
+	uniform interface to multiple databases, then a better solution may be to provide multiple
+	generators instead - one for each type of database.]
+      </p>
+    </description>
+  </helper-func>
+</class>
+
+<class name="transformer">
+  <name>transformer</name>
+  <inherits>stream_component</inherits>
+  <source>pycoon/transformers/__init__.py</source>
+  <description>
+    Base class for all transformer components.
+  </description>
+  <syntax xml:space="preserve">
+    &lt;!ELEMENT match (transform?,...)&gt;
+    &lt;!ELEMENT when (transform?,...)&gt;
+    &lt;!ELEMENT otherwise (transform?,...)&gt;
+    &lt;!ELEMENT transform (parameter*)&gt;
+    &lt;!ATTLIST transform type CDATA #REQUIRED&gt;
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
+    <description>
+      <p>
+	Just calls stream_component's <link class="stream_component"
+	method="__init__">__init__</link> method and sets <identifier>description</identifier>
+	property to "Transformer base class".
+      </p>
+    </description>
+  </method>
+  <class-property>
+    <name>role</name>
+    <description>
+      Value is "stream".
+    </description>
+  </class-property>
+  <class-property>
+    <name>function</name>
+    <description>
+      Value is "transform".
+    </description>
+  </class-property>
+  <helper-func name="register_invokation_syntax">
+    <definition>register_invokation_syntax(server)</definition>
+    <description>
+      <p>
+	This function creates and populates an instance of the <link
+	class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
+	transformer elements. This instance is then stored in the given server object's <link
+	class="server_config" property="component_syntaxes">component_syntaxes</link> dictionary.
+      </p>
+    </description>
+  </helper-func>
+</class>
+
+<class name="serializer">
+  <name>serializer</name>
+  <inherits>stream_component</inherits>
+  <source>pycoon/serializers/__init__.py</source>
+  <description>
+    Base class for all serializer components.
+  </description>
+  <syntax xml:space="preserve">
+    &lt;!ELEMENT match (serialize?,...)&gt;
+    &lt;!ELEMENT when (serialize?,...)&gt;
+    &lt;!ELEMENT otherwise (serialize?,...)&gt;
+    &lt;!ELEMENT serialize&gt;
+    &lt;!ATTLIST serialize type CDATA #REQUIRED&gt;
+    &lt;!ATTLIST serialize mime CDATA #IMPLIED&gt;
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent, root_path="")</definition>
+    <overrides><link class="stream_component" method="__init__">stream_component.__init__</link></overrides>
+    <description>
+      <p>
+	Just calls stream_component's <link class="stream_component"
+	method="__init__">__init__</link> method and sets <identifier>description</identifier>
+	property to "Serializer base class".
+      </p>
+    </description>
+  </method>
+  <class-property>
+    <name>role</name>
+    <description>
+      Value is "stream".
+    </description>
+  </class-property>
+  <class-property>
+    <name>function</name>
+    <description>
+      Value is "serialize".
+    </description>
+  </class-property>
+  <helper-func name="register_invokation_syntax">
+    <definition>register_invokation_syntax(server)</definition>
+    <description>
+      <p>
+	This function creates and populates an instance of the <link
+	class="invokation_syntax">invokation_syntax</link> class with an abstract syntax for
+	serializer elements. This instance is then stored in the given server object's <link
+	class="server_config" property="component_syntaxes">component_syntaxes</link> dictionary.
+      </p>
+    </description>
+  </helper-func>
+</class>
+
+<class name="server_config">
+  <name>server_config</name>
+  <source>pycoon/server.py</source>
+  <description>
+    Holds the configuration information of a running Pycoon instance including available component
+    classes for building pipelines, data source initialisation methods and the default error
+    handling pipelines. It persists between requests by being created as a global object in the
+    handler module.
+  </description>
+  <method name="__init__">
+    <definition>__init__(self)</definition>
+    <description>
+      <p>
+	Class constructor. Creates all the object properties and populates them with default or
+	empty values. Also registers the built in <link
+	class="interpolation_syntax">interpolation_syntax</link> objects.
+      </p>
+    </description>
+  </method>
+  <method name="get_new_component">
+    <definition>get_new_component(self, el_name, parent, attrs, root_path)</definition>
+    <returns>
+      a new component object.
+    </returns>
+    <description>
+      <p>
+	Creates a new component object from the given parameters. <identifier>el_name</identifier>
+	is the element name given in a sitemap file to declare the component;
+	<identifier>parent</identifier> is the element name of the parent element in the sitemap
+	file; <identifier>attrs</identifier> is an <identifier>xml.sax.Attributes</identifier>
+	instance which contains the attributes given in the sitemap file to declare the component;
+	<identifier>root_path</identifier> is either the sitemap or server document root depending
+	on whether the component is part of a sitemap pipeline (the ordinary case) or a server
+	pipeline.
+      </p>
+      <p>
+	This method attempts to find a component class in the <link class="server_config"
+	property="components">components</link> dictionary which matches the given element name. If
+	one matches and the given <identifier>attrs</identifier> provide a valid declaration, then a
+	new instance of the component class is created with the given parameters and returned.
+      </p>
+    </description>
+  </method>
+  <method name="handler_error">
+    <definition>handle_error(self, req, error_code)</definition>
+    <returns>
+      a 2-tuple whose first memeber is a boolean flag which is True if the error was successfully
+      handled or False otherwise and whose second memeber is <identifier>apache.DONE</identifier>.
+    </returns>
+    <description>
+      <p>
+	Attempts to handle an HTTP error condition. <identifier>req</identifier> is an Apache
+	request object; <identifier>error_code</identifier> is an HTTP error code.
+      </p>
+      <p>
+	This method loops through the server's <link class="server_config"
+	property="pipelines">pipelines</link> and calls each one's <link class="pipeline"
+	method="handle_error">handle_error</link> method until one of them successfully handles the
+	error. If none of the pipelines handles the error then it is simply left unhandled by
+	returning the error code to the client but with no error page.
+      </p>
+    </description>
+  </method>
+  <property>
+    <name>log_up_down</name>
+    <description>
+      A boolean value which is True if logging of the server startup and shutdown has been enabled.
+    </description>
+  </property>
+  <property>
+    <name>log_errors</name>
+    <description>
+      A boolean value which is True if logging of error handling has been enabled.
+    </description>
+  </property>
+  <property>
+    <name>log_requests</name>
+    <description>
+      A boolean value which is True if logging of request handling has been enabled.
+    </description>
+  </property>
+  <property>
+    <name>log_debug</name>
+    <description>
+      A boolean value which is True if logging of debugging information has been enabled.
+    </description>
+  </property>
+  <property>
+    <name>EXCEPTION</name>
+    <description>
+      Holds the exception information and traceback when an exception occured during pipeline
+      processing.
+    </description>
+  </property>
+  <property>
+    <name>component_super_types</name>
+    <description>
+      A list of the allowed container element names for declaring available components in the server
+      configuration file: ["built-in", "matchers", "selectors", "authenticators", "generators",
+      "transformers", "serializers"].
+    </description>
+  </property>
+  <property>
+    <name>component_types</name>
+    <description>
+      A list of the allowed element names for declaring available components in the server
+      configuration file: ["component", "matcher", "selector", "generator", "transformer",
+      "serializer"]
+    </description>
+  </property>
+  <property>
+    <name>components</name>
+    <description>
+      A dictionary of available component classes; indexed using the 2-tuple: (function
+      [generate|transform|...], required value of 'type' attribute).
+    </description>
+  </property>
+  <property>
+    <name>component_enames</name>
+    <description>
+      A list of the available components' element names.
+    </description>
+  </property>
+  <property>
+    <name>component_syntaxes</name>
+    <description>
+      A dictionary of <link class="invokation_syntax">invokation_syntax</link> objects for the
+      available components; indexed using the 2-tuple: (function [generate|transform|...], required
+      value of 'type' attribute).
+    </description>
+  </property>
+  <property>
+    <name>interpolation_syntaxes</name>
+    <description>
+      A dictionary of <link class="interpolation_syntax">interpolation_syntax</link> objects;
+      indexed by name.
+    </description>
+  </property>
+  <property>
+    <name>ds_initialisers</name>
+    <description>
+      A dictionary of <link class="generator" helper-func="init_datasource">init_datasource</link>
+      methods which have been extracted from all the generator modules which provide them by the
+      <link class="component" helper-func="register_component">register_component</link> function.
+    </description>
+  </property>
+  <property>
+    <name>pipelines</name>
+    <description>
+      A list of <link class="pipeline">pipeline</link> objects; these are where the server defines
+      its default error handlers.
+    </description>
+  </property>
+  <property>
+    <name>access_log</name>
+    <description>
+      A file-like object which allows writing to the Apache access log. NOT IMPLEMENTED.
+    </description>
+  </property>
+  <property>
+    <name>error_log</name>
+    <description>
+      A file-like object which allows writing to the Apache error log.
+    </description>
+  </property>
+  <property>
+    <name>config_root</name>
+    <description>
+      The absolute path specified in the Apache VirtualHost directive as the PycoonConfigRoot.
+    </description>
+  </property>
+  <property>
+    <name>document_root</name>
+    <description>
+      This property mirros the <link class="server_config" property="config_root">config_root</link>
+      and allows a certain amount of polymorphism between sevrer_config and sitemap_config objects.
+    </description>
+  </property>
+</class>
+
+<class name="sitemap_config">
+  <name>sitemap_config</name>
+  <source>pycoon/sitemap.py</source>
+  <description>
+    The sitemap class holds configuration information for a Pycoon sitemap along with the <link
+    class="pipeline">pipeline</link> objects, any related database connections and provides the
+    primary interface for handling requests.
+  </description>
+  <syntax>
+    &lt;!ELEMENT site-map (components?, pipelines)&gt;
+    &lt;!ATTLIST site-map document-root CDATA #REQUIRED&gt;
+    &lt;!ELEMENT components (data-source*)&gt;
+    &lt;!ELEMENT data-source EMPTY&gt;
+    &lt;!ATTLIST data-source type CDATA #REQUIRED&gt;
+    &lt;!ATTLIST data-source name CDATA #REQUIRED&gt;
+    &lt;!ATTLIST data-source src CDATA #REQUIRED&gt;
+    &lt;!ELEMENT pipelines (pipeline+)&gt;
+    &lt;!ELEMENT pipeline (match+)&gt;
+    ...
+  </syntax>
+  <method name="__init__">
+    <definition>__init__(self, parent)</definition>
+    <description>
+      <p>
+	Class constructor. Creates all the object properties and populates them with default or
+	empty values.
+      </p>
+    </description>
+  </method>
+  <method name="handle">
+    <definition>handle(self, req)</definition>
+    <returns>
+      Returns a 2-tuple which consists of: a boolean flag indicating whether the request was
+      successfully handled or not; and an apache error/status code.
+    </returns>
+    <description>
+      <p>
+	Attempts to handle the given request. <identifier>req</identifier> is an Apache request
+	object.
+      </p>
+      <p>
+	This method loops over the available <link class="sitemap_config"
+	property="pipelines">pipelines</link> and calls each one's <link class="pipeline"
+	method="execute">execute</link> method. If the method returns True, the returned result it
+	written to the client. If it returns True, but the returned result is empty, it means that
+	the pipeline did not match; in this case the next pipeline is tried. If it returns False, it
+	means there was an error processing the pipeline and the <link class="sitemap_config"
+	method="handle_error">handle_error</link> method is called. If the loop terminates without a
+	matching pipeline having been found, the <link class="sitemap_config"
+	method="handle_error">handle_error</link> method is called with an
+	<identifier>apache.HTTP_NOT_FOUND</identifier> status.
+      </p>
+    </description>
+  </method>
+  <method name="handle_error">
+    <definition>handle_error(self, req, error_code)</definition>
+    <returns>
+      Returns a 2-tuple which consists of: a boolean flag indicating whether the error was
+      successfully handled or not; and an apache error/status code which should be
+      <identifier>apache.DONE</identifier> if the error was handled, or the given
+      <identifier>error_code</identifier> if not.
+    </returns>
+    <description>
+      <p>
+	Attempts to handle an HTTP error. <identifier>req</identifier> is an Apache request object;
+	<identifier>error_code</identifier> is an HTTP error code.
+      </p>
+      <p>
+	This method loops over the available <link class="sitemap_config"
+	property="pipelines">pipelines</link> and calls each one's <link class="pipeline"
+	method="handle_error">handle_error</link> method. If the error handler returns True, the
+	returned result is written to the client and the method returns the tuple
+	(<identifier>True</identifier>, <identifier>apache.DONE</identifier>). If the loop
+	terminates without a matching error handler having been found, the method returns False,
+	along with the given <identifier>error_code</identifier>.
+      </p>
+    </description>
+  </method>
+  <property>
+    <name>parent</name>
+    <description>
+      The sitemap object's parent <link class="server_config">server_config</link> (this name allows
+      simple polypmorphism between sitemap and server objects)
+    </description>
+  </property>
+  <property>
+    <name>server</name>
+    <description>
+      The sitemap object's parent <link class="server_config">server_config</link>
+    </description>
+  </property>
+  <property>
+    <name>server_name</name>
+    <description>
+      The name of the VirtualHost on which the handler is running
+    </description>
+  </property>
+  <property>
+    <name>document_root</name>
+    <description>
+      The absolute path which is used by default by all the sitemap components when retrieving local
+      resources; it is set with the site-map element's <identifier>document-root</identifier>
+      attribute
+    </description>
+  </property>
+  <property>
+    <name>data_sources</name>
+    <description>
+      A dictionary of database connection objects; indexed by database name. This dictionary is
+      populated using the <link class="generator"
+      helper-func="init_datasource">init_datasource_*(sitemap, attrs)</link> functions provided by
+      generator modules which require database connections. These functions are called by the <link
+      class="component" helper-func="register_component">register_component</link> function and the
+      selection of which function to call is made using the <identifier>backend</identifier>
+      attribute of the generator's declaration in the server.xml configuration file. The class of
+      connection objects themsevles depends on the database being connected to. Ideally, where a
+      generator has one than one backend, the connection object interfaces should be compatible
+      (e.g. DBI).
+    </description>
+  </property>
+  <property>
+    <name>ds_mods</name>
+    <description>
+      A dictionary of modules or classes needed to establish database connections. This dictionary
+      is populated using the <link class="component"
+      helper-func="register_component">register_component</link> and indexed by module name.
+    </description>
+  </property>
+  <property>
+    <name>pipelines</name>
+    <description>
+      A list of <link class="pipeline">pipeline</link> objects.
+    </description>
+  </property>
+</class>
+
+<class name="sitemap_config_parse">
+  <name>sitemap_config_parse</name>
+  <inherits>xml.sax.handler.ContentHandler</inherits>
+  <source>pycoon/sitemap.py</source>
+  <description>
+    The sitemap_config_parse class is a SAX handler which parses sitemap XML configuration files in
+    order to populate <link class="sitemap_config">sitemap_config</link> objects.
+  </description>
+  <method name="__init__">
+    <definition>__init__(self, filename, sitemap)</definition>
+    <description>
+      <p>
+	Class constructor. <identifier>filename</identifier> is the file URL of the sitemap XML
+	file. <identifier>sitemap</identifier> is a <link
+	class="sitemap_config">sitemap_config</link> instance which will be populated with the
+	configuration from the sitemap file.
+      </p>
+      <p>
+	This constructor method begins parsing the configuration file immediately, meaning that the
+	class is used more like a function.
+      </p>
+    </description>
+  </method>
+  <method name="startElement">
+    <definition>startElement(self, name, attrs)</definition>
+    <overrides>xml.sax.handler.ContentHandler.startElement</overrides>
+    <description>
+      <p>
+	Handles start element events in parsing the XML file. <identifier>name</identifier> is the
+	element's name and <identifier>attrs</identifier> is the element's attribute values.
+      </p>
+      <p>
+	This is the main method of the class. It consists of a series of if/elif blocks which make
+	the method's behaviour conditional on the name of the element being processed.
+      </p>
+      <list>
+	<item>
+	  element name "site-map": retrieve the document-root attribute from the element and assign
+	  it to the sitemap's <link class="sitemap_config"
+	  property="document_root">document_root</link>.
+	</item>
+	<item>
+	  element name "components": set the <link class="sitemap_config_parse"
+	  property="in_components">in_components</link> flag to True
+	</item>
+	<item>
+	  element name "data-source": if the <link class="sitemap_config_parse"
+	  property="in_components">in_components</link> flag is True (i.e. if the
+	  &lt;data-source&gt; element is inside the &lt;components&gt; element) and the current
+	  server has a <link class="server_config" property="ds_initialisers">datasource initialiser
+	  method</link> for the data source type sepcified in the element's "type" attribute then
+	  that initialiser method is called with the current element's attributes as arguments.
+	</item>
+	<item>
+	  element name "pipelines": set the <link class="sitemap_config_parse"
+	  property="in_pipelines">in_pipelines</link> flag to True.
+	</item>
+	<item>
+	  element name "pipeline": if the <link class="sitemap_config_parse"
+	  property="in_pipelines">in_pipelines</link> flag is True (i.e. if the &lt;pipeline&gt;
+	  element is inside the &lt;pipelines&gt; element) then use <link class="pipeline"
+	  helper-func="build_pipeline">pipeline.build_pipeline</link> to create a new pipeline
+	  object using the current element's attribute values as arguments.  The new pipeline object
+	  is assigned to the <link class="sitemap_config_parse"
+	  property="proc_comp_stack">proc_comp_stack</link> as the first object in the list.
+	</item>
+	<item>
+	  if the element name is in the current server's <link class="server_config"
+	  property="component_enames">component_enames</link> list, then it is the definition of a
+	  sitemap component. The method attempts to create a new component using the element's tag
+	  name and attributes as arguments to the current server's <link class="server_config"
+	  method="get_new_component">get_new_component</link> method. If it was successfull, the new
+	  component is passed as an argument to the <link class="component"
+	  method="add_component">add_component</link> method of the last component in the <link
+	  class="sitemap_config_parse" property="proc_comp_stack">proc_comp_stack</link> and then
+	  appended to this list itself.
+	</item>
+      </list>
+      <p>
+	If the element name has not been handled by any of these conditions then an exception is
+	raised saying the the element name is unrecognised.
+      </p>
+    </description>
+  </method>
+  <method name="endElement">
+    <definition>endElement(self, name)</definition>
+    <overrides>xml.sax.handler.ContentHandler.endElement</overrides>
+    <description>
+      <p>
+	This method handles the SAX event when an element is closed. It consists of a few if/elif
+	blocks:
+      </p>
+      <list>
+	<item>
+	  element name "pipeline": if the logging level is "debug" a message saying that the
+	  pipeline has been created is logged.
+	</item>
+	<item>
+	  element name "pipelines": set the <link class="sitemap_config_parse"
+	  property="in_pipelines">in_pipelines</link> flag to False.
+	</item>
+	<item>
+	  element name "components": set the <link class="sitemap_config_parse"
+	  property="in_components">in_components</link> flag to False
+	</item>
+	<item>
+	  if the element name is in the current server's <link class="server_config"
+	  property="component_enames">component_enames</link> list, then it is the end of the
+	  definition of a sitemap component. The reference to the component object at the end of the
+	  <link class="sitemap_config_parse" property="proc_comp_stack">proc_comp_stack</link> list
+	  is removed. (This means that it is no longer the current parent element.)
+	</item>
+      </list>
+    </description>
+  </method>
+  <property>
+    <name>sitemap</name>
+    <description>
+      The <link class="sitemap_config">sitemap_config</link> instance which will be populated.
+    </description>
+  </property>
+  <property>
+    <name>server</name>
+    <description>
+      The current <link class="server_config">server_config</link> instance.
+    </description>
+  </property>
+  <property>
+    <name>proc_comp_stack</name>
+    <description>
+      a list of references to components which have been created from the sitemap XML configuration
+      file.  This list is used as a stack whose last element is always the current "parent"
+      component and where the element at position <identifier>n-1</identifier> is the parent of the
+      component at position <identifier>n</identifier> and where the component at position 0 is
+      always the current pipeline being processed. When a new component is created, it uses the last
+      element in this list as its parnet component and then appends itself to the end of this list
+      to become the new current parent. When the closing tag of a component's definition in the
+      sitemap is read, the last element from this list is removed because it is no longer the
+      current parent element. When a new pipeline component is created, it assigns itself as the
+      first element of this list and therefore becomes the default parent element of all its child
+      components.
+    </description>
+  </property>
+  <property>
+    <name>in_components</name>
+    <description>
+      a boolean flag which is True while the child elements of the &lt;components&gt; element are
+      being processed.
+    </description>
+  </property>
+  <property>
+    <name>in_pipelines</name>
+    <description>
+      a boolean flag which is True while the child elements of the &lt;pipelines&gt; element are
+      being processed.
+    </description>
+  </property>
+</class>
+
+<class name="interpolation_syntax">
+  <name>interpolation_syntax</name>
+  <source>pycoon/interpolation.py</source>
+  <description>
+    Base class for all interpolation classes.
+  </description>
+  <method name="__init__">
+    <definition>__init__(self, pattern, component=None)</definition>
+    <decsription>
+      <p>
+	Class constructor. <identifier>pattern</identifier> is a regular expression string used to
+	match the syntax of {} delimited expressions in component attribute
+	values. <identifier>component</identifier> is a <link class="sitemap_config">sitemap</link>
+	or <link class="server_config">server</link> instance.
+      </p>
+    </decsription>
+  </method>
+  <method name="_match">
+    <definition>_match(self, instruction)</definition>
+    <returns>
+      Returns a boolean.
+    </returns>
+    <description>
+      <p>
+	Matches a string against a pattern. <identifier>instruction</identifier> is the contents of
+	a {} delimited interpolation instruction from a component attribute value; it will have been
+	extracted by the <link class="interpolation_syntax"
+	helper-func="interpolate">interpolate</link> function.
+      </p>
+      <p>
+	This method just calls the <link class="interpolation_syntax"
+	property="pattern">pattern</link> property's match() method with the given
+	<identifier>instruction</identifier> and returns True if it matches, or False if it doesn't.
+      </p>
+    </description>
+  </method>
+  <method name="__call__">
+    <definition>__call__(self, instruction, uri_matcher, context)</definition>
+    <returns>
+      Returns a 2-tuple which consists of a boolean flag which is True if the given
+      <identifier>instruction</identifier> matched the object's pattern; and a string containing the
+      result of performing the interpolation.
+    </returns>
+    <description>
+      <p>
+	Performs the interpolation. <identifier>instruction</identifier> is the text from inside the
+	{} delimited instruction in the component attribute value;
+	<identifier>uri_matcher</identifier> is the calling object's parent <link
+	class="uri_matcher">uri_matcher</link> (or <link class="error_matcher">error_matcher</link>)
+	component; <identifier>context</identifier> is either a <link
+	class="sitemap_config">sitemap</link> or <link class="server_config">server</link>.
+      </p>
+      <p>
+	This is where derived components should implement their functionality. The default behaviour
+	raises a <identifier>NotImplemented</identifier> exception.
+      </p>
+    </description>
+  </method>
+  <property>
+    <name>pattern</name>
+    <description>
+      A compiled regular expression object used to match the syntax of {} delimited expressions in
+      component attribute values.
+    </description>
+  </property>
+  <property>
+    <name>component</name>
+    <description>
+      a <link class="sitemap_config">sitemap</link> or <link class="server_config">server</link>
+      instance.
+    </description>
+  </property>
+  <helper-func name="register_interpolation_syntax">
+    <definition>register_interpolation_syntax(server, syntax, name)</definition>
+    <description>
+      <identifier>server</identifier> is a <link class="server_config">server_config</link>
+      instance; <identifier>syntax</identifier> is an <link
+      class="interpolation_syntax">interpolation_syntax</link> instance;
+      <identifier>name</identifier> is a name for the interpolation syntax. The function adds the
+      given <identifier> interpolation_syntax</identifier> to the server's <link
+      class="server_config" property="interpolation_syntaxes">interpolation_syntaxes</link>
+      dictionary using the given <identifier>name</identifier> as an index.
+    </description>
+  </helper-func>
+  <helper-func name="interpolate">
+    <definition>interpolate(component, string_arg, as_filename=False, root_path="")</definition>
+    <returns>
+      Returns the interpolated string.
+    </returns>
+    <description>
+      <p>
+	Takes a component attribute value, interprets the special {} delimited syntax and returns
+	the interpolated string. <identifier>component</identifier> is the componet object which
+	called the function; <identifier>string_arg</identifier> is the component attribute value
+	which includes the {} delimited instructions; <identifier>as_filename</identifier> is a
+	boolean which, when True, will cause the function to return an absolute file path by
+	prepending the value of <identifier>root_path</identifier> to the result; if
+	<identifier>root_path</identifier> is not supplied, the give
+	<identifier>component</identifier>'s <link class="component"
+	property="root_path">root_path</link> is used.
+      </p>
+      <p>
+	First, this function attempts to find the given <identifier>component</identifier>'s parent
+	<link class="uri_matcher">uri_matcher</link> or <link
+	class="error_matcher">error_matcher</link>. If it can't find one, it raises an
+	exception. (The uri_matcher is needed in order to retrieve information about the request
+	URI.) Next it initialises the result string with the <identifier>root_path</identifier> (if
+	<identifier>as_filename</identifier> was True). Next it loops over the characters in the
+	given <identifier>string_as</identifier>. If a character is outside a {}, it is simply added
+	to the result string.  When it finds characters inside a pair of {}s, it begins looping over
+	the available <link class="server_config"
+	property="interpolation_syntaxes">interpolation_syntaxes</link>. When it finds one which
+	matches the given syntax, it inserts its result into the return string in place of the {}
+	delimited instruction. If it doesn't find a matching interpolation_syntax, the {} delimited
+	instruction is replaced with nothing.
+      </p>
+    </description>
+  </helper-func>
+</class>
+
+</div>
+
+<!--<div id="request-processing" title="Processing a Request">
+    <p>
+    When Apache receives a request which will be handled by Pycoon, this is the flow of execution:
+    </p>
+    <flow id="execution">
+    <call module="pycoon" method="handler">
+    <call class="sitemap" method="handle">
+    
+    </call>
+    </call>
+    </flow>
+    </div>-->
+</div>
+
+</body>
+
 </document>

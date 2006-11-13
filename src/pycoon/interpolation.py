@@ -282,5 +282,8 @@ def interpolate(component, string_arg, as_filename=False, root_path=""):
 
         return_string += string_arg[start_pos:]
 
+    if as_filename:# and os.name == "nt":
+        return_string = os.path.normpath(return_string)
+
     # return the completed return string
     return return_string

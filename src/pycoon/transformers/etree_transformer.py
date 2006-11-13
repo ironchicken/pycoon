@@ -62,6 +62,8 @@ class etree_transformer(transformer):
 
         transformer.__init__(self, parent, root_path)
 
+        self.description = "etree_transformer(\"%s.%s\")" % (module, code_object)
+
     def _descend(self, req, p_sibling_result=None):
         return False
 
