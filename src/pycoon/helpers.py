@@ -31,7 +31,9 @@ class fake_apache:
         self.URI_PATH=6
         self.URI_QUERY=7
         self.URI_FRAGMENT=8
-        self._server_root = ""
+
+        from os import getcwd
+        self._server_root = getcwd()
     def import_module(self, name):
         return __import__(name)
     def server_root(self):
@@ -73,7 +75,6 @@ class fake_util(object):
     """
 
     def redirect(self, req, uri, permanent=False, text=None):
-        print "REDIRECT: %s" % uri
         if permanent:
             return 301
         else:

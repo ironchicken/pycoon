@@ -139,6 +139,7 @@ class sitemap_config_parse(ContentHandler):
             self.in_components = True
             
         elif name == "data-source":
+            # process a specified data source
             if not self.in_components:
                 raise SitemapError("<data-source> element may only appear inside the <components> element.")
             
@@ -147,18 +148,24 @@ class sitemap_config_parse(ContentHandler):
                 self.sitemap.parent.ds_initialisers[str(attrs['type'])](self.sitemap, attrs)
 
         elif name == "pipelines":
+            # set the in_pipelines flag to True
             self.in_pipelines = True
             
         elif name == "pipeline":
+            # process a pipeline
             if not self.in_pipelines:
                 raise SitemapError("<pipeline> element may only appear inside <pipelines> element.")
             
-            # process a pipeline specification
+            # create a pipeline object and set it as the first member of the temporary storage
+            # stack self.proc_comp_stack
             self.proc_comp_stack = [build_pipeline(self.server, self.sitemap, attrs)]
 
         elif name in self.server.component_enames:
             # process a pipeline component
 
+            # creates a component from the current element's attributes using the server_config.get_new_component
+            # method; adds the component as a child to the previously created component and also appends it
+            # to the temporary storage stack
             self.proc_comp_stack.append(self.proc_comp_stack[-1].add_component(\
                 self.server.get_new_component(name, self.proc_comp_stack[-1], attrs, self.sitemap.document_root)))
 

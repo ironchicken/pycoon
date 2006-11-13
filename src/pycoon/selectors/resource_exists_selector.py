@@ -56,7 +56,6 @@ class resource_exists_selector(selector):
         for res in conditions:
             path = interpolate(self, res, as_filename=True, root_path=self.root_path)
             try:
-                print "testing: %s" % path
                 os.stat(path)
             except OSError:
                 continue

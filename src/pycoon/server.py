@@ -238,6 +238,7 @@ class server_config_parse(ContentHandler):
             self.in_pipelines = True
             
         elif name == "pipeline":
+            # process a server pipeline
             if not self.done_components:
                 # ensure that all the component classes have been registered before processing any server pipelines
                 raise ServerConfigurationError("<pipeline> elements must follow the <components> element.")
@@ -245,11 +246,16 @@ class server_config_parse(ContentHandler):
             if not self.in_pipelines:
                 raise ServerConfigurationError("<pipeline> elements must appear inside the <pipelines> element.")
             
+            # create a pipeline object and set it as the first member of the temporary storage
+            # stack self.proc_comp_stack
             self.proc_comp_stack = [build_pipeline(self.server, sitemap=None, attrs=attrs)]
 
         elif name in self.server.component_enames and self.done_components:
-            # process a pipeline component
+            # process a component inside a server pipeline
 
+            # creates a component from the current element's attributes using the server_config.get_new_component
+            # method; adds the component as a child to the previously created component and also appends it
+            # to the temporary storage stack
             self.proc_comp_stack.append(self.proc_comp_stack[-1].add_component(\
                 self.server.get_new_component(name, self.proc_comp_stack[-1], attrs, self.server.document_root)))
 
