@@ -585,10 +585,10 @@
   </syntax>
   <method name="__init__">
     <definition>__init__(self, parent, method="exclusive", root_path="")</definition>
-    <overrides><link class="syntax_component" method="_result">syntax_component.__init__</link></overrides>
+    <overrides><link class="syntax_component" method="__init__">syntax_component.__init__</link></overrides>
     <description>
       <p>
-	Calls <link class="syntax_component" method="_result">syntax_component.__init__</link> and
+	Calls <link class="syntax_component" method="__init__">syntax_component.__init__</link> and
 	sets <link class="selector" property="description">description</link> property to "Selector
 	bass class". <identifier>method</identifier> defines how child <link
 	class="when">when</link> components will be treated: "exclusive" means that once a matching
@@ -658,10 +658,10 @@
   </description>
   <method name="__init__">
     <definition>__init__(self, parent, root_path="")</definition>
-    <overrides><link class="component" method="_result">component.__init__</link></overrides>
+    <overrides><link class="component" method="__init__">component.__init__</link></overrides>
     <description>
       <p>
-	Calls <link class="component" method="_result">component.__init__</link> and sets <link
+	Calls <link class="component" method="__init__">component.__init__</link> and sets <link
 	class="stream_component" property="description">description</link> property to "Streamed
 	component base class".
       </p>

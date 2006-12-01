@@ -31,6 +31,7 @@
     <matchers>
       <matcher name="uri" module="pycoon.matchers.uri_matcher" class="uri_matcher" />
       <matcher name="error" module="pycoon.matchers.error_matcher" class="error_matcher" />
+      <matcher name="special" module="pycoon.matchers.special_matcher" class="special_matcher" />
     </matchers>
     <selectors>
       <selector name="browser-class" module="pycoon.selectors.browser_class_selector" class="browser_class_selector" />
