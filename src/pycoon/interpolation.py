@@ -7,7 +7,7 @@ This module impelements the 'interpolation' mechanism which allows sitemap compo
 attributes to include a special syntax (denoted by {}) for parameterizing their values.
 """
 
-import string, re, os, traceback
+import string, re, os, traceback, urllib
 from StringIO import StringIO
 from pycoon import apache
 from pycoon.helpers import strip_amps
@@ -283,7 +283,7 @@ def interpolate(component, string_arg, as_filename=False, root_path=""):
         return_string += string_arg[start_pos:]
 
     if as_filename:# and os.name == "nt":
-        return_string = os.path.normpath(return_string)
+        return_string = urllib.pathname2url(return_string)
 
     # return the completed return string
     return return_string
