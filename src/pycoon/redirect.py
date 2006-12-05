@@ -15,6 +15,7 @@ except ImportError:
     util = fake_util()
     
 from pycoon.components import syntax_component, invokation_syntax
+from pycoon.interpolation import interpolate
 
 def register_invokation_syntax(server):
     """
@@ -61,4 +62,4 @@ class redirect(syntax_component):
         return False
     
     def _result(self, req, p_sibling_result=None, child_results=[]):
-        util.redirect(req, self.new_uri, self.permanent, self.message)
+        util.redirect(req, interpolate(self, self.new_uri), self.permanent, self.message)
