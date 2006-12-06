@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-
-<error>
-  <title>Resource not found</title>
-  <code>404</code>
-  <description>
-    <p>The resource you requested "<uri />" could not be found.</p>
-  </description>
-</error>
