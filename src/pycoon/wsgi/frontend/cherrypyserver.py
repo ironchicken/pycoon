@@ -13,10 +13,6 @@ def main(*args):
     if len(args) == 2:
         from pkg_resources import resource_filename
         conf = resource_filename("pycoon", "pycoon.xconf")
-        
-        # DEBUG:
-        print open(conf).read()
-        
         # Some Windows-specific file path handling
         if conf[0] != "/":
             conf = "file:///%s" % conf.replace("\\", "/")

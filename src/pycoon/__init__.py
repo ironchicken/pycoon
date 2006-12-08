@@ -66,7 +66,7 @@ def main():
     import getopt
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "s:", ["help", "license", "serve"])
+        opts, args = getopt.getopt(sys.argv[1:], "s:", ["help", "license", "serve="])
         for opt, arg in opts:
             if opt == "--help":
                 print __doc__
@@ -78,6 +78,7 @@ def main():
                 if arg == "cherrypy":
                     from pycoon.wsgi.frontend import cherrypyserver
                     cherrypyserver.main(*args)
+                    sys.exit(0)
                 else:
                     raise getopt.GetoptError("")
             else:
