@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cocoon version="2.1">
+  <sitemap file="webapp/sitemap.xmap" check-reload="yes" logger="sitemap.processor"/>
+  <logging disable="NOTSET">
+    <logger name="sitemap" level="INFO"/>
+    <logger name="source" level="INFO"/>
+    <logger name="component-manager" level="INFO"/>
+    <logger name="environment" level="INFO"/>
+    <logger name="sitemap.builder" level="DEBUG"/>
+    <!--
+    <logger name="sitemap.processor" level="DEBUG"/>
+    <logger name="sitemap.generator" level="DEBUG"/>    
+    <logger name="sitemap.reader" level="DEBUG"/>
+    <logger name="sitemap.aggregator" level="DEBUG"/>
+    <logger name="sitemap.select" level="DEBUG"/>
+    <logger name="sitemap.transformer" level="DEBUG"/>
+    <logger name="sitemap.serializer" level="DEBUG"/>
+    -->
+  </logging>
+  <web-app>
+    <servlet>
+      <init-param>
+        <param-name>form-encoding</param-name>
+        <param-value>utf-8</param-value>
+      </init-param>
+    </servlet>
+    <!-- This is only the example. Of course text/css is in mimetypes by default -->
+    <mime-mapping>
+      <extension>css</extension>
+      <mime-type>text/css</mime-type>
+    </mime-mapping>
+  </web-app>
+  <properties>
+    <!-- This property is used by HttpSource for encoding URIs (as in Apache Cocoon) -->
+    <property name="file.property" value="windows-1251"/>
+    <!-- Share TreeProcessor instance between multiple server threads and don't recreate it for every request -->
+    <property name="threading.treeprocessor.shared" value="yes"/>
+  </properties>
+</cocoon>
+
