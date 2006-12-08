@@ -5,17 +5,16 @@ __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 
 from setuptools import setup, find_packages
 setup(
-    name = "pycoon-pysitemap",
+    name = "pycoon",
     version = "0.2a1",
     packages = find_packages("src"),
     package_dir = {"": "src"},
-    install_requires = ['lxml >= 1.1.1, < 1.1.2'],
+    install_requires = ['lxml >= 1.1.1, < 1.2'],
     entry_points = {
         "console_scripts": [
             "pycoon = pycoon:main",
         ],
     },
-    include_package_data = True,
     zip_safe = False,
     
     # Metadata for upload to PyPI
