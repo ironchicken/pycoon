@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <cocoon version="2.1">
-  <sitemap file="sitemap.xmap" check-reload="yes" logger="sitemap.processor"/>
+  <sitemap file="webapp/sitemap.xmap" check-reload="yes" logger="sitemap.processor"/>
   <logging disable="NOTSET">
     <logger name="sitemap" level="INFO"/>
     <logger name="source" level="INFO"/>
