@@ -36,7 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."""
 
 __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
-__version__ = "0.2a1"
+__version__ = "0.2a2"
 
 ns = {
     "map": "http://apache.org/cocoon/sitemap/1.0",
