@@ -1,0 +1,83 @@
+# This is an incomplete deployment descriptor.
+# This is an application/rdf+n3 file.
+# See also <http://en.wikipedia.org/wiki/Notation_3>.
+
+@prefix : <http://anrienord.livejournal.com/ns/deployment/0.1/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+
+<urn:uuid:f37e1e3b-3fa0-427a-b572-21d0a37c2cd7> a :SoftwareProduct;
+  dc:title "Pycoon";
+  dc:description "Pycoon Web Development Framework";
+  foaf:homepage <http://code.google.com/p/pycoon/>;
+  :version "0.2a1";
+  :release
+    [ a :SoftwareRelease;
+      dc:title "Development, Platform-Independent";
+      :platform
+        [ a :SoftwarePlatform;
+          dc:title "Generic Linux" ];
+      :platform
+        [ a :SoftwarePlatform;
+          dc:title "Microsoft Windows NT/XP" ];
+      :requiredFeature
+        [ a :SoftwareFeature;
+          dc:title "Pycoon Framework and Core Components";
+          :requiredElement <#pycoon>;
+      :requiredFeature
+        [ a :SoftwareFeature;
+          dc:title "Front-end Server";
+          :optionalFeature
+            [ a :SoftwareFeature;
+              dc:title "CherryPy Standalone WSGI Server";
+              :requiredElement
+                [ a :SoftwareElement;
+                  dc:title "CherryPy WSGI Server";
+                  :name "cherrypy-wsgiserver";
+                  :minVersion "3.0.0RC1";
+                  :maxVersion "3.0.0RC*";
+                  foaf:homepage <http://www.cherrypy.org/> ] ],
+            [ a :SoftwareFeature;
+              dc:title "Apache HTTP Server with mod_python as WSGI Server";
+              dc:requiredProduct
+                [ a :SoftwareProduct;
+                  dc:title "Apache HTTP Server";
+                  :minVersion "2.0";
+                  :maxVersion "2.0.*";
+                  foaf:homepage <http://httpd.apache.org/> ];
+              :requiredElement
+                [ a :SoftwareElement;
+                  dc:title "mod_python Apache Module";
+                  :name "apache-mod_python";
+                  :minVersion "3.2";
+                  :maxVersion "3.2.*";
+                  foaf:homepage <http://www.modpython.org/> ],
+                [ a :SoftwareElement;
+                  dc:title "paste.modpython WSGI wrapper for mod_python";
+                  :name "paste-modpython";
+                  :minVersion "1.0";
+                  :maxVersion "1.0.*";
+                  foaf:homepage <http://pythonpaste.org/> ] ] ].
+
+<#pycoon> a :SoftwareElement;
+  :name "pycoon";
+  :version "0.2a1";
+  :requiredProduct
+    [ a :SoftwareProduct;
+      dc:title "CPython Interpreter";
+      :minVersion "2.4";
+      :maxVersion "2.5.*";
+      foaf:homepage <http://www.python.org/> ];
+  :requiredElement
+    [ a :SoftwareElement;
+      dc:title "lxml Pythonc Binding for the libxml2 and libxslt Libraries";
+      :name "lxml";
+      :minVersion "1.1";
+      :maxVersion "1.1.*";
+      foaf:homepage <http://codespeak.net/lxml/>;
+      :requiredElement
+        [ a :SoftwareElement;
+          :name "libxml2" ],
+        [ a :SoftwareElement;
+          :name "libxslt" ] ].
+
