@@ -5,7 +5,7 @@ __author__ = "Andrey Nordin <mailto:anrienord@inbox.ru>"
 
 import logging
 import time
-import elementtree.ElementTree as etree
+import lxml.etree as etree
 from pycoon import ns, synchronized
 from pycoon.source import FileSource
 from pycoon.sitemap.nodes import PipelinesNode, PipelineNode, AggregateNode, SerializeNode, ResourceCall, SelectNode, HandleErrorsNode, GenerateNode, MatchNode, TransformNode, ReadNode
