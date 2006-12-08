@@ -15,6 +15,7 @@ setup(
             "pycoon = pycoon:main",
         ],
     },
+    include_package_data = True,
     zip_safe = False,
     
     # Metadata for upload to PyPI
