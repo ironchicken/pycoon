@@ -109,7 +109,9 @@ class TreeBuilder:
             self.log.debug("%s is built in %.3f s" % (source.uri, t1 - t0))
         
     def buildNode(self, element):
-        if not element.tag.startswith("{%(map)s}" % ns):
+        self.log.debug(u"element: %s" % element)
+        self.log.debug(u"element.tag: %s" % element.tag)
+        if not isinstance(element.tag, str) or not element.tag.startswith("{%(map)s}" % ns):
             return None
 
         suffix = element.tag[len("{%(map)s}" % ns):]
