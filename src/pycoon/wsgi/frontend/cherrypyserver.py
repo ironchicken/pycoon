@@ -1,23 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Usage: cherrypyserver.py <host> <port> <pycoon.xconf absolute file: URI> 
-"""
+"""Usage: pycoon -s cherrypy <host> <port> [<pycoon.xconf absolute file URI>]"""
 
 __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(sys.modules[__name__].__file__), "..", "..", ".."))
 from pycoon.wsgi.servers.cherrypy.wsgiserver import CherryPyWSGIServer
 from pycoon import wsgi
 
-if __name__ == "__main__":
-    if len(sys.argv) != 4:
+def main(*args):
+    if len(args) == 2:
+        from pkg_resources import resource_filename
+        conf = resource_filename("pycoon", "pycoon.xconf")
+        
+        # DEBUG:
+        print open(conf).read()
+        
+        # Some Windows-specific file path handling
+        if conf[0] != "/":
+            conf = "file:///%s" % conf.replace("\\", "/")
+        else:
+            conf = "file://%s" % conf
+    elif len(args) == 3:
+        conf = args[2]
+    else:
         print __doc__
         sys.exit(1)
-    pycoon = wsgi.pycoonFactory({"server-xconf": sys.argv[3]})
-    addr = (sys.argv[1], int(sys.argv[2]))
+    pycoon = wsgi.pycoonFactory({"server-xconf": conf})
+    addr = (args[0], int(args[1]))
     server = CherryPyWSGIServer(addr, pycoon)
     try:
         server.start()
