@@ -7,25 +7,29 @@ import logging
 import time
 import lxml.etree as etree
 from pycoon import ns, synchronized
-from pycoon.source import FileSource
-from pycoon.sitemap.nodes import PipelinesNode, PipelineNode, AggregateNode, SerializeNode, ResourceCall, SelectNode, HandleErrorsNode, GenerateNode, MatchNode, TransformNode, ReadNode
+from pycoon.source import FileSource, SourceResolver
+from pycoon.sitemap.nodes import PipelinesNode, PipelineNode, AggregateNode, SerializeNode, ResourceCall, SelectNode, HandleErrorsNode, GenerateNode, MatchNode, TransformNode, ReadNode, MountNode
 from pycoon.sitemap.nodes import Node, ContainerNode, InvokeContext
 from pycoon.sitemap.manager import ComponentManager
 from pycoon import variables
 
-class TreeProcessor(Node):
-    parent = None
-    lastModified = 0
-    
-    def __init__(self):
+class TreeProcessor(Node):    
+    def __init__(self, contextPath=None):
         Node.__init__(self)
-        self.log = logging.getLogger("sitemap.processor")
+        self.contextPath = contextPath
         self.rootNode = None
-        self.componentConfigurations = {}
+        self.children = {}
+        self.parent = None
+        self.parentComponentManager = None
+        self.componentConfigurations = None
+        self.lastModified = 0
+        self.log = logging.getLogger("sitemap.processor")
+        self.checkReload = True
     
     def configure(self, element):
         self.checkReload = (element.get("check-reload", "yes") == "yes")
         self.uri = element.get("file", "sitemap.xmap")
+        self.source = SourceResolver().resolveUri(self.uri, self.contextPath)
         self.log = logging.getLogger(element.get("logger"))
         self.log.debug("Tree processor is configured")
 
@@ -33,13 +37,13 @@ class TreeProcessor(Node):
         t0 = time.clock()
         try:
             env.objectModel["processor"] = self
-            self.source = env.sourceResolver.resolveUri(self.uri)
             self.setupProcessor(env)
             context = InvokeContext()
             return self.rootNode.invoke(env, context)
         finally:
             t1 = time.clock()
-            self.log.debug("'%s': rendered in %.3f s" % (env.request.uri, t1 - t0))
+            if self.parent is None:
+                self.log.debug("'%s': rendered in %.3f s" % (env.request.uri, t1 - t0))
     
     def buildPipeline(self, env):
         env.objectModel["processor"] = self
@@ -50,12 +54,15 @@ class TreeProcessor(Node):
             return None
         
     def setupProcessor(self, env):
+        log = logging.getLogger("%s.setup" % self.log.name)
+        log.debug("Setting up processor for: %s" % self.source.uri)
         if self.parent is None:
             env.changeContext("", self.source.uri)
         
         if self.checkReload and self.source.getLastModified() != self.lastModified:
-            self.log.debug("source mtime: %d" % self.source.getLastModified())
-            self.log.debug("processor mtime: %d" % self.lastModified)
+            log.debug("Source: %s" % self.source.uri)
+            log.debug("Source mtime: %d" % self.source.getLastModified())
+            log.debug("Processor mtime: %d" % self.lastModified)
             self.buildProcessor(env)
         env.componentManager = self.componentManager
 
@@ -66,11 +73,28 @@ class TreeProcessor(Node):
             return
         builder = TreeBuilder()
         builder.processor = self
-        self.lastModified = self.source.getLastModified()
         root = builder.build(self.source)
         self.rootNode = root
         self.componentManager = builder.componentManager
+        if self.parentComponentManager is not None:
+            self.componentManager.parent = self.parentComponentManager
+        self.lastModified = self.source.getLastModified()
         self.log.debug("Processor (re)built")
+        
+    @synchronized
+    def createChildProcessor(self, src, env):
+        if src in self.children:
+            child = self.children[src]
+        else:
+            child = TreeProcessor()
+            child.parent = self
+            child.log = logging.getLogger("sitemap.processor")
+            child.uri = src
+            child.source = SourceResolver(env).resolveUri(child.uri)
+            self.children[src] = child
+        #child.componentConfigurations = self.componentConfigurations
+        child.parentComponentManager = self.componentManager
+        return child
         
 class ComponentConfigurations:
     def build(self, element):
@@ -90,6 +114,7 @@ class TreeBuilder:
         "select": SelectNode,
         "read": ReadNode,
         "handle-errors": HandleErrorsNode,
+        "mount": MountNode,
         "component-configurations": ComponentConfigurations,
     }
     
@@ -102,7 +127,9 @@ class TreeBuilder:
         try:
             self.root = etree.fromstring(source.read())
             self.componentManager = ComponentManager()
-            self.componentManager.configure(self.root.find("{%(map)s}components" % ns))
+            components = self.root.find("{%(map)s}components" % ns)
+            if components is not None:
+                self.componentManager.configure(components)
             return self.buildNode(self.root.find("{%(map)s}pipelines" % ns))
         finally:
             t1 = time.clock()
