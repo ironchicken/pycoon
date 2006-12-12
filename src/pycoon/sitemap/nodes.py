@@ -62,6 +62,40 @@ class HandleErrorsNode(ContainerNode):
         else:
             raise exception
 
+class MountNode(Node):
+    def __init__(self):
+        Node.__init__(self)
+        self.log = logging.getLogger("sitemap.mount")    
+    
+    def build(self, element):
+        Node.build(self, element)
+        self.src = variables.getResolver(element.get("src"))
+        self.prefix = variables.getResolver(element.get("uri-prefix"))
+    
+    def invoke(self, env, context):
+        resolvedSource = self.src.resolve(context, env.objectModel)
+        resolvedPrefix = self.prefix.resolve(context, env.objectModel)
+        self.log.debug('<map:mount src="%s" prefix-uri="%s"> invoke()' % (resolvedSource, resolvedPrefix))
+ 
+        if resolvedSource.endswith("/"):
+            resolvedSource += "sitemap.xmap"
+
+        processor = env.objectModel["processor"].createChildProcessor(resolvedSource, env)        
+        env.changeContext(resolvedPrefix, resolvedSource)
+
+        if context.isBuildingPipelineOnly:
+            self.log.debug("Building pipeline only")
+            processor.setupProcessor(env)
+            pipeline = processor.buildPipeline(env)
+            if pipeline is not None:
+                context.processingPipeline = pipeline
+                return True
+            else:
+                return False
+        else:
+            self.log.debug("Processing")
+            return processor.process(env)
+            
 class PipelinesNode(ContainerNode):
     def __init__(self):
         ContainerNode.__init__(self)
@@ -79,7 +113,7 @@ class PipelinesNode(ContainerNode):
 
 class Pipeline:
     def __init__(self):
-        self.log = logging.getLogger("sitemap._pipeline")
+        self.log = logging.getLogger("sitemap.pipeline")
         self.generator = None
         self.transformers = []
         self.serializer = None
@@ -117,14 +151,14 @@ class PipelineNode(ContainerNode):
             if not self.isLast:
                 return False
             else:
-                raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.uriPrefix, env.request.uri))
+                raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.prefix, env.request.uri))
         context.processingPipeline = Pipeline()
         try:
             if self.invokeChildren(env, context):
                 return True
             elif not self.isLast:
                 return False
-            raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.uriPrefix, env.request.uri))
+            raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.prefix, env.request.uri))
         except Exception, e:
             if env.isExternal and self.handleErrorsNode is not None:
                 return self.handleErrorsNode.invoke(env, context, e)

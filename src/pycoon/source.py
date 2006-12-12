@@ -96,7 +96,7 @@ class SourceResolver:
     """
     Allows to get a Source instance for any type of URI.
     """
-    def __init__(self, env):
+    def __init__(self, env=None):
         self.env = env
         self.log = logging.getLogger("source.resolver")
     

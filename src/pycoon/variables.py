@@ -59,10 +59,16 @@ class PreparedVariableResolver(VariableResolver):
                     if encoding is not None:
                         subst = param.decode(encoding)
                     else:
-                        subst = param
+                        subst = param                    
                 elif scheme == "global":
-                    gvars = objectModel["processor"].componentConfigurations.findall("global-variables/*")
-                    subst = "".join([var.text for var in gvars if var.tag == name]) 
+                    subst = ""
+                    processor = objectModel["processor"]
+                    while processor is not None:
+                        confs = processor.componentConfigurations
+                        if confs is not None:
+                            gvars = confs.findall("global-variables/*")
+                            subst = "".join([var.text for var in gvars if var.tag == name])
+                        processor = processor.parent
                 else:
                     raise Exception("Unknown variable resolving scheme for: %s" % v)
             else:

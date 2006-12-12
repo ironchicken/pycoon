@@ -15,7 +15,7 @@ class Environment:
     
     def __init__(self, req):
         self.log = logging.getLogger("environment")
-        self.uriPrefix = "/" 
+        self.prefix = "/" 
         
         self.request = req
         self.response = HttpResponse()
@@ -32,8 +32,9 @@ class Environment:
 
     def changeContext(self, newPrefix, contextPath):
         if newPrefix:
-            # TODO: Correct prefix
+            newPrefix = "%s/" % newPrefix
             self.prefix += newPrefix
+            self.request.uri = self.request.uri.split(newPrefix, 1)[1]
         if contextPath:
             if contextPath.find(":") != -1:
                 s = contextPath
@@ -41,7 +42,8 @@ class Environment:
                 s = "%s/%s" % (self.contextPath, contextPath)
             s = os.path.dirname(s)
             self.contextPath = s
-        self.log.debug("New context path is %s" % self.contextPath)
+        self.log.debug('New context path: "%s", prefix: "%s"' % (self.contextPath, self.prefix))
+        self.log.debug('Request URI: "%s"' % self.request.uri)
         
     def createWrapper(self, uri):
         params = self.request.params.copy()
