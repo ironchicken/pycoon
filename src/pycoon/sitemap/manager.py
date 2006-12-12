@@ -8,6 +8,7 @@ from pycoon import ns, SitemapException
 
 class ComponentManager:
     def __init__(self):
+        self.parent = None
         self.log = logging.getLogger("component-manager")
         self.modules = {}
         self.components = {
@@ -18,11 +19,13 @@ class ComponentManager:
             "{%(map)s}match" % ns: ({}, "{%(map)s}matcher", "{%(map)s}matchers" % ns),
             "{%(map)s}select" % ns: ({}, "{%(map)s}selector", "{%(map)s}selectors" % ns),
             "{%(map)s}pipeline" % ns: ({}, "{%(map)s}pipe", "{%(map)s}pipes" % ns),
+            "{%(map)s}aggregate" % ns: ({"default": (self.getClass("pycoon.components.cocoon.ContentAggregator"), None)}, None, None),
         }
 
     def configure(self, element):
-        for classes, name, container in self.components.values():
-            container = element.find(container)
+        for classes, name, containterName in self.components.values():
+            if containterName is None: continue
+            container = element.find(containterName)
             if container is None: continue
             self.log.debug("container: %s" % container)
             default = container.get("default")
@@ -32,17 +35,16 @@ class ComponentManager:
                 classes[name] = klass, e
                 if name == default:
                     classes["default"] = klass, e
-        # TODO: Possibly we need to add ContentGenerator in the constructor,
-        # because there will be several instances of ComponentManager for
-        # mounted sitemaps in the fututre
-        self.components["{%(map)s}aggregate" % ns] = ({"default": (self.getClass("pycoon.components.cocoon.ContentAggregator"), None)}, None, None)
         self.log.debug(self.components)
         
     def getComponent(self, role, type):
         entry = self.components[role][0]
         klass, element = entry.get(type, entry.get("default", (None, None)))
         if klass is None:
-            raise SitemapException("There is no component of role %s and no default component of type %s" % (role, type))
+            if self.parent is not None:
+                return self.parent.getComponent(role, type)
+            else:
+                raise SitemapException("There is no component of role %s and no default component of type %s" % (role, type))
         c = klass()
         c.configure(element)
         return c
