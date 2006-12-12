@@ -11,6 +11,7 @@ __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 
 import sys
 from urllib import urlopen
+import urllib2
 from threading import Thread
 import time
 import random
@@ -26,12 +27,22 @@ class UriReader(Thread):
         t0 = time.clock()
         try:
             try:
+                request = urllib2.Request(uri)
+                opener = urllib2.build_opener()
+                fd = opener.open(self.uri)
+                try:
+                    self.data = fd.read()
+                    print "[%s] OK" % self.getName()
+                finally:
+                    fd.close()
+                """
                 fd = urlopen(self.uri)
                 try:
                     self.data = fd.read()
                     print "[%s] OK" % self.getName()
                 finally:
                     fd.close()
+                """
             except Exception, e:
                 self.exception = e
         finally:
@@ -53,11 +64,14 @@ def stddev(samples):
     return math.sqrt(float(sum) / (len(samples) - 1))
     
 if __name__ == "__main__":
-    readers = [UriReader("http://localhost:8080/news") for i in range(1000)]
+    if len(sys.argv) < 4:
+        raise Exception("Wrong command line parameters")
+    uri, count, lam = sys.argv[1:4]
+    readers = [UriReader(uri) for i in range(int(count))]
     for r in readers:
         # Lambda parameter of the exponential distribution -- request rate (secs ** -1)
         # E. g. 5.0 means 5 requests per second (1 request per 0.2 secs) on average 
-        time.sleep(random.expovariate(5.0))
+        time.sleep(random.expovariate(float(lam)))
         r.start()
     for r in readers: r.join()
     for r in readers:
@@ -68,3 +82,8 @@ if __name__ == "__main__":
     print "content is the same: %s" % (reduce(rcmp, readers) is not None)
     print "mean: %.3f s, variance: %.3f" % (mean([r.time for r in readers]), stddev([r.time for r in readers]) ** 2)
 
+    correct = readers[0]
+    for r in readers[1:]:
+        if len(r.data) != len(correct.data):
+            print "\nWrong data:\n%s\n" % r.data
+    
