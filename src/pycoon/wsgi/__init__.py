@@ -36,7 +36,7 @@ class Pycoon:
         sh.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
         log.addHandler(sh)
         try:
-            self.contextPath = conf
+            self.contextPath = conf 
             source = SourceResolver(None).resolveUri(conf, "")
             self.xconf = etree.fromstring(source.read())
             
@@ -64,19 +64,25 @@ class Pycoon:
                 self.processor = self.createTreeProcessor()
         finally:
             log.removeHandler(sh)
+            log.addHandler(WsgiLoggingHandler())
 
     def __call__(self, environ, startResponse):
         try: 
-            self.acquireLogger(environ.get("wsgi.errors"))
+            threading.currentThread.errors = environ.get("wsgi.errors")
             try:
                 return self.process(environ, startResponse)
             finally:
-                self.releaseLogger()
+                #del threading.currentThread.errors
+                pass                
         except:
             status = "500 Internal Server Error"
             type, value, trace = sys.exc_info()
             response = [status]
-            response.append("\n\n%s: %s\n\n" % (type.__name__, value.args[0]))
+            if value.args:
+                info = value.args[0]
+            else:
+                info = "No additional info available"
+            response.append("\n\n%s: %s\n\n" % (type.__name__, info))
             response.append("Stacktrace:\n")
             response.append("".join(traceback.format_tb(trace)))
             startResponse(status, [("content-type", "text/plain")], sys.exc_info())
@@ -92,11 +98,8 @@ class Pycoon:
         if uri and uri.startswith("/"):
             uri = uri[1:]
 
-        query = environ.get("QUERY_STRING")
-        if query:
-            params = cgi.parse_qsl(query, keep_blank_values=True, strict_parsing=False)
-        else:
-            params = {}
+        params = dict([(k, v[0])
+            for k, v in cgi.parse(environ.get("wsgi.input"), environ, keep_blank_values=True, strict_parsing=False).items()])
 
         req = HttpRequest(uri, params)
         req.formEncoding = self.params.get("form-encoding")
@@ -125,6 +128,7 @@ class Pycoon:
             status = "404 Not Found"
             response = [status]
             orig = "/%s" % uri
+            query = environ.get("QUERY_STRING")
             if query:
                 orig += "?%s" % query
             response.append('\n\nResource "%s" not found. Reported by built-in error handler' % orig)
@@ -133,30 +137,19 @@ class Pycoon:
         
     def createTreeProcessor(self):
         sitemap = self.xconf.find("sitemap")
-        processor = TreeProcessor()
+        processor = TreeProcessor(os.path.dirname(self.contextPath))
         processor.configure(sitemap)
         processor.log.debug("Shared processor is created")
         return processor
-        
-    def acquireLogger(self, errors):
-        self.loggingHandler = WsgiLoggingHandler(errors)
-        log = logging.getLogger()
-        log.setLevel(logging.DEBUG)
-        log.addHandler(self.loggingHandler)
-        
-    def releaseLogger(self):
-        log = logging.getLogger()
-        log.removeHandler(self.loggingHandler)
 
 class WsgiLoggingHandler(logging.Handler):
-    def __init__(self, errors, level=logging.NOTSET):
+    def __init__(self, level=logging.NOTSET):
         logging.Handler.__init__(self, level)
-        self.fd = errors
     
     def emit(self, record):
         s = "[%s] %s [%s]: %s\n" % (record.levelname, record.name, threading.currentThread().getName(), record.getMessage().encode("utf-8"))
-        if self.fd is not None: 
-            self.fd.write(s)
+        if hasattr(threading.currentThread, "errors"):
+            threading.currentThread.errors.write(s)
         else:
             raise Exception("WsgiLoggingHandler: Error file descriptor not found. The message was:\n%s\n" % s)
 
