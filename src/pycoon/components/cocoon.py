@@ -86,8 +86,7 @@ class ExceptionGenerator(Generator):
         root = Element("{%(ex)s}exception-report" % ns)
         root.set("class", type.__name__)
         if value.args[0]:
-            self.log.debug("value.args[0]: %s" % str(value))
-            SubElement(root, "{%(ex)s}message" % ns).text = str(value)
+            SubElement(root, "{%(ex)s}message" % ns).text = unicode(value.args[0])
         SubElement(root, "{%(ex)s}stacktrace" % ns).text = "".join(traceback.format_tb(trace))
         env.response.body = root
         env.response.status = 500
