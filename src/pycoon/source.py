@@ -7,6 +7,7 @@ import os
 import urlparse
 import urllib2
 import logging
+import pkg_resources
 from pycoon import ResourceNotFoundException
 
 class Source:
@@ -22,21 +23,21 @@ class Source:
         raise NotImplementedError()
 
 class FileSource(Source):
-    def __init__(self, fileName, uri=None):
+    def __init__(self, filename, uri=None):
         if uri:
             self.uri = uri
         else:
-            self.uri = fileName
-        self.fileName = fileName
-        logging.getLogger("source.file").debug("Created with filename %s" % fileName)
+            self.uri = filename
+        self.filename = filename
+        logging.getLogger("source.file").debug("Created with filename %s" % filename)
 
     def getLastModified(self):
-        return os.path.getmtime(self.fileName)
+        return os.path.getmtime(self.filename)
     
     def read(self):
-        if not os.path.exists(self.fileName):
-            raise ResourceNotFoundException("File %s not found" % self.fileName)
-        fd = open(self.fileName, "rb")
+        if not os.path.exists(self.filename):
+            raise ResourceNotFoundException("File %s not found" % self.filename)
+        fd = open(self.filename, "rb")
         try:
             return fd.read()
         finally:
@@ -80,12 +81,18 @@ class SitemapSource(Source):
     Represents sitemap pipeline output accessible via cocoon: URI.
     """
     def __init__(self, uri, env):
-        if uri.startswith("/"):
+        logging.getLogger("source.sitemap").debug("Initializing source with URI: %s" % uri)
+        if uri.startswith("//"):
+            self.processor = env.objectModel["root-processor"]
+            self.uri = uri[2:]
+            self.env = env.createWrapper(self.uri)
+            self.env.contextPath = self.processor.contextPath
+        elif uri.startswith("/"):
             self.processor = env.objectModel["processor"]
             self.uri = uri[1:]
+            self.env = env.createWrapper(self.uri)
         else:
-            raise Exception("Malformed cocoon URI: %s" % uri)
-        self.env = env.createWrapper(self.uri)
+            raise Exception("Malformed cocoon URI: %s" % uri)        
         self.processingPipeline = self.processor.buildPipeline(self.env)
         
     def read(self):
@@ -118,6 +125,9 @@ class SourceResolver:
             return HttpSource(uri)
         elif scheme == "cocoon":
             return SitemapSource(path, self.env)
+        elif scheme == "rawegg":
+            egg, filename = path.split(":", 1) 
+            return FileSource(pkg_resources.resource_filename(egg, filename[1:]), uri)
         else:
             raise Exception("Unknown URI scheme: %s for URI %s" % (scheme, uri))
 
