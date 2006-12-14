@@ -95,7 +95,10 @@ class TraxTransformer(Transformer):
     def transform(self, env, source, params):
         self.log.debug('<map:transform src="%s"> process()' % source.uri)
         fd = StringIO(source.read())
-        fd.filename = source.uri
+        if hasattr(source, "filename"):
+            fd.filename = source.filename
+        else:
+            fd.filename = source.uri
         xslt = etree.parse(fd)
         transform = etree.XSLT(xslt)
         doc = env.response.body
@@ -138,4 +141,28 @@ class ResourceReader(Reader):
         env.response.body = source.read()
         self.log.debug('<map:read src="%s"> process()' % source.uri)
         self.log.debug("status: %d" % env.response.status)
+
+class Pipeline(Component):
+    def __init__(self):
+        self.log = logging.getLogger("sitemap.pipeline")
+        self.generator = None
+        self.transformers = []
+        self.serializer = None
+        self.reader = None
+        
+    def process(self, env):        
+        if self.generator is not None:
+            if self.serializer is None: raise SitemapException("Serializer is not set")
+            source = env.sourceResolver.resolveUri(self.generator.src)
+            self.generator.generate(env, source, self.generator.params)
+            for t in self.transformers:
+                source = env.sourceResolver.resolveUri(t.src)
+                t.transform(env, source, t.params)
+            self.serializer.serialize(env, self.serializer.params)
+        elif self.reader is not None:
+            source = env.sourceResolver.resolveUri(self.reader.src)
+            self.reader.read(env, source, self.reader.params)
+        else:
+            raise SitemapException("There is no generator or reader")
+        return True
 

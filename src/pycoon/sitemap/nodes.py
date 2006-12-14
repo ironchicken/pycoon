@@ -54,8 +54,8 @@ class InvokeContext:
 class HandleErrorsNode(ContainerNode):
     def invoke(self, env, context, exception=None):
         env.objectModel["throwable"] = exception
-        context = InvokeContext() # param = context.isBuildingPipelineOnly?
-        context.processingPipeline = Pipeline()
+        context = InvokeContext()
+        context.processingPipeline = env.componentManager.getComponent("{%(map)s}pipeline" % ns, "default")
         if self.invokeChildren(env, context):
             env.response.exceptionAware = True
             return True
@@ -111,30 +111,6 @@ class PipelinesNode(ContainerNode):
             else:
                 raise
 
-class Pipeline:
-    def __init__(self):
-        self.log = logging.getLogger("sitemap.pipeline")
-        self.generator = None
-        self.transformers = []
-        self.serializer = None
-        self.reader = None
-        
-    def process(self, env):        
-        if self.generator is not None:
-            if self.serializer is None: raise SitemapException("Serializer is not set")
-            source = env.sourceResolver.resolveUri(self.generator.src)
-            self.generator.generate(env, source, self.generator.params)
-            for t in self.transformers:
-                source = env.sourceResolver.resolveUri(t.src)
-                t.transform(env, source, t.params)
-            self.serializer.serialize(env, self.serializer.params)
-        elif self.reader is not None:
-            source = env.sourceResolver.resolveUri(self.reader.src)
-            self.reader.read(env, source, self.reader.params)
-        else:
-            raise SitemapException("There is no generator or reader")
-        return True
-        
 class PipelineNode(ContainerNode):
     def __init__(self):
         ContainerNode.__init__(self)
@@ -152,7 +128,7 @@ class PipelineNode(ContainerNode):
                 return False
             else:
                 raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.prefix, env.request.uri))
-        context.processingPipeline = Pipeline()
+        context.processingPipeline = env.componentManager.getComponent(self.elementName, self.type)
         try:
             if self.invokeChildren(env, context):
                 return True

@@ -28,6 +28,9 @@
          <encoding>utf-8</encoding>
       </map:serializer>
     </map:serializers>
+    <map:pipes default="noncaching">
+      <map:pipe name="noncaching" src="org.apache.cocoon.components.pipeline.impl.NonCachingProcessingPipeline" py:src="pycoon.components.cocoon.Pipeline"/>
+    </map:pipes>
   </map:components>
 
   <map:pipelines>
