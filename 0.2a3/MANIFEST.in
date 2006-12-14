@@ -1,0 +1,3 @@
+include src/pycoon/pycoon.xconf
+recursive-include src/pycoon/webapp *
+
