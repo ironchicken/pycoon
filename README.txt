@@ -3,7 +3,7 @@ Pycoon Web Development Framework
 ================================
 
 Version:
-    pysitemap/0.2a2
+    pysitemap/0.2a3
 Authors:
     Andrey Nordin <http://claimid.com/anrienord>
     Richard Lewis <http://www.richard-lewis.me.uk/>
@@ -18,6 +18,19 @@ Homepage:
 
 == Release Notes ==
 
+0.2a3
+2006-12-14
+
+The programming part of 0.2 release is almost done. Documentation is still on
+the way.
+
+* Support for <map:mount> (#17)
+* Added rawegg: URI scheme (#19)
+* Added logging of HTTP requests on "info" logging level (#18)
+* Support for HTTP POST urlencoded parameters
+* Root sitemap addressing via cocoon:// URI
+* Minor enhancements and bug fixes
+
 0.2a2
 2006-12-10
 
@@ -30,7 +43,8 @@ Bug fix release.
 0.2a1
 2006-12-08
 
-* Initial release. Implemented the very basic Apache Cocoon sitemap functionality
+* Initial release. Implemented the very basic Apache Cocoon sitemap
+  functionality
 
 == Documentation ==
 
