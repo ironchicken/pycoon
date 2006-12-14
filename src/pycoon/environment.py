@@ -29,6 +29,7 @@ class Environment:
         
         # Possibly non-standard
         self.objectModel["processor"] = None
+        self.objectModel["root-processor"] = None
 
     def changeContext(self, newPrefix, contextPath):
         if newPrefix:
@@ -56,6 +57,7 @@ class Environment:
         env.isExternal = False
         env.componentManager = self.componentManager
         env.objectModel["processor"] = self.objectModel["processor"]
+        env.objectModel["root-processor"] = self.objectModel["root-processor"]
         return env
 
 class HttpRequest:

@@ -37,6 +37,8 @@ class TreeProcessor(Node):
         t0 = time.clock()
         try:
             env.objectModel["processor"] = self
+            if env.objectModel.get("root-processor") is None:
+                env.objectModel["root-processor"] = self.parent
             self.setupProcessor(env)
             context = InvokeContext()
             return self.rootNode.invoke(env, context)
@@ -47,6 +49,8 @@ class TreeProcessor(Node):
     
     def buildPipeline(self, env):
         env.objectModel["processor"] = self
+        if env.objectModel.get("root-processor") is None:
+            env.objectModel["root-processor"] = self.parent
         context = InvokeContext(True)
         if self.rootNode.invoke(env, context):
             return context.processingPipeline
@@ -78,6 +82,8 @@ class TreeProcessor(Node):
         self.componentManager = builder.componentManager
         if self.parentComponentManager is not None:
             self.componentManager.parent = self.parentComponentManager
+        if self.parent is None:
+            self.contextPath = env.contextPath
         self.lastModified = self.source.getLastModified()
         self.log.debug("Processor (re)built")
         
