@@ -10,6 +10,7 @@ import logging
 import mimetypes
 import cgi
 import threading
+import time
 from lxml import etree
 
 from pycoon.sitemap.treeprocessor import TreeProcessor
@@ -30,11 +31,11 @@ class Pycoon:
     }
     
     def __init__(self, conf):
-        log = logging.getLogger()
-        log.setLevel(logging.DEBUG)
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
         sh = logging.StreamHandler()
         sh.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
-        log.addHandler(sh)
+        root.addHandler(sh)
         try:
             self.contextPath = conf 
             source = SourceResolver(None).resolveUri(conf, "")
@@ -63,17 +64,13 @@ class Pycoon:
             if self.processorIsShared:
                 self.processor = self.createTreeProcessor()
         finally:
-            log.removeHandler(sh)
-            log.addHandler(WsgiLoggingHandler())
+            root.removeHandler(sh)
+            root.addHandler(WsgiLoggingHandler())
 
     def __call__(self, environ, startResponse):
         try: 
             threading.currentThread.errors = environ.get("wsgi.errors")
-            try:
-                return self.process(environ, startResponse)
-            finally:
-                #del threading.currentThread.errors
-                pass                
+            return self.process(environ, startResponse)
         except:
             status = "500 Internal Server Error"
             type, value, trace = sys.exc_info()
@@ -85,6 +82,7 @@ class Pycoon:
             response.append("\n\n%s: %s\n\n" % (type.__name__, info))
             response.append("Stacktrace:\n")
             response.append("".join(traceback.format_tb(trace)))
+            self.logStatusInfo(environ, 500)
             startResponse(status, [("content-type", "text/plain")], sys.exc_info())
             return response
             
@@ -119,6 +117,7 @@ class Pycoon:
                 else:
                     message = self.httpStatusCodes.get(env.response.status / 100, "Unknows Status Message")
                 status = "%d %s" % (env.response.status, message)
+                self.logStatusInfo(environ, env.response.status)
                 startResponse(status, responseHeaders)
                 return [env.response.body]
             else:
@@ -127,11 +126,8 @@ class Pycoon:
             processor.log.error(e.args[0])
             status = "404 Not Found"
             response = [status]
-            orig = "/%s" % uri
-            query = environ.get("QUERY_STRING")
-            if query:
-                orig += "?%s" % query
-            response.append('\n\nResource "%s" not found. Reported by built-in error handler' % orig)
+            response.append('\n\nResource "%(uri)s" not found. Reported by built-in error handler' % self.getRequestInfo(environ))
+            self.logStatusInfo(environ, 404)
             startResponse(status, [("content-type", "text/plain")])
             return response
         
@@ -141,6 +137,24 @@ class Pycoon:
         processor.configure(sitemap)
         processor.log.debug("Shared processor is created")
         return processor
+        
+    def getRequestInfo(self, environ):
+        info = {
+            "addr": environ.get("REMOTE_ADDR"),
+            "method": environ.get("REQUEST_METHOD"),
+            "protocol": environ.get("SERVER_PROTOCOL"),
+            "time": time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime()),
+        }
+        if environ.get("QUERY_STRING"):
+            info["uri"] = "%(PATH_INFO)s?%(QUERY_STRING)s" % environ
+        else:
+            info["uri"] = environ.get("PATH_INFO")
+        return info
+        
+    def logStatusInfo(self, environ, status):
+        info = self.getRequestInfo(environ)
+        info["status"] = status
+        logging.getLogger("access").info('%(addr)s [%(time)s] "%(method)s %(uri)s" %(status)s' % info)
 
 class WsgiLoggingHandler(logging.Handler):
     def __init__(self, level=logging.NOTSET):
