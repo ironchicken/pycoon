@@ -3,7 +3,7 @@ Pycoon Web Development Framework
 ================================
 
 Version:
-    pysitemap/0.2a1
+    pysitemap/0.2a2
 Authors:
     Andrey Nordin <http://claimid.com/anrienord>
     Richard Lewis <http://www.richard-lewis.me.uk/>
@@ -18,7 +18,19 @@ Homepage:
 
 == Release Notes ==
 
-None.
+0.2a2
+2006-12-10
+
+Bug fix release.
+
+* Removed unnecessarily elementtree dependency
+* Fixed some platform-related lxml version issues
+* Fixed bugs with downloading sources and building eggs from Cheese Shop
+
+0.2a1
+2006-12-08
+
+* Initial release. Implemented the very basic Apache Cocoon sitemap functionality
 
 == Documentation ==
 
