@@ -23,13 +23,28 @@ class XmlSerializer(Serializer):
     def configure(self, element=None):
         Component.configure(self, element)
         if element is not None:
-            self.encoding = element.find("encoding").text
+            def get(element, default=None):
+                if element is not None: return element.text
+                else: return default
+            self.mimeType = element.get("mime-type", "application/xml")
+            self.encoding = get(element.find("encoding"), "utf-8")
+            self.doctypePublic = get(element.find("doctype-public"))
+            self.doctypeSystem = get(element.find("doctype-system"))
     
     def serialize(self, env, params):
         self.log.debug('<map:serialize> process()')
         if env.isExternal:
             self.log.debug('Serializing XML infoset to string')
-            env.response.body = etree.tostring(env.response.body, self.encoding)
+            body = etree.tostring(env.response.body, self.encoding)
+            if self.doctypePublic is not None:
+                response = [
+                    '<?xml version="1.0" encoding="%s"?>' % self.encoding,
+                    '<!DOCTYPE html PUBLIC "%s" "%s">' % (self.doctypePublic, self.doctypeSystem),
+                    body,
+                ]
+                env.response.body = "\n".join(response)
+            else:
+                env.response.body = body
         if self.statusCode >= 0:
             env.response.status = self.statusCode
         env.contentType = "%s; charset=%s" % (self.mimeType, self.encoding)
@@ -72,12 +87,16 @@ class WildcardUriMatcher(Matcher):
 
 class FileGenerator(Generator):        
     def generate(self, env, source, params):
+        self.uri = source.uri
         self.log.debug('<map:generate src="%s"> process()' % source.uri)
         data = source.read()
         if isinstance(data, str):
             env.response.body = etree.fromstring(data)
         else:
             env.response.body = data
+            
+    def __str__(self):
+        return '<map:generate src="%s"/>' % self.uri
 
 class ExceptionGenerator(Generator):
     def generate(self, env, source, params):
@@ -92,8 +111,18 @@ class ExceptionGenerator(Generator):
         env.response.status = 500
         
 class TraxTransformer(Transformer):
+    def configure(self, element=None):
+        Component.configure(self, element)
+        self.useRequestParameters = False
+        if element is not None:
+            p = element.find("use-request-parameters")
+            if p is not None:
+                self.useRequestParameters = (p.text == "true")
+    
     def transform(self, env, source, params):
         self.log.debug('<map:transform src="%s"> process()' % source.uri)
+        if "use-request-parameters" in params:
+            self.useRequestParameters = (params["use-request-parameters"] == "true")
         fd = StringIO(source.read())
         if hasattr(source, "filename"):
             fd.filename = source.filename
@@ -102,7 +131,15 @@ class TraxTransformer(Transformer):
         xslt = etree.parse(fd)
         transform = etree.XSLT(xslt)
         doc = env.response.body
+        if self.useRequestParameters:
+            rparams = env.objectModel["request"].params
+            encoding = env.objectModel["request"].formEncoding
+            if encoding is not None:
+                params.update(dict([(k, v.decode(encoding)) for k, v in rparams.items()]))
+            else:
+                params.update(rparams)
         params = dict([(k, '"%s"' % v) for k, v in params.items()])
+        self.log.debug("Stylesheet parameters:\n%s" % "\n".join(["  %s: %s" % (k, v) for k, v in params.items()]))
         env.response.body = transform(doc, **params).getroot()
 
 class ContentAggregator(Generator):
@@ -130,6 +167,13 @@ class ContentAggregator(Generator):
             else:
                 document.append(data)
         env.response.body = document
+        
+    def __str__(self):
+        return "\n".join([
+            '<map:aggregate element="%s" ns="%s">' % (self.element, self.ns),
+            "\n".join(['  <map:part src="%s"/>' % part for part in self.parts]),
+            '</map:aggregate>',
+        ])
 
 class ResourceReader(Reader):
     def read(self, env, source, params):
@@ -144,13 +188,18 @@ class ResourceReader(Reader):
 
 class Pipeline(Component):
     def __init__(self):
-        self.log = logging.getLogger("sitemap.pipeline")
         self.generator = None
         self.transformers = []
         self.serializer = None
         self.reader = None
         
-    def process(self, env):        
+    def configure(self, element=None):
+        Component.configure(self, element)
+        self.log = logging.getLogger("sitemap.pipeline.noncaching")
+        
+    def process(self, env):
+        self.log.debug('<map:pipeline> process()')
+        
         if self.generator is not None:
             if self.serializer is None: raise SitemapException("Serializer is not set")
             source = env.sourceResolver.resolveUri(self.generator.src)
@@ -165,4 +214,12 @@ class Pipeline(Component):
         else:
             raise SitemapException("There is no generator or reader")
         return True
+
+    def __str__(self):
+        return "\n".join([
+            "<map:pipeline>",
+            "\n".join(["  %s" % line for line in str(self.generator).splitlines()]),
+            "  ...",
+            "</map:pipeline>",
+        ])
 
