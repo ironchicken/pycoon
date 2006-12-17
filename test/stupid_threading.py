@@ -35,14 +35,6 @@ class UriReader(Thread):
                     print "[%s] OK" % self.getName()
                 finally:
                     fd.close()
-                """
-                fd = urlopen(self.uri)
-                try:
-                    self.data = fd.read()
-                    print "[%s] OK" % self.getName()
-                finally:
-                    fd.close()
-                """
             except Exception, e:
                 self.exception = e
         finally:
@@ -86,4 +78,4 @@ if __name__ == "__main__":
     for r in readers[1:]:
         if len(r.data) != len(correct.data):
             print "\nWrong data:\n%s\n" % r.data
-    
+
