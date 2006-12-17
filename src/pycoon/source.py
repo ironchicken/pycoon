@@ -50,6 +50,7 @@ class HttpSource(Source):
     """
     def __init__(self, uri):
         self.uri = uri
+        logging.getLogger("source.http").debug("Created with URI %s" % self.uri)        
         
     def read(self):
         encoding = os.getenv("file.property")
@@ -81,22 +82,32 @@ class SitemapSource(Source):
     Represents sitemap pipeline output accessible via cocoon: URI.
     """
     def __init__(self, uri, env):
-        logging.getLogger("source.sitemap").debug("Initializing source with URI: %s" % uri)
+        self.log = logging.getLogger("source.sitemap")
+        self.uri = "cocoon:%s" % uri
+        self.log.debug("Initializing source with URI: %s" % self.uri)
         if uri.startswith("//"):
             self.processor = env.objectModel["root-processor"]
-            self.uri = uri[2:]
-            self.env = env.createWrapper(self.uri)
+            uri = uri[2:]
+            self.env = env.createWrapper(uri)
             self.env.contextPath = self.processor.contextPath
         elif uri.startswith("/"):
             self.processor = env.objectModel["processor"]
-            self.uri = uri[1:]
-            self.env = env.createWrapper(self.uri)
+            uri = uri[1:]
+            self.env = env.createWrapper(uri)
         else:
-            raise Exception("Malformed cocoon URI: %s" % uri)        
+            raise Exception("Malformed cocoon URI: %s" % self.uri)
         self.processingPipeline = self.processor.buildPipeline(self.env)
         
     def read(self):
-        self.processingPipeline.process(self.env)
+        try:
+            self.processingPipeline.process(self.env)
+        except Exception, e:
+            if hasattr(self.processingPipeline, "handleErrorsNode"):
+                self.log.debug("Exception occured, found <map:handle-errros>, handling")
+                self.processingPipeline.handleErrorsNode.invoke(self.env, None, e)
+            else:                
+                self.log.debug("Exception occured, no <map:handle-errros>, re-raising")
+                raise
         return self.env.response.body
         
 class SourceResolver:

@@ -52,7 +52,22 @@ class InvokeContext:
         self.mapStack.pop()
 
 class HandleErrorsNode(ContainerNode):
+    def __init__(self):
+        Node.__init__(self)
+        self.log = logging.getLogger("sitemap.handle-errors")
+        
+    def build(self, element):
+        Node.build(self, element)
+        self.when = variables.getResolver(element.get("when", "external"))
+    
     def invoke(self, env, context, exception=None):
+        resolvedWhen = self.when.resolve(context, env.objectModel)
+        self.log.debug("<map:handle-errors> invoke(), when: %s" % resolvedWhen)
+        
+        if resolvedWhen == "external" and not env.isExternal:
+            raise exception
+        elif resolvedWhen == "internal" and env.isExternal:
+            raise exception        
         env.objectModel["throwable"] = exception
         context = InvokeContext()
         context.processingPipeline = env.componentManager.getComponent("{%(map)s}pipeline" % ns, "default")
@@ -80,21 +95,28 @@ class MountNode(Node):
         if resolvedSource.endswith("/"):
             resolvedSource += "sitemap.xmap"
 
-        processor = env.objectModel["processor"].createChildProcessor(resolvedSource, env)        
-        env.changeContext(resolvedPrefix, resolvedSource)
-
-        if context.isBuildingPipelineOnly:
-            self.log.debug("Building pipeline only")
-            processor.setupProcessor(env)
-            pipeline = processor.buildPipeline(env)
-            if pipeline is not None:
-                context.processingPipeline = pipeline
-                return True
+        processor = env.objectModel["processor"].createChildProcessor(resolvedSource, env)
+        
+        oldPrefix = env.prefix
+        oldUri = env.request.uri
+        oldContextPath = env.contextPath
+        pipelineWasBuilt = False
+        
+        try:
+            env.changeContext(resolvedPrefix, resolvedSource)
+            if context.isBuildingPipelineOnly:
+                processor.setupProcessor(env)
+                pipeline = processor.buildPipeline(env)
+                if pipeline is not None:
+                    context.processingPipeline = pipeline                    
+                    pipelineWasBuilt = True
             else:
-                return False
-        else:
-            self.log.debug("Processing")
-            return processor.process(env)
+                self.log.debug("Processing")
+                pipelineWasBuilt = processor.process(env)
+        finally:
+            if not pipelineWasBuilt:
+                env.setContext(oldPrefix, oldUri, oldContextPath)
+        return pipelineWasBuilt
             
 class PipelinesNode(ContainerNode):
     def __init__(self):
@@ -106,7 +128,7 @@ class PipelinesNode(ContainerNode):
         try:
             return self.invokeChildren(env, context)
         except Exception, e:
-            if env.isExternal and self.handleErrorsNode is not None:
+            if self.handleErrorsNode is not None:
                 return self.handleErrorsNode.invoke(env, context, e)
             else:
                 raise
@@ -129,14 +151,21 @@ class PipelineNode(ContainerNode):
             else:
                 raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.prefix, env.request.uri))
         context.processingPipeline = env.componentManager.getComponent(self.elementName, self.type)
+        self.log.debug('<map:pipeline> invoke(): %d' % id(context.processingPipeline))
         try:
             if self.invokeChildren(env, context):
+                # For handling errors in SitemapSource, where invoke() and
+                # process() are separated and context.isBuildingPipelineOnly.
+                # Otherwise PipelineNode instance will catch exception itself
+                if self.handleErrorsNode is not None and context.isBuildingPipelineOnly:
+                    context.processingPipeline.handleErrorsNode = self.handleErrorsNode
+                    self.log.debug("Setting handleErrorsNode: %s" % context.processingPipeline.handleErrorsNode)
                 return True
             elif not self.isLast:
                 return False
             raise ResourceNotFoundException('No pipeline matched request: "%s%s"' % (env.prefix, env.request.uri))
         except Exception, e:
-            if env.isExternal and self.handleErrorsNode is not None:
+            if self.handleErrorsNode is not None:
                 return self.handleErrorsNode.invoke(env, context, e)
             else:
                 raise
@@ -242,14 +271,15 @@ class SerializeNode(Node):
         Node.build(self, element)
         self._buildParams(element)
         self.statusCode = int(element.get("status-code", -1))
-        self.mimeType = element.get("mime-type", "text/html")
+        self.mimeType = element.get("mime-type")
     
     def invoke(self, env, context):
         self.log.debug('<map:serialize> invoke()')
         s = env.componentManager.getComponent(self.elementName, self.type)
         s.params = variables.buildMap(self.params, context, env.objectModel)
         s.statusCode = self.statusCode
-        s.mimeType = self.mimeType
+        if self.mimeType is not None:
+            s.mimeType = self.mimeType
         context.processingPipeline.serializer = s
         if not context.isBuildingPipelineOnly:
             return context.processingPipeline.process(env)

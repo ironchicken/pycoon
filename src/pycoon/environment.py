@@ -13,7 +13,7 @@ class Environment:
     prefix = ""
     contentType = None
     
-    def __init__(self, req):
+    def __init__(self, req, isExternal=True):
         self.log = logging.getLogger("environment")
         self.prefix = "/" 
         
@@ -21,7 +21,7 @@ class Environment:
         self.response = HttpResponse()
         self.sourceResolver = SourceResolver(self)
         self.componentManager = None
-        self.isExternal = True
+        self.isExternal = isExternal
         
         self.objectModel = {}
         self.objectModel["request"] = self.request
@@ -30,6 +30,8 @@ class Environment:
         # Possibly non-standard
         self.objectModel["processor"] = None
         self.objectModel["root-processor"] = None
+        
+        self.log.debug('Created: %s, self.isExternal: %s' % (self, self.isExternal))
 
     def changeContext(self, newPrefix, contextPath):
         if newPrefix:
@@ -46,15 +48,19 @@ class Environment:
         self.log.debug('New context path: "%s", prefix: "%s"' % (self.contextPath, self.prefix))
         self.log.debug('Request URI: "%s"' % self.request.uri)
         
+    def setContext(self, prefix, uri, contextPath):
+        self.prefix = prefix
+        self.request.uri = uri
+        self.contextPath = contextPath
+        
     def createWrapper(self, uri):
         params = self.request.params.copy()
         scheme, netloc, path, paramstr, query, fragment = urlparse(uri)
         if len(query) > 0:
             params.update(dict([p.split("=") for p in query.split("&")]))
         req = HttpRequest(path, params, request=self.request)
-        env = Environment(req)
+        env = Environment(req, False)
         env.contextPath = self.contextPath
-        env.isExternal = False
         env.componentManager = self.componentManager
         env.objectModel["processor"] = self.objectModel["processor"]
         env.objectModel["root-processor"] = self.objectModel["root-processor"]
