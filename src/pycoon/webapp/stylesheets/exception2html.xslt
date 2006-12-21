@@ -2,6 +2,7 @@
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:ex="http://apache.org/cocoon/exception/1.0"
+                exclude-result-prefixes="ex"
                 xmlns="http://www.w3.org/1999/xhtml">
 
   <xsl:param name="page-title">An Error Has Occured</xsl:param>

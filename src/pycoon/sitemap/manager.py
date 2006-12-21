@@ -10,7 +10,7 @@ class ComponentManager:
     def __init__(self):
         self.parent = None
         self.log = logging.getLogger("component-manager")
-        self.modules = {}
+        self.classLoader = ClassLoader()
         self.components = {
             "{%(map)s}generate" % ns: ({}, "{%(map)s}generator", "{%(map)s}generators" % ns),
             "{%(map)s}read" % ns: ({}, "{%(map)s}reader", "{%(map)s}readers" % ns),
@@ -19,7 +19,7 @@ class ComponentManager:
             "{%(map)s}match" % ns: ({}, "{%(map)s}matcher", "{%(map)s}matchers" % ns),
             "{%(map)s}select" % ns: ({}, "{%(map)s}selector", "{%(map)s}selectors" % ns),
             "{%(map)s}pipeline" % ns: ({}, "{%(map)s}pipe", "{%(map)s}pipes" % ns),
-            "{%(map)s}aggregate" % ns: ({"default": (self.getClass("pycoon.components.cocoon.ContentAggregator"), None)}, None, None),
+            "{%(map)s}aggregate" % ns: ({"default": (self.classLoader.getClass("pycoon.components.cocoon.ContentAggregator"), None)}, None, None),
         }
 
     def configure(self, element):
@@ -31,7 +31,7 @@ class ComponentManager:
             default = container.get("default")
             for e in container.findall(name % ns):
                 name = e.get("name")
-                klass = self.getClass(e.get("{%(py)s}src" % ns))
+                klass = self.classLoader.getClass(e.get("{%(py)s}src" % ns))
                 classes[name] = klass, e
                 if name == default:
                     classes["default"] = klass, e
@@ -49,13 +49,16 @@ class ComponentManager:
         c.configure(element)
         return c
     
+class ClassLoader:
+    def __init__(self):
+        self.modules = {}
+        
     def getClass(self, name):
-        self.log.debug("Getting class object by name: %s" % name)
         comps = name.split(".")
         if len(comps) > 1:
             moduleQName = ".".join(comps[:-1])
             className = comps[-1]
-            if self.modules.has_key(moduleQName):
+            if moduleQName in self.modules:
                 return getattr(self.modules[moduleQName], className)
             else:
                 moduleName = comps[-2]
@@ -64,4 +67,3 @@ class ComponentManager:
                 return getattr(self.modules[moduleQName], className)
         else:
             return getattr(sys.modules[__name__], name)
-

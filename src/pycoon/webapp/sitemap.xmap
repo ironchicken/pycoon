@@ -6,7 +6,7 @@
     </map:matchers>
     <map:generators default="file">
       <map:generator name="file" logger="sitemap.generator.file" src="org.apache.cocoon.generation.FileGenerator" py:src="pycoon.components.cocoon.FileGenerator"/>
-      <map:generator name="exception" logger="sitemap.generator.exception"  src="org.apache.cocoon.generation.ExceptionGenerator" py:src="pycoon.components.cocoon.ExceptionGenerator"/>
+      <map:generator name="exception" logger="sitemap.generator.exception" src="org.apache.cocoon.generation.ExceptionGenerator" py:src="pycoon.components.cocoon.ExceptionGenerator"/>
     </map:generators>
     <map:readers default="resource">
       <map:reader name="resource" logger="sitemap.reader.resource" src="org.apache.cocoon.reading.ResourceReader" py:src="pycoon.components.cocoon.ResourceReader"/>
@@ -17,15 +17,21 @@
     <map:selectors default="browser">
       <map:selector name="exception" src="org.apache.cocoon.selection.ExceptionSelector" py:src="pycoon.components.cocoon.ExceptionSelector">
         <exception name="not-found" class="org.apache.cocoon.ResourceNotFoundException" py:class="ResourceNotFoundException"/>
-        <exception name="connection-refused" class="java.net.ConnectException" py:class="URLError"/>
+        <exception name="connect-exception" class="java.net.ConnectException" py:class="URLError"/>
+        <exception name="not-found" class="java.io.FileNotFoundException" py:class="ResourceNotFoundException"/>
         <exception class="java.lang.Throwable" unroll="true"/>
       </map:selector>
       <map:selector name="request-parameter" logger="sitemap.selector.request-parameter" src="org.apache.cocoon.selection.RequestParameterSelector" py:src="pycoon.components.cocoon.RequestParameterSelector"/>
       <map:selector name="request-method" logger="sitemap.selector.request-method" src="org.apache.cocoon.selection.RequestMethodSelector" py:src="pycoon.components.cocoon.RequestMethodSelector"/>
     </map:selectors>
     <map:serializers default="xml">
-      <map:serializer name="xml" mime-type="application/xml; charset=utf-8" logger="sitemap.serializer.xml" src="org.apache.cocoon.serialization.XMLSerializer" py:src="pycoon.components.cocoon.XmlSerializer">
-         <encoding>utf-8</encoding>
+      <map:serializer name="xml" mime-type="application/xml" logger="sitemap.serializer.xml" src="org.apache.cocoon.serialization.XMLSerializer" py:src="pycoon.components.cocoon.XmlSerializer">
+        <encoding>utf-8</encoding>
+      </map:serializer>
+      <map:serializer name="xhtml" mime-type="text/html" logger="sitemap.serializer.xhtml" src="org.apache.cocoon.serialization.XMLSerializer" py:src="pycoon.components.cocoon.XmlSerializer">
+        <doctype-public>-//W3C//DTD XHTML 1.0 Strict//EN</doctype-public>
+        <doctype-system>http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd</doctype-system>
+        <encoding>utf-8</encoding>
       </map:serializer>
     </map:serializers>
     <map:pipes default="noncaching">
@@ -37,13 +43,13 @@
     <map:pipeline>
       <map:match pattern="">
         <map:generate src="welcome.html"/>
-        <map:serialize/>
+        <map:serialize type="xhtml"/>
       </map:match>
     </map:pipeline>
     <map:pipeline>
       <map:match pattern="debug">
         <map:generate src="http://foo.bar/nonexistent"/>
-        <map:serialize/>
+        <map:serialize type="xhtml"/>
       </map:match>
     </map:pipeline>
     <map:handle-errors>
@@ -53,11 +59,11 @@
           <map:transform src="stylesheets/exception2html.xslt">
             <map:parameter name="page-title" value="Resource Not Found"/>
           </map:transform>
-          <map:serialize status-code="404"/>
+          <map:serialize status-code="404" type="xhtml"/>
         </map:when>
         <map:otherwise>
           <map:transform src="stylesheets/exception2html.xslt"/>
-          <map:serialize status-code="500"/>
+          <map:serialize status-code="500" type="xhtml"/>
         </map:otherwise>
       </map:select>
     </map:handle-errors>
