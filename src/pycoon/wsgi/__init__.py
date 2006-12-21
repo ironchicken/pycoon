@@ -17,6 +17,7 @@ from pycoon.sitemap.treeprocessor import TreeProcessor
 from pycoon.source import SourceResolver
 from pycoon.environment import HttpRequest, Environment
 from pycoon import ResourceNotFoundException
+from pycoon.sitemap.manager import ClassLoader
 
 class Pycoon:
     httpStatusCodes = {
@@ -38,12 +39,25 @@ class Pycoon:
         root.addHandler(sh)
         try:
             self.contextPath = conf 
-            source = SourceResolver(None).resolveUri(conf, "")
+            source = SourceResolver().resolveUri(conf, "")
             self.xconf = etree.fromstring(source.read())
             
             logging.disable(logging.getLevelName(self.xconf.find("logging").get("disable", "NOTSET")))
-            for l in self.xconf.findall("logging/logger"):
+            for l in self.xconf.findall("logging/loggers/logger"):
                 logging.getLogger(l.get("name")).setLevel(logging.getLevelName(l.get("level", "DEBUG")))
+                
+            loader = ClassLoader()
+            for h in self.xconf.findall("logging/handlers/handler"):
+                args = [eval(arg.text) for arg in h.findall("args/arg")]
+                if h.find("kwargs"):
+                    kwargs = dict([(arg.get("name"), eval(arg.text)) for arg in h.findall("kwargs/arg")])
+                else:
+                    kwargs = {}
+                handler = loader.getClass(h.get("class"))(*args, **kwargs)
+                handler.setLevel(logging.getLevelName(h.get("level", "DEBUG")))
+                handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
+                for l in h.findall("logger-ref"):
+                    logging.getLogger(l.get("name")).addHandler(handler)
                 
             # Pseudo-servlet parameters (and their defaults)
             #self.params = {
@@ -65,7 +79,6 @@ class Pycoon:
                 self.processor = self.createTreeProcessor()
         finally:
             root.removeHandler(sh)
-            root.addHandler(WsgiLoggingHandler())
 
     def __call__(self, environ, startResponse):
         try: 
@@ -83,6 +96,7 @@ class Pycoon:
             response.append("Stacktrace:\n")
             response.append("".join(traceback.format_tb(trace)))
             self.logStatusInfo(environ, 500)
+            self.logInternalError(status, environ, response)
             startResponse(status, [("content-type", "text/plain")], sys.exc_info())
             return response
             
@@ -118,6 +132,8 @@ class Pycoon:
                     message = self.httpStatusCodes.get(env.response.status / 100, "Unknows Status Message")
                 status = "%d %s" % (env.response.status, message)
                 self.logStatusInfo(environ, env.response.status)
+                if env.response.status / 100 == 5:
+                    self.logInternalError(status, environ, env.response.body)
                 startResponse(status, responseHeaders)
                 return [env.response.body]
             else:
@@ -151,6 +167,16 @@ class Pycoon:
             info["uri"] = environ.get("PATH_INFO")
         return info
         
+    def logInternalError(self, status, environ, body):
+        info = self.getRequestInfo(environ)
+        info["status"] = status
+        rec = '%(addr)s [%(time)s] "%(method)s %(uri)s" %(status)s' % info
+        logging.getLogger().error("\n".join([
+            rec,
+            "\n".join(["    %s: %s" % (k, v) for k, v in environ.items()]),
+            "".join(body),
+        ]))
+
     def logStatusInfo(self, environ, status):
         info = self.getRequestInfo(environ)
         info["status"] = status

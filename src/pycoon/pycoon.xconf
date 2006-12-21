@@ -2,20 +2,62 @@
 <cocoon version="2.1">
   <sitemap file="webapp/sitemap.xmap" check-reload="yes" logger="sitemap.processor"/>
   <logging disable="NOTSET">
-    <logger name="sitemap" level="INFO"/>
-    <logger name="source" level="INFO"/>
-    <logger name="component-manager" level="INFO"/>
-    <logger name="environment" level="INFO"/>
-    <logger name="sitemap.builder" level="DEBUG"/>
-    <!--
-    <logger name="sitemap.processor" level="DEBUG"/>
-    <logger name="sitemap.generator" level="DEBUG"/>    
-    <logger name="sitemap.reader" level="DEBUG"/>
-    <logger name="sitemap.aggregator" level="DEBUG"/>
-    <logger name="sitemap.select" level="DEBUG"/>
-    <logger name="sitemap.transformer" level="DEBUG"/>
-    <logger name="sitemap.serializer" level="DEBUG"/>
-    -->
+    <loggers>
+      <logger name="" level="INFO"/>
+      <logger name="sitemap.builder" level="DEBUG"/>
+      <!--
+      <logger name="sitemap" level="DEBUG"/>
+      <logger name="source" level="DEBUG"/>
+      <logger name="component-manager" level="DEBUG"/>
+      <logger name="environment" level="DEBUG"/>
+      <logger name="sitemap.generator" level="DEBUG"/>
+      <logger name="sitemap.matcher" level="DEBUG"/>
+      <logger name="sitemap.processor" level="DEBUG"/>
+      <logger name="sitemap.processor.setup" level="DEBUG"/>
+      <logger name="sitemap.mount" level="DEBUG"/>
+      <logger name="sitemap.reader" level="DEBUG"/>
+      <logger name="sitemap.generator" level="DEBUG"/>
+      <logger name="sitemap.aggregator" level="DEBUG"/>
+      <logger name="sitemap.select" level="DEBUG"/>
+      <logger name="sitemap.transformer" level="DEBUG"/>
+      -->
+    </loggers>
+    <handlers>
+      <!-- Handler of all DEBUG messages, print to stderr by default -->
+      <handler id="stderr.debug" level="DEBUG" class="logging.StreamHandler">
+        <logger-ref name="sitemap"/>
+      </handler>
+      
+      <!-- Analogous to access.log of Apache HTTP Server -->
+      <handler id="file.access" level="INFO" class="logging.handlers.RotatingFileHandler">
+        <logger-ref name="access"/>
+        <!-- You can use any Python expression in text elements of args and kwargs nodes -->
+        <args>
+          <arg>SourceResolver().resolveUri("rawegg:pycoon:/log/access.log", "").filename</arg>
+        </args>
+        <kwargs>
+          <arg name="maxBytes">2 ** 20</arg>
+          <arg name="backupCount">4</arg>
+        </kwargs>
+      </handler>
+      
+      <!-- Writes errors to wsgi.errors stream -->
+      <handler id="wsgi.errors" level="ERROR" class="pycoon.wsgi.WsgiLoggingHandler">
+        <logger-ref name=""/>
+      </handler>
+      
+      <!-- Analogous to errors.log of Apache HTTP Server -->
+      <handler id="file.errors" level="ERROR" class="logging.handlers.RotatingFileHandler">
+        <logger-ref name=""/>
+        <args>
+          <arg>SourceResolver().resolveUri("rawegg:pycoon:/log/error.log", "").filename</arg>
+        </args>
+        <kwargs>
+          <arg name="maxBytes">2 ** 16</arg>
+          <arg name="backupCount">4</arg>
+        </kwargs>
+      </handler>
+    </handlers>
   </logging>
   <web-app>
     <servlet>
@@ -24,12 +66,14 @@
         <param-value>utf-8</param-value>
       </init-param>
     </servlet>
-    <!-- This is only the example. Of course text/css is in mimetypes by default -->
+    
+    <!-- This is only an example. Of course text/css is in mimetypes by default -->
     <mime-mapping>
       <extension>css</extension>
       <mime-type>text/css</mime-type>
     </mime-mapping>
   </web-app>
+  
   <properties>
     <!-- This property is used by HttpSource for encoding URIs (as in Apache Cocoon) -->
     <property name="file.property" value="windows-1251"/>
