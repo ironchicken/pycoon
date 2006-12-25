@@ -12,7 +12,7 @@ import logging
 import lxml.etree as etree
 from lxml.etree import Element, SubElement, XSLT
 from StringIO import StringIO
-from pycoon.components import Component, Serializer, Selector, Matcher, Generator, Transformer, Reader
+from pycoon.components import Component, Serializer, Selector, Matcher, Generator, Transformer, Reader, Action
 from pycoon import ns
 
 ns["ex"] = "http://apache.org/cocoon/exception/1.0"
@@ -104,7 +104,7 @@ class ExceptionGenerator(Generator):
         type, value, trace = sys.exc_info()
         root = Element("{%(ex)s}exception-report" % ns)
         root.set("class", type.__name__)
-        if value.args[0]:
+        if len(value.args) > 0 and value.args[0]:
             SubElement(root, "{%(ex)s}message" % ns).text = unicode(value.args[0])
         SubElement(root, "{%(ex)s}stacktrace" % ns).text = "".join(traceback.format_tb(trace))
         env.response.body = root
@@ -223,3 +223,35 @@ class Pipeline(Component):
             "</map:pipeline>",
         ])
 
+class SendmailAction(Action):    
+    hmap = {
+        "from": "From",
+        "to": "To",
+        "replyTo": "Reply-To",
+        "cc": "Cc",
+        "bcc": "Bcc",
+        "subject": "Subject",
+    }
+    
+    def act(self, objectModel, params):
+        assert params.get("smtp-host")
+        assert params.get("from")
+        assert params.get("to")
+        assert params.get("body")
+
+        charset = params.get("charset", "iso-8859-1")
+        msg = "\r\n".join(
+            ["%s: %s" % (self.hmap[k], v) for k, v in params.items() if k in self.hmap and v] +
+            [
+                "Content-Type: text/plain; charset=%s; format=flowed" % charset,
+                "Content-Transfer-Encoding: 8bit",
+                "\r\n%s" % params.get("body"),
+            ]
+        )
+        import smtplib
+        server = smtplib.SMTP(params.get("smtp-host"))
+        if "smtp-user" in params:
+            server.login(params.get("smtp-user"), params.get("smtp-password"))
+        server.sendmail(params.get("from"), params.get("to"), msg.encode(charset), ["body=8bitmime"])
+        server.quit()
+        return {"status": "success"}
