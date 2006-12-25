@@ -9,7 +9,7 @@ import lxml.etree as etree
 from pycoon import ns, synchronized
 from pycoon.source import FileSource, SourceResolver
 from pycoon.sitemap.nodes import PipelinesNode, PipelineNode, AggregateNode, SerializeNode, ResourceCall, SelectNode, HandleErrorsNode, GenerateNode, MatchNode, TransformNode, ReadNode, MountNode
-from pycoon.sitemap.nodes import Node, ContainerNode, InvokeContext
+from pycoon.sitemap.nodes import Node, ContainerNode, InvokeContext, ActNode
 from pycoon.sitemap.manager import ComponentManager
 from pycoon import variables
 
@@ -121,6 +121,7 @@ class TreeBuilder:
         "read": ReadNode,
         "handle-errors": HandleErrorsNode,
         "mount": MountNode,
+        "act": ActNode,
         "component-configurations": ComponentConfigurations,
     }
     
@@ -146,6 +147,8 @@ class TreeBuilder:
             return None
 
         suffix = element.tag[len("{%(map)s}" % ns):]
+        if suffix == "parameter":
+            return None        
         try:
             node = self.nodeClasses[suffix]()
         except KeyError:

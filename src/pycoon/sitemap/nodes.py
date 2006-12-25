@@ -116,6 +116,7 @@ class MountNode(Node):
         finally:
             if not pipelineWasBuilt:
                 env.setContext(oldPrefix, oldUri, oldContextPath)
+                env.objectModel["processor"] = processor.parent
         return pipelineWasBuilt
             
 class PipelinesNode(ContainerNode):
@@ -203,7 +204,7 @@ class MatchNode(ContainerNode):
             self.log.debug('<map:match pattern="%s">: invoke(%s)' % (self.pattern, env.request.uri))
             return self.invokeChildren(env, context, result)
         else:
-            return None
+            return False
 
 class TransformNode(Node):
     def __init__(self):
@@ -330,3 +331,21 @@ class SelectNode(ContainerNode):
         else:
             return False
 
+class ActNode(ContainerNode):
+    def __init__(self):
+        ContainerNode.__init__(self)
+        self.log = logging.getLogger("sitemap.action")
+    
+    def build(self, element):
+        Node.build(self, element)
+        self._buildParams(element)
+
+    def invoke(self, env, context):
+        self.log.debug('<map:act type="%s">: invoke()' % self.type)
+        resolvedParams = variables.buildMap(self.params, context, env.objectModel)
+        action = env.componentManager.getComponent(self.elementName, self.type)
+        result = action.act(env.objectModel, resolvedParams)
+        if result is not None:
+            return self.invokeChildren(env, context, result)
+        else:
+            return False

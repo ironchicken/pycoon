@@ -18,6 +18,7 @@ class ComponentManager:
             "{%(map)s}serialize" % ns: ({}, "{%(map)s}serializer", "{%(map)s}serializers" % ns),
             "{%(map)s}match" % ns: ({}, "{%(map)s}matcher", "{%(map)s}matchers" % ns),
             "{%(map)s}select" % ns: ({}, "{%(map)s}selector", "{%(map)s}selectors" % ns),
+            "{%(map)s}act" % ns: ({}, "{%(map)s}action", "{%(map)s}actions" % ns),
             "{%(map)s}pipeline" % ns: ({}, "{%(map)s}pipe", "{%(map)s}pipes" % ns),
             "{%(map)s}aggregate" % ns: ({"default": (self.classLoader.getClass("pycoon.components.cocoon.ContentAggregator"), None)}, None, None),
         }

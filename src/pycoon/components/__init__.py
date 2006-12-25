@@ -44,3 +44,6 @@ class Reader(Component):
     def read(self, env, source, params):
         raise NotImplementedError()
 
+class Action(Component):
+    def act(self, objectModel, params):
+        raise NotImplementedError()
