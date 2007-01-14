@@ -13,7 +13,7 @@ import lxml.etree as etree
 from lxml.etree import Element, SubElement, XSLT
 from StringIO import StringIO
 from pycoon.components import Component, Serializer, Selector, Matcher, Generator, Transformer, Reader, Action
-from pycoon import ns
+from pycoon import ns, SitemapException
 
 ns["ex"] = "http://apache.org/cocoon/exception/1.0"
 

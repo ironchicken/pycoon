@@ -37,7 +37,11 @@ class Environment:
         if newPrefix:
             newPrefix = "%s/" % newPrefix
             self.prefix += newPrefix
-            self.request.uri = self.request.uri.split(newPrefix, 1)[1]
+            splitted = self.request.uri.split(newPrefix, 1)
+            if len(splitted) == 2:
+                self.request.uri = splitted[1]
+            else:
+                self.request.uri = ""
         if contextPath:
             if contextPath.find(":") != -1:
                 s = contextPath

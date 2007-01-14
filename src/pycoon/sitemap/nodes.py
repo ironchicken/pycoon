@@ -4,7 +4,7 @@
 __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 
 import logging
-from pycoon import ResourceNotFoundException, SitemapException, ns, variables
+from pycoon import ResourceNotFoundException, ns, variables
 
 class Node:
     def __init__(self):
