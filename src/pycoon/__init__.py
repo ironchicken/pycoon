@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Pycoon Web Development Framework
-Copyright (C) 2006 Andrey Nordin, Richard Lewis
+Copyright (C) 2006/2007 Andrey Nordin, Richard Lewis
 This is free software, and you are welcome to redistribute it under certain
 conditions; use --license option for details.
 
@@ -19,7 +19,7 @@ Options:
 
 __license__ = \
 """Pycoon Web Development Framework
-Copyright (C) 2006 Andrey Nordin, Richard Lewis
+Copyright (C) 2006/2007 Andrey Nordin, Richard Lewis
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."""
 
 __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
-__version__ = "0.2a3"
+__version__ = "0.2a4"
 
 ns = {
     "map": "http://apache.org/cocoon/sitemap/1.0",

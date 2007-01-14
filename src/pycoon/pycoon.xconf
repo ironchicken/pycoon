@@ -57,6 +57,19 @@
           <arg name="backupCount">4</arg>
         </kwargs>
       </handler>
+      
+      <!-- This handler sends an email when an error occured -->
+      <!--
+      <handler id="smtperrors" level="ERROR" class="logging.handlers.SMTPHandler">
+        <logger-ref name=""/>
+        <args>
+          <arg>"smtp.example.com"</arg>
+          <arg>"nobody@example.com"</arg>
+          <arg>["nobody@example.com"]</arg>
+          <arg>"An error occured"</arg>
+        </args>
+      </handler>
+      -->
     </handlers>
   </logging>
   <web-app>

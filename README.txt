@@ -3,20 +3,34 @@ Pycoon Web Development Framework
 ================================
 
 Version:
-    pysitemap/0.2a3
+    pysitemap/0.2a4
 Authors:
     Andrey Nordin <http://claimid.com/anrienord>
     Richard Lewis <http://www.richard-lewis.me.uk/>
 Rights:
-    Copyright (C) 2006 Andrey Nordin, Richard Lewis
+    Copyright (C) 2006/2007 Andrey Nordin, Richard Lewis
 License:
     GNU GPL v2 (see LICENSE.txt)
 Source Code:
     Pycoon Subversion repository <http://pycoon.googlecode.com/svn/>
 Homepage:
     Pycoon Project website <http://code.google.com/p/pycoon/>
+Downloads:
+    Pycoon at Cheese Shop <http://cheeseshop.python.org/pypi/pycoon/>
 
 == Release Notes ==
+
+0.2a4
+2007-01-14
+
+* Added support for <map:act>
+* Added XHTML serializer
+* Added SendmailAction
+* Added support for use-request-parameters to TraxTransformer
+* Added support for "when" parameter to <map:handle-errors>
+* Added early versions of generators that use lightweight markup as their
+  input: Textile and reStructured Text
+* Minor bugfixes
 
 0.2a3
 2006-12-14
