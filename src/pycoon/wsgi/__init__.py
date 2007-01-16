@@ -161,6 +161,8 @@ class Pycoon:
             "protocol": environ.get("SERVER_PROTOCOL"),
             "time": time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime()),
         }
+        if "HTTP_X_FORWARDED_FOR" in environ:
+            info["addr"] += " fw:%s" % environ.get("HTTP_X_FORWARDED_FOR")
         if environ.get("QUERY_STRING"):
             info["uri"] = "%(PATH_INFO)s?%(QUERY_STRING)s" % environ
         else:
