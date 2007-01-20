@@ -87,3 +87,5 @@ class HttpResponse:
     body = None
     exceptionAware = False
 
+    def __init__(self):
+        self.headers = []
