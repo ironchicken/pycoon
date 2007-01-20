@@ -27,6 +27,8 @@ class Pycoon:
         4: "Client Error",
         5: "Server Error",
         200: "OK",
+        301: "Moved Permanently",
+        302: "Found",
         404: "Not Found",
         500: "Internal Server Error",
     }
@@ -123,8 +125,9 @@ class Pycoon:
         try:
             if processor.process(env):
                 responseHeaders = []
-                responseHeaders.append(("content-type", env.contentType))
-                if not env.response.exceptionAware and env.response.status / 100 != 2:
+                if env.contentType:
+                    responseHeaders.append(("content-type", env.contentType))
+                if not env.response.exceptionAware and env.response.status / 100 not in [2, 3]:
                     raise Exception("Exception not processed by sitemap: HTTP %d\n%s" % (env.response.status, env.response.body))
                 if env.response.status in self.httpStatusCodes:
                     message = self.httpStatusCodes[env.response.status]
@@ -134,6 +137,9 @@ class Pycoon:
                 self.logStatusInfo(environ, env.response.status)
                 if env.response.status / 100 == 5:
                     self.logInternalError(status, environ, env.response.body)
+                if env.response.body:
+                    responseHeaders.append(("content-length", str(len(env.response.body))))
+                responseHeaders += env.response.headers
                 startResponse(status, responseHeaders)
                 return [env.response.body]
             else:
