@@ -35,7 +35,7 @@ class FileSource(Source):
         return os.path.getmtime(self.filename)
     
     def read(self):
-        if not os.path.exists(self.filename):
+        if not os.path.isfile(self.filename):
             raise ResourceNotFoundException("File %s not found" % self.filename)
         fd = open(self.filename, "rb")
         try:
