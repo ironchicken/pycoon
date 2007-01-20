@@ -349,3 +349,23 @@ class ActNode(ContainerNode):
             return self.invokeChildren(env, context, result)
         else:
             return False
+
+class RedirectNode(Node):
+    def __init__(self):
+        Node.__init__(self)
+        self.log = logging.getLogger("sitemap.redirection")
+        
+    def build(self, element):
+        Node.build(self, element)
+        self.uri = variables.getResolver(element.get("uri"))
+        self.permanent = (element.get("permanent", "no") == "yes")
+        
+    def invoke(self, env, context):
+        env.response.headers.append(("location", self.uri.resolve(context, env.objectModel)))
+        if self.permanent:
+            env.response.status = 301
+        else:
+            env.response.status = 302
+        return True
+        
+        

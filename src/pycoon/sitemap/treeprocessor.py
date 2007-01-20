@@ -9,7 +9,7 @@ import lxml.etree as etree
 from pycoon import ns, synchronized
 from pycoon.source import FileSource, SourceResolver
 from pycoon.sitemap.nodes import PipelinesNode, PipelineNode, AggregateNode, SerializeNode, ResourceCall, SelectNode, HandleErrorsNode, GenerateNode, MatchNode, TransformNode, ReadNode, MountNode
-from pycoon.sitemap.nodes import Node, ContainerNode, InvokeContext, ActNode
+from pycoon.sitemap.nodes import Node, ContainerNode, InvokeContext, ActNode, RedirectNode
 from pycoon.sitemap.manager import ComponentManager
 from pycoon import variables
 
@@ -122,6 +122,7 @@ class TreeBuilder:
         "handle-errors": HandleErrorsNode,
         "mount": MountNode,
         "act": ActNode,
+        "redirect-to": RedirectNode,
         "component-configurations": ComponentConfigurations,
     }
     
