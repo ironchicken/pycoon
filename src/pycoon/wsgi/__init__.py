@@ -29,6 +29,7 @@ class Pycoon:
         200: "OK",
         301: "Moved Permanently",
         302: "Found",
+        304: "Not Modified",
         404: "Not Found",
         500: "Internal Server Error",
     }
@@ -119,7 +120,7 @@ class Pycoon:
         req.formEncoding = self.params.get("form-encoding")
         req.method = environ.get("REQUEST_METHOD")
 
-        env = Environment(req)
+        env = Environment(req, environ=environ)
         env.changeContext("", self.contextPath)
 
         try:
@@ -141,7 +142,8 @@ class Pycoon:
                     responseHeaders.append(("content-length", str(len(env.response.body))))
                 responseHeaders += env.response.headers
                 startResponse(status, responseHeaders)
-                return [env.response.body]
+                if env.response.body: return [env.response.body]
+                else: return []
             else:
                 raise Exception("Sitemap is returned False, but no exception was raised")
         except ResourceNotFoundException, e:

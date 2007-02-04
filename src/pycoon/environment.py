@@ -13,7 +13,7 @@ class Environment:
     prefix = ""
     contentType = None
     
-    def __init__(self, req, isExternal=True):
+    def __init__(self, req, isExternal=True, environ=None):
         self.log = logging.getLogger("environment")
         self.prefix = "/" 
         
@@ -22,6 +22,7 @@ class Environment:
         self.sourceResolver = SourceResolver(self)
         self.componentManager = None
         self.isExternal = isExternal
+        self.environ = environ
         
         self.objectModel = {}
         self.objectModel["request"] = self.request

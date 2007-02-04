@@ -12,6 +12,8 @@ import logging
 import lxml.etree as etree
 from lxml.etree import Element, SubElement, XSLT
 from StringIO import StringIO
+import time
+from datetime import datetime
 from pycoon.components import Component, Serializer, Selector, Matcher, Generator, Transformer, Reader, Action
 from pycoon import ns, SitemapException
 
@@ -179,10 +181,25 @@ class ResourceReader(Reader):
     def read(self, env, source, params):
         if self.mimeType is None:
             root, ext = os.path.splitext(source.uri)
-            self.log.debug("ext: %s" % ext)
             self.mimeType = mimetypes.types_map.get(ext, "application/octet-stream")
         env.contentType = self.mimeType
+
+        if hasattr(source, "getLastModified") and env.environ:
+            mtime = datetime.utcfromtimestamp(source.getLastModified())
+            fmt = "%a, %d %b %Y %H:%M:%S GMT"
+            timestr = mtime.strftime(fmt)
+            iftimestr = env.environ.get("HTTP_IF_MODIFIED_SINCE")
+            if iftimestr:
+                ifmtime = datetime(*(time.strptime(iftimestr, fmt)[0:6]))
+                if ifmtime >= mtime:
+                    env.response.status = 304
+                    self.log.debug('<map:read src="%s"> process()' % source.uri)
+                    self.log.debug("status: %d" % env.response.status)
+                    return
+            env.response.headers.append(("Last-Modified", timestr))
+        
         env.response.body = source.read()
+            
         self.log.debug('<map:read src="%s"> process()' % source.uri)
         self.log.debug("status: %d" % env.response.status)
 
