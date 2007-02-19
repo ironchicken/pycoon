@@ -32,16 +32,20 @@ class FileSource(Source):
         logging.getLogger("source.file").debug("Created with filename %s" % filename)
 
     def getLastModified(self):
+        self.checkExist()
         return os.path.getmtime(self.filename)
     
     def read(self):
-        if not os.path.isfile(self.filename):
-            raise ResourceNotFoundException("File %s not found" % self.filename)
+        self.checkExist()
         fd = open(self.filename, "rb")
         try:
             return fd.read()
         finally:
             fd.close()
+            
+    def checkExist(self):
+        if not os.path.isfile(self.filename):
+            raise ResourceNotFoundException("File %s not found" % self.filename)
         
 class HttpSource(Source):
     """
