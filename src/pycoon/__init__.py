@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Pycoon Web Development Framework
+"""
+Pycoon Web Development Framework.
 Copyright (C) 2006/2007 Andrey Nordin, Richard Lewis
-This is free software, and you are welcome to redistribute it under certain
-conditions; use --license option for details.
 
-Usage: pycoon <options>
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
-Options:
-    -s, --serve <srv>   , where srv is:
-    
-        cherrypy <host> <port> [<pycoon.xconf absolute file URI>]
-                        run Pycoon in CherryPy WSGI server
-    
-    --help              print help message
-    --license           print legal info"""
+See also:
+
+ - Pycoon Subversion repository <U{http://pycoon.googlecode.com/svn/}>
+ - Pycoon Project website <U{http://code.google.com/p/pycoon/}>
+ - Pycoon at Cheese Shop <U{http://cheeseshop.python.org/pypi/pycoon/}>
+"""
 
 __license__ = \
 """Pycoon Web Development Framework
@@ -38,6 +38,24 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 __version__ = "0.2a4"
 
+usage = \
+"""Pycoon Web Development Framework
+Copyright (C) 2006/2007 Andrey Nordin, Richard Lewis
+This is free software, and you are welcome to redistribute it under certain
+conditions; use --license option for details.
+
+Usage: pycoon <options>
+
+Options:
+    -s, --serve <srv>   , where srv is:
+    
+        cherrypy <host> <port> [<pycoon.xconf absolute file URI>]
+                        run Pycoon in CherryPy WSGI server
+    
+    --help              print help message
+    --license           print legal info
+"""
+
 ns = {
     "map": "http://apache.org/cocoon/sitemap/1.0",
     "py": "http://pycoon.org/ns/pysitemap/0.1/",
@@ -48,6 +66,13 @@ class ResourceNotFoundException(Exception): pass
 class SitemapException(Exception): pass
 
 def synchronized(func):
+    """A Python decorator for synchronizing method calls.
+    
+    Adds an extra L{threading.RLock} attribute named C{_lock} to the
+    dictionary of the object which method is decorated.
+    
+    @param func: a method to be synchronized.
+    """
     def decorator(self, *args, **kwargs):
         try:
             rlock = self._lock
@@ -61,7 +86,8 @@ def synchronized(func):
             rlock.release()
     return decorator
 
-def main():    
+def main():
+    """The Pycoon command-line interface entry point."""
     import sys
     import getopt
     
