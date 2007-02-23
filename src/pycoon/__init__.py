@@ -53,8 +53,7 @@ Options:
                         run Pycoon in CherryPy WSGI server
     
     --help              print help message
-    --license           print legal info
-"""
+    --license           print legal info"""
 
 ns = {
     "map": "http://apache.org/cocoon/sitemap/1.0",
@@ -95,7 +94,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "s:", ["help", "license", "serve="])
         for opt, arg in opts:
             if opt == "--help":
-                print __doc__
+                print usage
                 sys.exit(0)
             elif opt == "--license":
                 print __license__
@@ -109,7 +108,7 @@ def main():
                     raise getopt.GetoptError("")
             else:
                 raise getopt.GetoptError("")
-        print __doc__
+        print usage
         sys.exit(1)
     except getopt.GetoptError:
         print "Wrong command line options, use --help"
