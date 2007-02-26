@@ -1,0 +1,231 @@
+format 29
+
+classcanvas 128204 class_ref 128716 // Node
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 286 518 2000
+classcanvas 128332 class_ref 128844 // ParentNode
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 272 690 2000
+classcanvas 129356 class_ref 129100 // InvokeContext
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 109 532 3005
+classcanvas 130508 class_ref 129228 // PipelinesNode
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 409 658 2000
+classcanvas 130636 class_ref 129356 // PipelineNode
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 411 710 2000
+classcanvas 130764 class_ref 129484 // TransformNode
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 405 602 2005
+classcanvas 132300 class_ref 129612 // Component
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 272 119 2000
+classcanvas 132428 class_ref 129740 // Pipeline
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 125 190 3005
+classcanvas 133196 class_ref 129868 // Transformer
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 266 191 2005
+classcanvas 133452 class_ref 129996 // TraxTransformer
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 444 197 2005
+classcanvas 134092 class_ref 128972 // Environment
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 455 532 2000
+classcanvas 134348 class_ref 130124 // ComponentManager
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 435 336 2005
+classcanvas 135244 class_ref 130252 // Source
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 260 264 2000
+classcanvas 135372 class_ref 130380 // FileSource
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 389 274 2010
+classcanvas 136908 class_ref 130508 // TreeProcessor
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 214 404 2000
+classcanvas 137036 class_ref 130636 // TreeBuilder
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 381 420 2000
+classcanvas 137676 class_ref 128332 // Pycoon
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  xyz 30 421 2000
+note 137932 "      <map:transformer name=\"xslt\" py:src=\"pycoon.components.cocoon.TraxTransformer\"/>
+"
+  xyzwh 632 134 2000 467 35
+note 138060 "<map:sitemap>
+"
+  xyzwh 629 17 2000 211 35
+note 138188 "   </map:transformers>
+    ...
+  </map:components>
+"
+  xyzwh 632 173 2000 209 60
+note 139212 "  <map:pipelines>
+    ...
+"
+  xyzwh 631 237 2000 212 46
+note 139340 "    <map:pipeline>
+      ...
+"
+  xyzwh 631 287 2000 213 48
+note 139468 "      <map:match pattern=\"**\">
+        <map:generate ...
+"
+  xyzwh 632 363 2000 214 50
+note 139596 "        <map:transform ...
+          <map:parameter name=\"title\" value=\"Hello World!\"/>
+        </map:transoform>
+"
+  xyzwh 632 444 2000 298 62
+note 139724 "        <map:serialize type=\"xhtml\"/>
+      </map:match>
+    </map:pipeline>
+  </map:pipelines>
+</map:sitemap>"
+  xyzwh 631 511 2000 216 91
+note 141772 "    <map:transformers default=\"xslt\">"
+  xyzwh 631 95 2005 209 35
+note 141900 "  <map:components>"
+  xyzwh 630 56 2000 211 35
+note 142668 "
+... src=\"{1}.xml\"/>"
+  xyzwh 849 363 2000 122 50
+note 143436 "... src=\"xml2xhtml.xslt\">"
+  xyzwh 934 445 2000 151 61
+relationcanvas 128460 relation_ref 128076 // <generalisation>
+  from ref 128332 z 1999 to ref 128204
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 128588 relation_ref 128204 // <aggregation by value>
+  from ref 128332 z 1999 to point 239 705
+  line 129228 z 1999 to point 239 568
+  line 130124 z 1999 to point 284 568
+  line 130252 z 1999 to point 286 559
+  line 129996 z 1999 to ref 128204
+  role_a_pos 242 554 3000 no_role_b
+  multiplicity_a_pos 272 569 3000 no_multiplicity_b
+relationcanvas 129484 relation_ref 128332 // <dependency>
+  from ref 128204 z 1999 stereotype "<<uses>>" xyz 222 533 3000 to ref 129356
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 130892 relation_ref 128460 // <generalisation>
+  from ref 130764 z 1999 to point 372 617
+  line 134732 z 1999 to ref 128204
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 131276 relation_ref 128588 // <generalisation>
+  from ref 130508 z 1999 to point 370 674
+  line 131404 z 1999 to point 370 706
+  line 131532 z 1999 to ref 128332
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 131660 relation_ref 128716 // <generalisation>
+  from ref 130636 z 1999 to point 370 727
+  line 131788 z 1999 to point 370 706
+  line 131916 z 1999 to ref 128332
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 132556 relation_ref 128844 // <generalisation>
+  from ref 132428 z 1999 to point 152 141
+  line 133708 z 1999 to ref 132300
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 132684 relation_ref 128972 // <aggregation by value>
+  from ref 129356 z 3004 to ref 132428
+  role_a_pos 58 244 3000 no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 133324 relation_ref 129100 // <generalisation>
+  from ref 133196 z 1999 to ref 132300
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 133580 relation_ref 129228 // <generalisation>
+  from ref 133452 z 2004 to ref 133196
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 133836 relation_ref 129356 // <aggregation by value>
+  from ref 132428 z 2004 to ref 133196
+  role_a_pos 192 196 3000 no_role_b
+  multiplicity_a_pos 251 221 3000 no_multiplicity_b
+relationcanvas 134220 relation_ref 129612 // <dependency>
+  from ref 128204 z 1999 stereotype "<<uses>>" xyz 369 532 3000 to ref 134092
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 134476 relation_ref 129740 // <aggregation by value>
+  from ref 134092 z 1999 to ref 134348
+  role_a_pos 499 400 3000 no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 134604 relation_ref 129868 // <dependency>
+  from ref 134348 z 2004 stereotype "<<create>>" xyz 435 246 3000 to ref 133452
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 135500 relation_ref 129996 // <generalisation>
+  from ref 135372 z 1999 to ref 135244
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 135628 relation_ref 130124 // <dependency>
+  from ref 133196 z 1999 stereotype "<<uses>>" xyz 312 245 3000 to ref 135244
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 135756 relation_ref 130252 // <dependency>
+  from ref 132428 z 1999 to point 171 235
+  line 139084 z 1999 stereotype "<<create>>" xyz 197 276 3000 to point 171 293
+  line 138700 z 1999 to ref 135244
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 137164 relation_ref 130380 // <dependency>
+  from ref 136908 z 1999 stereotype "<<create>>" xyz 175 496 3000 to ref 129356
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 137292 relation_ref 130508 // <dependency>
+  from ref 136908 z 1999 stereotype "<<create>>" xyz 315 425 3000 to ref 137036
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 137420 relation_ref 130636 // <dependency>
+  from ref 137036 z 1999 stereotype "<<create>>" xyz 337 495 3000 to ref 128204
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 137548 relation_ref 130764 // <dependency>
+  from ref 137036 z 1999 stereotype "<<create>>" xyz 392 405 3000 to ref 134348
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 137804 relation_ref 130892 // <dependency>
+  from ref 137676 z 1999 stereotype "<<create>>" xyz 124 449 3000 to ref 136908
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+relationcanvas 144076 relation_ref 129484 // <dependency>
+  from ref 130764 z 2004 to ref 133452
+  no_role_a no_role_b
+  no_multiplicity_a no_multiplicity_b
+line 138316 -_-_
+  from ref 133452 z 1999 to point 567 214
+  line 142412 z 1999 to point 627 151
+  line 138444 z 1999 to ref 137932
+line 139852 -_-_
+  from ref 130764 z 1999 to point 529 617
+  line 140108 z 1999 to point 628 475
+  line 139980 z 1999 to ref 139596
+line 141004 -_-_
+  from ref 130508 z 1999 to point 528 673
+  line 141260 z 1999 to point 626 260
+  line 141132 z 1999 to ref 139212
+line 141388 -_-_
+  from ref 130636 z 1999 to point 535 725
+  line 141644 z 1999 to point 627 310
+  line 141516 z 1999 to ref 139340
+line 142028 -_-_
+  from ref 134348 z 1999 to point 573 356
+  line 142284 z 1999 to point 625 74
+  line 142156 z 1999 to ref 141900
+line 142796 -_-_
+  from ref 135372 z 1999 to point 558 291
+  line 143308 z 1999 to point 631 348
+  line 143180 z 1999 to point 907 348
+  line 142924 z 1999 to ref 142668
+line 143564 -_-_
+  from ref 135372 z 1999 to point 559 291
+  line 143948 z 1999 to point 631 426
+  line 143820 z 1999 to point 1004 426
+  line 143692 z 1999 to ref 143436
+end

@@ -1,0 +1,38 @@
+format 29
+
+deploymentnodecanvas 128076 deploymentnode_ref 128076 // Client
+  xyzwh 23 101 2000 200 123
+deploymentnodecanvas 128204 deploymentnode_ref 128204 // Server
+  xyzwh 252 23 2000 348 282
+deploymentnodecanvas 128332 deploymentnode_ref 128332 // Conent Provider
+  xyzwh 329 346 2000 192 193
+componentcanvas 129228 component_ref 128076 // HTTP Client
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 48 145 2005 143 51
+componentcanvas 129356 component_ref 128204 // HTTP Server
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 286 68 2005 143 51
+componentcanvas 129484 component_ref 128204 // HTTP Server
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 347 386 2005 143 51
+componentcanvas 129612 component_ref 128332 // Pycoon
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 287 151 2005 143 51
+artifactcanvas 129868 artifact_ref 128204 // Remote Conent
+  xyz 356 462 2005
+artifactcanvas 130892 artifact_ref 128332 // Sitemap
+  xyz 458 67 2005
+artifactcanvas 131020 artifact_ref 128460 // Pycoon Config
+  xyz 458 150 2005
+artifactcanvas 131276 artifact_ref 128588 // Local Content
+  xyz 458 234 2005
+line 128460 ----
+  from ref 128076 z 1999 to ref 128204
+line 128972 ----
+  from ref 128204 z 1999 to ref 128332
+simplerelationcanvas 129740 simplerelation_ref 128076
+  from ref 129356 z 2004 to ref 129612
+simplerelationcanvas 129996 simplerelation_ref 128204
+  from ref 129484 z 1999 to point 407 504
+  line 130124 z 1999 to ref 129484
+end

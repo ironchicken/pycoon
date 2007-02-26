@@ -1,0 +1,66 @@
+format 29
+
+packagecanvas 128076 
+  package_ref 128076 // pycoon
+    xyzwh 45 95 2000 498 379
+packagecanvas 128460 
+  package_ref 128204 // components
+    xyzwh 57 216 2005 67 71
+packagecanvas 128588 
+  package_ref 128332 // environment
+    xyzwh 57 305 2005 67 71
+packagecanvas 128716 
+  package_ref 128460 // sitemap
+    xyzwh 153 216 2005 65 71
+packagecanvas 128844 
+  package_ref 128588 // source
+    xyzwh 153 305 2005 65 71
+packagecanvas 128972 
+  package_ref 128716 // variables
+    xyzwh 245 305 2005 65 71
+packagecanvas 129100 
+  package_ref 128844 // wsgi
+    xyzwh 336 245 2005 178 131
+packagecanvas 129228 
+  package_ref 128972 // frontend
+    xyzwh 350 290 2010 65 71
+packagecanvas 129356 
+  package_ref 129100 // servers
+    xyzwh 432 290 2010 65 71
+note 129484 "Entry point & some utils"
+  xyzwh 408 49 2000 136 35
+note 129740 "Sitemap logic & pipeline components"
+  xyzwh 57 138 2005 119 49
+note 129996 "Sitemap building & invocation, component manager"
+  xyzwh 186 138 2005 121 61
+note 130636 "Pycoon WSGI server-to-app bindings"
+  xyzwh 330 138 2005 90 62
+note 130892 "Open-source WSGI servers"
+  xyzwh 437 138 2005 88 50
+note 131148 "Request processing environment, similar to WSGI's environ variable"
+  xyzwh 57 391 2005 136 63
+note 131404 "Data sources: file, HTTP, sitemap, etc."
+  xyzwh 210 394 2005 89 60
+note 131660 "Variable resolvers"
+  xyzwh 317 406 2005 68 48
+note 131916 "Pycoon WSGI app"
+  xyzwh 402 405 2005 70 49
+line 129612 -_-_
+  from ref 129484 z 1999 to ref 128076
+line 129868 -_-_
+  from ref 128460 z 2004 to ref 129740
+line 130508 -_-_
+  from ref 129996 z 2004 to ref 128716
+line 130764 -_-_
+  from ref 130636 z 2004 to ref 129228
+line 131020 -_-_
+  from ref 130892 z 2004 to ref 129356
+line 131276 -_-_
+  from ref 131148 z 2004 to ref 128588
+line 131532 -_-_
+  from ref 131404 z 2004 to ref 128844
+line 131788 -_-_
+  from ref 131660 z 2004 to ref 128972
+line 132044 -_-_
+  from ref 131916 z 2004 to ref 129100
+end
