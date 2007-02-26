@@ -3,7 +3,7 @@ Pycoon Web Development Framework
 ================================
 
 Version:
-    pysitemap/0.2a4
+    0.2a4
 Authors:
     Andrey Nordin <http://claimid.com/anrienord>
     Richard Lewis <http://www.richard-lewis.me.uk/>
