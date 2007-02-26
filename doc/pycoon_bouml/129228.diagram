@@ -1,0 +1,123 @@
+format 29
+
+classinstance 128076 class_ref 130508 // TreeProcessor
+  name "" xyz 28 16 2000 life_line_z 2000
+classinstance 128283 class_ref 128716 // Node
+  name "node" xyz 309 380 2000 life_line_z 2000
+classinstance 128460 class_ref 130636 // TreeBuilder
+  name "" xyz 135 98 2000 life_line_z 2000
+fragment 128923 "ref"
+  color white xyzwh 107 663 2015 265 50
+end
+textcanvas 129179 "Perform some node-specific parsing"
+  xyzwh 149 681 2020 182 16
+fragment 129307 "opt"
+  xyzwh 107 516 1990 264 128
+end
+textcanvas 129435 "[isinstance(node, ContainerNode)]"
+  xyzwh 143 522 2015 172 19
+classinstance 129484 class_ref 130380 // FileSource
+  name "source" xyz 189 15 2000 life_line_z 2000
+fragment 129691 "loop"
+  xyzwh 122 552 1995 183 76
+end
+textcanvas 129819 "*[for each c in element]"
+  xyzwh 180 560 3005 111 14
+classinstance 129868 class_ref 130124 // ComponentManager
+  name "componentManager" xyz 241 219 2000 life_line_z 2000
+note 129947 "Recursive building of a sitemap tree"
+  xyzwh 426 446 2000 83 63
+note 131227 "Specific node class is determined by it's XML element name and TreeBuilder.nodeClasses dictionary"
+  xyzwh 368 259 2000 141 93
+durationcanvas 128411 classinstance_ref 128283 // node:Node
+  xyzwh 328 435 2010 11 25
+durationcanvas 128588 classinstance_ref 128076 // :TreeProcessor
+  xyzwh 65 73 2010 11 750
+durationcanvas 128667 classinstance_ref 128283 // node:Node
+  xyzwh 328 479 2010 11 25
+durationcanvas 128716 classinstance_ref 128460 // :TreeBuilder
+  xyzwh 164 150 2010 11 25
+durationcanvas 129100 classinstance_ref 128460 // :TreeBuilder
+  xyzwh 164 198 2010 11 575
+durationcanvas 129612 classinstance_ref 129484 // source:FileSource
+  xyzwh 214 214 2010 11 25
+durationcanvas 129996 classinstance_ref 129868 // componentManager:ComponentManager
+  xyzwh 290 275 2010 11 25
+durationcanvas 130252 classinstance_ref 129868 // componentManager:ComponentManager
+  xyzwh 290 319 2010 11 25
+reflexivemsg 128027 asynchronous
+  to durationcanvas_ref 128588 // 128076
+  yz 782 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+reflexivemsg 128155 asynchronous
+  to durationcanvas_ref 129100 // 128460
+  yz 734 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+msg 128539 synchronous
+  from durationcanvas_ref 129100 // 128460
+  to durationcanvas_ref 128411 // 128283
+  yz 435 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 187 422
+msg 128795 synchronous
+  from durationcanvas_ref 129100 // 128460
+  to durationcanvas_ref 128667 // 128283
+  yz 479 2000 msg operation_ref 128076 // "build(in element : Element)"
+  show_full_operations_definition default drawing_language default
+  label_xy 187 465
+msg 128844 synchronous
+  from durationcanvas_ref 128588 // 128076
+  to durationcanvas_ref 128716 // 128460
+  yz 150 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 96 136
+reflexivemsg 128972 synchronous
+  to durationcanvas_ref 128588 // 128076
+  yz 93 2000 msg operation_ref 129228 // "buildProcessor()"
+  show_full_operations_definition default drawing_language default
+  label_xy 81 77
+msg 129228 synchronous
+  from durationcanvas_ref 128588 // 128076
+  to durationcanvas_ref 129100 // 128460
+  yz 198 2000 explicitmsg "build(self.source)"
+  show_full_operations_definition default drawing_language default
+  label_xy 80 184
+msg 129356 return
+  from durationcanvas_ref 129100 // 128460
+  to durationcanvas_ref 128588 // 128076
+  yz 761 2000 explicitmsg "self.root"
+  show_full_operations_definition default drawing_language default
+  label_xy 101 752
+reflexivemsg 129563 synchronous
+  to durationcanvas_ref 129100 // 128460
+  yz 602 2000 explicitmsg "buildNode(c)"
+  show_full_operations_definition default drawing_language default
+  label_xy 179 587
+msg 129740 synchronous
+  from durationcanvas_ref 129100 // 128460
+  to durationcanvas_ref 129612 // 129484
+  yz 214 2000 msg operation_ref 128844 // "read()"
+  show_full_operations_definition default drawing_language default
+  label_xy 179 200
+msg 130124 synchronous
+  from durationcanvas_ref 129100 // 128460
+  to durationcanvas_ref 129996 // 129868
+  yz 275 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 186 261
+msg 130380 synchronous
+  from durationcanvas_ref 129100 // 128460
+  to durationcanvas_ref 130252 // 129868
+  yz 319 2000 msg operation_ref 130124 // "configure()"
+  show_full_operations_definition default drawing_language default
+  label_xy 185 307
+reflexivemsg 130508 synchronous
+  to durationcanvas_ref 129100 // 128460
+  yz 365 2000 explicitmsg "buildNode(element)"
+  show_full_operations_definition default drawing_language default
+  label_xy 179 351
+line 130843 -_-_
+  from ref 129947 z 1989 to ref 129307
+line 131355 -_-_
+  from ref 131227 z 1999 to ref 128283
+end

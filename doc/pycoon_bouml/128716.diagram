@@ -1,0 +1,61 @@
+format 29
+
+componentcanvas 128076 component_ref 128204 // HTTP Server
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 228 19 2000 143 51
+componentcanvas 128332 component_ref 128076 // HTTP Client
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 13 20 2000 143 51
+componentcanvas 128460 component_ref 128332 // Pycoon
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 504 -23 2000 563 345
+componentcanvas 128588 component_ref 128716 // Logic Component
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 248 258 2005 143 51
+componentcanvas 128716 component_ref 128588 // Sitemap Tree Processor
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 42 258 2005 147 51
+componentcanvas 128844 component_ref 128972 // Pipeline Component
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 254 360 2005 143 51
+componentcanvas 128972 component_ref 129100 // Data Source
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 256 454 2005 143 51
+componentcanvas 129100 component_ref 128460 // WSGI Adapter
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 229 102 2005 143 51
+componentcanvas 130380 component_ref 128972 // Pipeline Component
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 46 358 3005 143 51
+componentcanvas 130508 component_ref 129100 // Data Source
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 46 459 2005 143 51
+arrowjunctioncanvas 131404 class_ref 128204 // WSGI
+  xyz 290 171 2000 label_xy 312 172
+arrowjunctioncanvas 131788 class_ref 128076 // HTTP
+  xyz 186 37 2000 label_xy 183 56
+arrowjunctioncanvas 132556 class_ref 128204 // WSGI
+  xyz 108 427 2000 label_xy 130 430
+arrowjunctioncanvas 133580 class_ref 128588 // _WSGI
+  xyz 106 327 2000 label_xy 125 328
+simplerelationcanvas 129228 simplerelation_ref 128332
+  from ref 128076 z 1999 to ref 129100
+simplerelationcanvas 129484 simplerelation_ref 128716
+  from ref 128716 z 2004 to ref 128588
+line 131532 ---O
+  from ref 128460 z 1999 to ref 131404
+line 131660 ---(
+  from ref 129100 z 1999 to ref 131404
+line 131916 ---O
+  from ref 128076 z 1999 to ref 131788
+line 132044 ---(
+  from ref 128332 z 1999 to ref 131788
+line 132684 ---O
+  from ref 130508 z 1999 to ref 132556
+line 132812 ---(
+  from ref 130380 z 1999 to ref 132556
+line 133708 ---O
+  from ref 130380 z 1999 to ref 133580
+line 133836 ---(
+  from ref 128716 z 1999 to ref 133580
+end

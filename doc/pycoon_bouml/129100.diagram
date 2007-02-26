@@ -1,0 +1,197 @@
+format 29
+
+fragment 128027 "opt"
+  xyzwh 143 707 1995 133 102
+end
+classinstance 128076 class_ref 130764 // WSGIServer
+  name "" xyz 23 12 2000 life_line_z 2000
+textcanvas 128155 "[sitemap modified]"
+  xyzwh 179 711 2020 86 14
+classinstance 128204 class_ref 128332 // Pycoon
+  name "" xyz 104 64 2000 life_line_z 2000
+note 128283 "Thread-safe, guarded by RLock"
+  xyzwh 473 638 2000 110 53
+note 128539 "Build a TreeProcessor and configure it by parsing pycoon.xconf only once"
+  xyzwh 456 211 2000 127 79
+fragment 128844 "opt"
+  xyzwh 20 45 1995 169 108
+end
+classinstance 128972 class_ref 130508 // TreeProcessor
+  name "processor" xyz 166 227 2000 life_line_z 2000
+note 129051 "A Pycoon instance is created using the signleton design pattern in thread-safe manner"
+  xyzwh 444 38 2000 139 76
+fragment 129100 "opt"
+  xyzwh 88 214 1995 313 332
+end
+classinstance 129228 class_ref 128972 // Environment
+  name "env" xyz 366 569 2000 life_line_z 2000
+note 129307 "Every class derived from Node *should* implement invoke(env, context) method. This method returns True if the request was processed by a Node or False otherwise.
+
+If isinstance(node, ContainerNode), it *must* invokeChildren(...).
+
+If node is associated with a sitemap pipeline component (not with logic component), it *must* add the component to the context.processingPipeline.
+
+If node is associated with the final pipeline component (e. g. Serializer or Reader), it *must* call context.processingPipeline.process()."
+  xyzwh 573 765 2000 209 294
+fragment 131148 "ref"
+  color white xyzwh 154 736 2015 108 61
+end
+textcanvas 131276 "Build sitemap"
+  xyzwh 176 762 2020 72 19
+classinstance 131532 class_ref 129100 // InvokeContext
+  name "context" xyz 460 822 2000 life_line_z 2000
+classinstance 131660 class_ref 129228 // PipelinesNode
+  name "rootNode" xyz 411 772 2000 life_line_z 2000
+fragment 132428 "ref"
+  color white xyzwh 379 944 2015 145 62
+end
+textcanvas 132556 "Invoke sitemap nodes"
+  xyzwh 399 972 2020 112 15
+classinstance 133196 class_ref 130892 // SourceResolver
+  name "" xyz 240 327 2000 life_line_z 2000
+classinstance 133836 class_ref 130380 // FileSource
+  name "source" xyz 324 414 2000 life_line_z 2000
+durationcanvas 128332 classinstance_ref 128076 // :WSGIServer
+  xyzwh 54 103 2010 11 992
+durationcanvas 128460 classinstance_ref 128204 // :Pycoon
+  xyzwh 123 173 2010 11 906
+durationcanvas 129356 classinstance_ref 128972 // processor:TreeProcessor
+  xyzwh 202 665 2010 11 376
+durationcanvas 129996 classinstance_ref 128204 // :Pycoon
+  xyzwh 123 115 2010 11 27
+durationcanvas 130252 classinstance_ref 128972 // processor:TreeProcessor
+  xyzwh 202 281 2010 11 25
+durationcanvas 130636 classinstance_ref 129228 // env:Environment
+  xyzwh 395 619 2010 11 25
+durationcanvas 131788 classinstance_ref 131532 // context:InvokeContext
+  xyzwh 494 874 2010 11 25
+durationcanvas 132044 classinstance_ref 131660 // rootNode:PipelinesNode
+  xyzwh 444 924 2010 11 104
+durationcanvas 132940 classinstance_ref 128972 // processor:TreeProcessor
+  xyzwh 202 324 2010 11 210
+durationcanvas 133324 classinstance_ref 133196 // :SourceResolver
+  xyzwh 280 372 2010 11 25
+durationcanvas 133580 classinstance_ref 133196 // :SourceResolver
+  xyzwh 280 414 2010 11 105
+durationcanvas 133964 classinstance_ref 133836 // source:FileSource
+  xyzwh 349 470 2010 11 28
+msg 128588 synchronous
+  from durationcanvas_ref 128332 // 128076
+  to durationcanvas_ref 128460 // 128204
+  yz 173 2000 msg operation_ref 129612 // "__call__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 72 159
+reflexivemsg 128716 synchronous
+  to durationcanvas_ref 128460 // 128204
+  yz 192 2000 msg operation_ref 129484 // "process()"
+  show_full_operations_definition default drawing_language default
+  label_xy 145 176
+msg 129484 synchronous
+  from durationcanvas_ref 128460 // 128204
+  to durationcanvas_ref 129356 // 128972
+  yz 665 2000 msg operation_ref 129100 // "process()"
+  show_full_operations_definition default drawing_language default
+  label_xy 143 650
+msg 130124 synchronous
+  from durationcanvas_ref 128332 // 128076
+  to durationcanvas_ref 129996 // 128204
+  yz 116 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 74 102
+msg 130380 synchronous
+  from durationcanvas_ref 128460 // 128204
+  to durationcanvas_ref 130252 // 128972
+  yz 281 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 146 267
+reflexivemsg 130508 asynchronous
+  to durationcanvas_ref 128460 // 128204
+  yz 1049 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+msg 130764 synchronous
+  from durationcanvas_ref 128460 // 128204
+  to durationcanvas_ref 130636 // 129228
+  yz 619 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 145 608
+reflexivemsg 131020 synchronous
+  to durationcanvas_ref 129356 // 128972
+  yz 685 2000 msg operation_ref 129740 // "setupProcessor()"
+  show_full_operations_definition default drawing_language default
+  label_xy 221 668
+reflexivemsg 131404 asynchronous
+  to durationcanvas_ref 129356 // 128972
+  yz 820 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+msg 131916 synchronous
+  from durationcanvas_ref 129356 // 128972
+  to durationcanvas_ref 131788 // 131532
+  yz 874 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 222 861
+msg 132172 synchronous
+  from durationcanvas_ref 129356 // 128972
+  to durationcanvas_ref 132044 // 131660
+  yz 924 2000 explicitmsg "invoke(env, context)"
+  show_full_operations_definition default drawing_language default
+  label_xy 223 907
+msg 132300 return
+  from durationcanvas_ref 132044 // 131660
+  to durationcanvas_ref 129356 // 128972
+  yz 1017 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+msg 132684 return
+  from durationcanvas_ref 129356 // 128972
+  to durationcanvas_ref 128460 // 128204
+  yz 1030 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+msg 132812 return
+  from durationcanvas_ref 128460 // 128204
+  to durationcanvas_ref 128332 // 128076
+  yz 1068 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+msg 133068 synchronous
+  from durationcanvas_ref 128460 // 128204
+  to durationcanvas_ref 132940 // 128972
+  yz 324 2000 msg operation_ref 129868 // "configure()"
+  show_full_operations_definition default drawing_language default
+  label_xy 139 310
+msg 133452 synchronous
+  from durationcanvas_ref 132940 // 128972
+  to durationcanvas_ref 133324 // 133196
+  yz 372 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 224 358
+msg 133708 synchronous
+  from durationcanvas_ref 132940 // 128972
+  to durationcanvas_ref 133580 // 133196
+  yz 414 2000 msg operation_ref 129996 // "resolveUri()"
+  show_full_operations_definition default drawing_language default
+  label_xy 218 400
+msg 134092 synchronous
+  from durationcanvas_ref 133580 // 133196
+  to durationcanvas_ref 133964 // 133836
+  yz 470 2000 explicitmsg "__init__()"
+  show_full_operations_definition default drawing_language default
+  label_xy 298 457
+msg 134220 return
+  from durationcanvas_ref 133580 // 133196
+  to durationcanvas_ref 132940 // 128972
+  yz 508 2000 explicitmsg "self.source"
+  show_full_operations_definition default drawing_language default
+  label_xy 219 494
+msg 134348 return
+  from durationcanvas_ref 132940 // 128972
+  to durationcanvas_ref 128460 // 128204
+  yz 523 2000 unspecifiedmsg
+  show_full_operations_definition default drawing_language default
+line 128667 -_-_
+  from ref 129100 z 1994 to ref 128539
+line 128795 -_-_
+  from ref 128283 z 1999 to ref 131148
+line 129179 -_-_
+  from ref 129051 z 1999 to ref 128204
+line 129435 -_-_
+  from ref 129307 z 1999 to ref 132428
+preferred_whz 1052 812 1
+end

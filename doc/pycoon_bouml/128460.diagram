@@ -1,0 +1,65 @@
+format 29
+
+note 128027 "In v0.3, all the pipeline components will be WSGI middleware. So one will be able to use components unrelated to Pycoon in his sitemap.
+
+Data sources in v0.3 will become WSGI applications."
+  xyzwh 64 407 2005 157 153
+componentcanvas 128076 component_ref 128076 // HTTP Client
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 15 18 2000 143 51
+componentcanvas 128204 component_ref 128204 // HTTP Server
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 233 20 2000 143 51
+componentcanvas 128332 component_ref 128332 // Pycoon
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 108 211 2000 394 294
+arrowjunctioncanvas 128460 class_ref 128076 // HTTP
+  xyz 186 34 2000 label_xy 183 53
+arrowjunctioncanvas 128844 class_ref 128204 // WSGI
+  xyz 296 175 2000 label_xy 321 177
+componentcanvas 129100 component_ref 128460 // WSGI Adapter
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 234 103 2005 143 51
+componentcanvas 129484 component_ref 128588 // Sitemap Tree Processor
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 128 268 2005 147 51
+componentcanvas 129612 component_ref 128844 // Sitemap Component
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 473 123 2005 143 51
+componentcanvas 129740 component_ref 128716 // Logic Component
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 335 268 2005 143 51
+componentcanvas 129868 component_ref 128972 // Pipeline Component
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 335 345 2005 143 51
+componentcanvas 130892 component_ref 129100 // Data Source
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  xyzwh 334 430 2005 143 51
+line 128588 ---O
+  from ref 128204 z 1999 to ref 128460
+line 128716 ---(
+  from ref 128076 z 1999 to ref 128460
+line 128972 ---O
+  from ref 128332 z 1999 to ref 128844
+simplerelationcanvas 129228 simplerelation_ref 128332
+  from ref 128204 z 1999 to ref 129100
+line 129356 ---(
+  from ref 129100 z 1999 to ref 128844
+simplerelationcanvas 129996 simplerelation_ref 128460
+  from ref 129740 z 2004 to point 541 291
+  line 130380 z 2004 to ref 129612
+simplerelationcanvas 130124 simplerelation_ref 128588
+  from ref 129868 z 2004 to point 541 368
+  line 130252 z 2004 to ref 129612
+simplerelationcanvas 130508 simplerelation_ref 128716
+  from ref 129484 z 2004 to ref 129740
+simplerelationcanvas 130636 simplerelation_ref 128844
+  from ref 129484 z 2004 to point 199 368
+  line 130764 z 2004 to ref 129868
+simplerelationcanvas 131020 simplerelation_ref 128972
+  from ref 129868 z 2004 to ref 130892
+line 128155 -_-_
+  from ref 128027 z 2004 to ref 129868
+line 128283 -_-_
+  from ref 128027 z 2004 to ref 130892
+end

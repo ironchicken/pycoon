@@ -1,0 +1,138 @@
+format 29
+"treeprocessor" // pycoon::sitemap::treeprocessor
+  revision 1
+  modified_by 76 "anrie"
+  // class settings
+  //class diagram settings
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  //use case diagram settings
+  package_name_in_tab default show_context default auto_label_position default shadow default
+  //sequence diagram settings
+  show_full_operations_definition default write_horizontally default drawing_language default shadow default
+  //collaboration diagram settings
+  show_full_operations_definition default show_hierarchical_rank default write_horizontally default drawing_language default package_name_in_tab default show_context default shadow default
+  //object diagram settings
+   write_horizontally default package_name_in_tab default show_context default auto_label_position default shadow default
+  //component diagram settings
+  package_name_in_tab default show_context default auto_label_position default shadow default
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  //deployment diagram settings
+  package_name_in_tab default show_context default write_horizontally default auto_label_position default shadow default
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  //state diagram settings
+  package_name_in_tab default show_context default auto_label_position default write_trans_label_horizontally default show_trans_definition default shadow default
+  show_activities default region_horizontally default drawing_language default
+  //activity diagram settings
+  package_name_in_tab default show_context default show_opaque_action_definition default auto_label_position default write_flow_label_horizontally default shadow default
+  show_infonote default drawing_language default
+  
+  classview 129228 "Class view"
+    //class diagram settings
+    draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+    //collaboration diagram settings
+    show_full_operations_definition default show_hierarchical_rank default write_horizontally default drawing_language default package_name_in_tab default show_context default shadow default
+    //object diagram settings
+     write_horizontally default package_name_in_tab default show_context default auto_label_position default shadow default
+    //sequence diagram settings
+    show_full_operations_definition default write_horizontally default drawing_language default shadow default
+    //state diagram settings
+    package_name_in_tab default show_context default auto_label_position default write_trans_label_horizontally default show_trans_definition default shadow default
+    show_activities default region_horizontally default drawing_language default
+    //class settings
+    //activity diagram settings
+    package_name_in_tab default show_context default show_opaque_action_definition default auto_label_position default write_flow_label_horizontally default shadow default
+    show_infonote default drawing_language default
+    
+    class 130508 "TreeProcessor"cpp_decl ""
+      java_decl ""
+      idl_decl ""
+      explicit_switch_type ""
+      
+      operation 129100 "process"
+	public explicit_return_type ""
+	nparams 0
+	
+	
+	
+      end
+
+      operation 129228 "buildProcessor"
+	public explicit_return_type ""
+	nparams 0
+	
+	
+	
+      end
+
+      classrelation 130892 // <dependency>
+	relation 130380 -_->
+	  stereotype "create"
+	  a package
+	    classrelation_ref 130892 // <dependency>
+	  b parent class_ref 129100 // InvokeContext
+      end
+
+      classrelation 131020 // <dependency>
+	relation 130508 -_->
+	  stereotype "create"
+	  a package
+	    classrelation_ref 131020 // <dependency>
+	  b parent class_ref 130636 // TreeBuilder
+      end
+
+      operation 129740 "setupProcessor"
+	public explicit_return_type ""
+	nparams 0
+	
+	
+	
+      end
+
+      operation 129868 "configure"
+	public explicit_return_type ""
+	nparams 0
+	
+	
+	
+      end
+    end
+
+    class 130636 "TreeBuilder"cpp_decl ""
+      java_decl ""
+      idl_decl ""
+      explicit_switch_type ""
+      
+      operation 129356 "build"
+	public explicit_return_type ""
+	nparams 0
+	
+	
+	
+      end
+
+      classrelation 131148 // <dependency>
+	relation 130636 -_->
+	  stereotype "create"
+	  a package
+	    classrelation_ref 131148 // <dependency>
+	  b parent class_ref 128716 // Node
+      end
+
+      classrelation 131276 // <dependency>
+	relation 130764 -_->
+	  stereotype "create"
+	  a package
+	    classrelation_ref 131276 // <dependency>
+	  b parent class_ref 130124 // ComponentManager
+      end
+
+      operation 130252 "buildNode"
+	public explicit_return_type ""
+	nparams 0
+	
+	
+	
+      end
+    end
+  end
+end

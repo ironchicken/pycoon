@@ -1,0 +1,219 @@
+format 29
+"pycoon" // pycoon
+  revision 3
+  modified_by 74 "anrie"
+  // class settings
+  //class diagram settings
+  draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+  //use case diagram settings
+  package_name_in_tab default show_context default auto_label_position default shadow default
+  //sequence diagram settings
+  show_full_operations_definition default write_horizontally default drawing_language default shadow default
+  //collaboration diagram settings
+  show_full_operations_definition default show_hierarchical_rank default write_horizontally default drawing_language default package_name_in_tab default show_context default shadow default
+  //object diagram settings
+   write_horizontally default package_name_in_tab default show_context default auto_label_position default shadow default
+  //component diagram settings
+  package_name_in_tab default show_context default auto_label_position default shadow default
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  //deployment diagram settings
+  package_name_in_tab default show_context default write_horizontally default auto_label_position default shadow default
+  draw_component_as_icon default show_component_req_prov default show_component_rea default
+  //state diagram settings
+  package_name_in_tab default show_context default auto_label_position default write_trans_label_horizontally default show_trans_definition default shadow default
+  show_activities default region_horizontally default drawing_language default
+  //activity diagram settings
+  package_name_in_tab default show_context default show_opaque_action_definition default auto_label_position default write_flow_label_horizontally default shadow default
+  show_infonote default drawing_language default
+  
+  componentview 128204 "Component view"
+    //component diagram settings
+    package_name_in_tab default show_context default auto_label_position default shadow default
+    draw_component_as_icon default show_component_req_prov default show_component_rea default
+    component 128076 "HTTP Client"
+      required_classes
+	class_ref 128076 // HTTP
+      end
+    end
+
+    component 128204 "HTTP Server"
+      provided_classes
+	class_ref 128076 // HTTP
+      end
+      simplerelation 128076
+	-_->
+	  on component_ref 128332 // Pycoon
+      end
+
+      simplerelation 128204
+	-_->
+	  on component_ref 128204 // HTTP Server
+      end
+
+      simplerelation 128332
+	-_->
+	  on component_ref 128460 // WSGI Adapter
+      end
+    end
+
+    component 128332 "Pycoon"
+      provided_classes
+	class_ref 128204 // WSGI
+      end
+    end
+
+    componentdiagram 128460 "Component Diagram"
+      package_name_in_tab default show_context default auto_label_position default shadow default
+      draw_component_as_icon default show_component_req_prov default show_component_rea default
+      component_color white 
+      size A4
+    end
+
+    component 128460 "WSGI Adapter"
+      required_classes
+	class_ref 128204 // WSGI
+      end
+    end
+
+    component 128588 "Sitemap Tree Processor"
+      simplerelation 128716
+	-_->
+	  on component_ref 128716 // Logic Component
+      end
+
+      simplerelation 128844
+	-_->
+	  on component_ref 128972 // Pipeline Component
+      end
+    end
+
+    component 128716 "Logic Component"
+      simplerelation 128460
+	---|>
+	  on component_ref 128844 // Sitemap Component
+      end
+    end
+
+    component 128844 "Sitemap Component"
+    end
+
+    component 128972 "Pipeline Component"
+      required_classes
+	class_ref 128204 // WSGI
+      end
+      simplerelation 128588
+	---|>
+	  on component_ref 128844 // Sitemap Component
+      end
+
+      simplerelation 128972
+	-_->
+	  on component_ref 129100 // Data Source
+      end
+    end
+
+    component 129100 "Data Source"
+      provided_classes
+	class_ref 128204 // WSGI
+      end
+    end
+  end
+
+  deploymentview 128076 "Deployment view"
+    //deployment diagram settings
+    package_name_in_tab default show_context default write_horizontally default auto_label_position default shadow default
+    draw_component_as_icon default show_component_req_prov default show_component_rea default
+    deploymentdiagram 128332 "Deployment Diagram"
+      package_name_in_tab default show_context default write_horizontally default auto_label_position default shadow default
+      draw_component_as_icon default show_component_req_prov default show_component_rea default
+      deploymentnode_color white component_color white artifact_color white 
+      size A4
+    end
+
+    deploymentnode 128076 "Client"
+    end
+
+    deploymentnode 128204 "Server"
+    end
+
+    deploymentnode 128332 "Conent Provider"
+    end
+
+    artifact 128204 "Remote Conent"
+      stereotype "database"
+      associated_artifacts
+      end
+    end
+
+    artifact 128332 "Sitemap"
+      stereotype "config"
+      associated_artifacts
+      end
+    end
+
+    artifact 128460 "Pycoon Config"
+      stereotype "config"
+      associated_artifacts
+      end
+    end
+
+    artifact 128588 "Local Content"
+      stereotype "file"
+      associated_artifacts
+      end
+    end
+  end
+
+  classview 128076 "Class view"
+    //class diagram settings
+    draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+    //collaboration diagram settings
+    show_full_operations_definition default show_hierarchical_rank default write_horizontally default drawing_language default package_name_in_tab default show_context default shadow default
+    //object diagram settings
+     write_horizontally default package_name_in_tab default show_context default auto_label_position default shadow default
+    //sequence diagram settings
+    show_full_operations_definition default write_horizontally default drawing_language default shadow default
+    //state diagram settings
+    package_name_in_tab default show_context default auto_label_position default write_trans_label_horizontally default show_trans_definition default shadow default
+    show_activities default region_horizontally default drawing_language default
+    //class settings
+    //activity diagram settings
+    package_name_in_tab default show_context default show_opaque_action_definition default auto_label_position default write_flow_label_horizontally default shadow default
+    show_infonote default drawing_language default
+    
+    classdiagram 128076 "Source Packages Overview"
+      draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+      size A4
+    end
+
+    classdiagram 128972 "Classes vs. XML Sitemap Diagram"
+      draw_all_relations default hide_attributes default hide_operations default show_members_full_definition default show_members_visibility default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default shadow default
+      class_color white 
+      size A4-Landscape
+    end
+
+    sequencediagram 129100 "Request Processing Sequence Diagram"
+      show_full_operations_definition default write_horizontally no drawing_language default shadow default
+      class_instance_color white 
+      size A4
+    end
+
+    sequencediagram 129228 "Building Sitemap Sequence Diagram"
+      show_full_operations_definition default write_horizontally no drawing_language default shadow default
+      class_instance_color white 
+      size A4
+    end
+  end
+
+  package_ref 128204 // components
+
+  package_ref 128332 // environment
+
+  package_ref 128460 // sitemap
+
+  package_ref 128588 // source
+
+  package_ref 128716 // variables
+
+  package_ref 128844 // wsgi
+end
