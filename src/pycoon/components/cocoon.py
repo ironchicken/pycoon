@@ -188,7 +188,8 @@ class ResourceReader(Reader):
             mtime = datetime.utcfromtimestamp(source.getLastModified())
             fmt = "%a, %d %b %Y %H:%M:%S GMT"
             timestr = mtime.strftime(fmt)
-            iftimestr = env.environ.get("HTTP_IF_MODIFIED_SINCE")
+            # XXX: This workaround deals with non-standard headers (bug #22)
+            iftimestr = env.environ.get("HTTP_IF_MODIFIED_SINCE", "").split(";")[0]
             if iftimestr:
                 ifmtime = datetime(*(time.strptime(iftimestr, fmt)[0:6]))
                 if ifmtime >= mtime:
