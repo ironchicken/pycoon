@@ -31,6 +31,7 @@ class Environment:
         # Possibly non-standard
         self.objectModel["processor"] = None
         self.objectModel["root-processor"] = None
+        self.objectModel["source-resolver"] = self.sourceResolver
         
         self.log.debug('Created: %s, self.isExternal: %s' % (self, self.isExternal))
 
