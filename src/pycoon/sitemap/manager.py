@@ -40,7 +40,10 @@ class ComponentManager:
         
     def getComponent(self, role, type):
         entry = self.components[role][0]
-        klass, element = entry.get(type, entry.get("default", (None, None)))
+        if type is None:
+            klass, element = entry.get("default", (None, None))
+        else:
+            klass, element = entry.get(type, (None, None))
         if klass is None:
             if self.parent is not None:
                 return self.parent.getComponent(role, type)
