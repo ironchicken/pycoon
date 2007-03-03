@@ -2,14 +2,14 @@
 <map:sitemap xmlns:map="http://apache.org/cocoon/sitemap/1.0" xmlns:py="http://pycoon.org/ns/pysitemap/0.1/">
   <map:components>
     <map:generators default="file">
-      <map:generator name="status" logger="sitemap.generator.status" src="org.apache.cocoon.generation.StatusGenerator" py:src="pycoon.components.status_generator.StatusGenerator"/>
+      <map:generator name="status" logger="sitemap.generator.status" src="org.apache.cocoon.generation.StatusGenerator" py:src="pycoon.blocks.mgmt_statusgen.StatusGenerator"/>
     </map:generators>
   </map:components>
   <map:pipelines>
     <map:pipeline>
       <map:match pattern="">
         <map:generate src="samples.xml"/>
-        <map:transform src="rawegg:pycoon:/webapp/samples/common/simple-samples2html.xsl"/>
+        <map:transform src="rawegg:pycoon:/webapp/samples/common/samples2xhtml.xsl"/>
         <map:serialize type="xhtml"/>
       </map:match>
       <map:match pattern="status">

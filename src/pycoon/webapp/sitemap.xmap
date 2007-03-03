@@ -23,6 +23,7 @@
       </map:selector>
       <map:selector name="request-parameter" logger="sitemap.selector.request-parameter" src="org.apache.cocoon.selection.RequestParameterSelector" py:src="pycoon.components.cocoon.RequestParameterSelector"/>
       <map:selector name="request-method" logger="sitemap.selector.request-method" src="org.apache.cocoon.selection.RequestMethodSelector" py:src="pycoon.components.cocoon.RequestMethodSelector"/>
+      <map:selector name="resource-exists" logger="sitemap.selector.resource-exists" src="org.apache.cocoon.selection.ResourceExistsSelector" py:src="pycoon.components.cocoon.ResourceExistsSelector"/>
     </map:selectors>
     <map:serializers default="xml">
       <map:serializer name="xml" mime-type="application/xml" logger="sitemap.serializer.xml" src="org.apache.cocoon.serialization.XMLSerializer" py:src="pycoon.components.cocoon.XmlSerializer">
@@ -45,13 +46,27 @@
         <map:generate src="welcome.html"/>
         <map:serialize type="xhtml"/>
       </map:match>
-    </map:pipeline>
-    <map:pipeline>
       <map:match pattern="debug">
         <map:generate src="http://foo.bar/nonexistent"/>
         <map:serialize type="xhtml"/>
       </map:match>
+     
+      <map:match pattern="samples/blocks/*/**">
+        <map:select type="resource-exists">
+          <map:when test="rawegg:pycoon:/blocks/{1}/webapp/samples/sitemap.xmap">
+            <map:mount src="rawegg:pycoon:/blocks/{1}/webapp/samples/" uri-prefix="samples/blocks/{1}"/>
+          </map:when>
+          <map:otherwise>
+            <map:mount src="rawegg:{1}:/webapp/samples/" uri-prefix="samples/blocks/{1}"/>
+          </map:otherwise>
+        </map:select>
+      </map:match>
+      
+      <map:match pattern="*/**">
+        <map:mount src="{1}/" uri-prefix="{1}"/>
+      </map:match>
     </map:pipeline>
+
     <map:handle-errors>
       <map:generate type="exception"/>
       <map:select type="exception">

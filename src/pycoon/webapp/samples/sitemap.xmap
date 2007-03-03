@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<map:sitemap xmlns:map="http://apache.org/cocoon/sitemap/1.0" xmlns:py="http://pycoon.org/ns/pysitemap/0.1/">
+  <map:pipelines>
+    <map:pipeline>
+     <map:match pattern="">
+       <map:generate src="samples.xml"/>
+       <map:transform src="rawegg:pycoon:/webapp/samples/common/samples2xhtml.xsl"/>
+       <map:serialize type="xhtml"/>
+     </map:match>
+    </map:pipeline>
+  </map:pipelines>
+</map:sitemap>
+
