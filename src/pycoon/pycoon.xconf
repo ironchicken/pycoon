@@ -18,7 +18,7 @@
       <logger name="sitemap.reader" level="DEBUG"/>
       <logger name="sitemap.generator" level="DEBUG"/>
       <logger name="sitemap.aggregator" level="DEBUG"/>
-      <logger name="sitemap.select" level="DEBUG"/>
+      <logger name="sitemap.selector" level="DEBUG"/>
       <logger name="sitemap.transformer" level="DEBUG"/>
       -->
     </loggers>
