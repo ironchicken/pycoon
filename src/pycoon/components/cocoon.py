@@ -59,6 +59,11 @@ class RequestParameterSelector(Selector):
     def select(self, expr, objectModel, params):
         name = params["parameter-name"]
         return expr == objectModel["request"].params.get(name)
+    
+class ResourceExistsSelector(Selector):
+    def select(self, expr, objectModel, params):
+        source = objectModel["source-resolver"].resolveUri(expr)
+        return source.exists()
 
 class ExceptionSelector(Selector):
     def configure(self, element=None):
