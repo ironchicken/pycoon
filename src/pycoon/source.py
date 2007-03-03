@@ -21,6 +21,9 @@ class Source:
     
     def read(self):
         raise NotImplementedError()
+    
+    def exists(self):
+        raise NotImplementedError()
 
 class FileSource(Source):
     def __init__(self, filename, uri=None):
@@ -32,19 +35,22 @@ class FileSource(Source):
         logging.getLogger("source.file").debug("Created with filename %s" % filename)
 
     def getLastModified(self):
-        self.checkExist()
+        self._checkExist()
         return os.path.getmtime(self.filename)
     
     def read(self):
-        self.checkExist()
+        self._checkExist()
         fd = open(self.filename, "rb")
         try:
             return fd.read()
         finally:
             fd.close()
             
-    def checkExist(self):
-        if not os.path.isfile(self.filename):
+    def exists(self):
+        return os.path.isfile(self.filename)
+            
+    def _checkExist(self):
+        if not self.exists():
             raise ResourceNotFoundException("File %s not found" % self.filename)
         
 class HttpSource(Source):
