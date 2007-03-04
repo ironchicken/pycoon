@@ -2,17 +2,15 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="1.0">
   <xsl:param name="contextPath"/>
-  <xsl:template match="/">
+  <xsl:template match="/samples">
     <html>
       <head>
         <title>Pycoon 0.2</title>
-        <!--
-        <link href="{$contextPath}/styles/main.css" type="text/css" rel="stylesheet"/>
-        -->
+        <link href="/samples/common/samples.css" type="text/css" rel="stylesheet"/>
       </head>
       <body>
         <h1>
-          <xsl:value-of select="samples/@name"/>
+          <xsl:value-of select="@name"/>
         </h1>
         <xsl:apply-templates/>
         <address>The <a href="http://code.google.com/p/pycoon/">Pycoon</a> Project</address>

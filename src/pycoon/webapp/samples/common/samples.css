@@ -1,0 +1,25 @@
+h1, h2, h3, dl, dt, dd, p {
+    font-family: "trebuchet ms", "verdana", sans-serif;
+}
+
+.group {
+    float: left;
+    width: 45%;
+    padding: 0.5em;
+    border: 1px dashed gray;
+    margin: 0.5em;
+}
+
+.sample {
+    margin: 0.5em;
+}
+
+address {
+    clear: left;
+}
+
+.note {
+    background: #fea;
+    padding: 0.5em;
+}
+

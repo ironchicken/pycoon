@@ -1,4 +1,6 @@
 <samples name="mgmt_statusgen Samples">
-  <sample name="Simple Status" href="status">The only one status sample.</sample>
+  <group name="Basic Samples">
+    <sample name="Simple Status" href="status">The only one status sample.</sample>
+  </group>
 </samples>
 
