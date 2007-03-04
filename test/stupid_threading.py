@@ -69,13 +69,16 @@ if __name__ == "__main__":
     for r in readers:
         if r.exception is not None:
             raise r.exception
+    errors = reduce(rcmp, readers) is None
     print "\n results:"
     print "\n".join(["len: %d B, time: %.3f s" % (len(r.data), r.time) for r in readers])
-    print "content is the same: %s" % (reduce(rcmp, readers) is not None)
+    print "content is the same: %s" % (not errors)
     print "mean: %.3f s, variance: %.3f" % (mean([r.time for r in readers]), stddev([r.time for r in readers]) ** 2)
 
-    correct = readers[0]
-    for r in readers[1:]:
-        if len(r.data) != len(correct.data):
-            print "\nWrong data:\n%s\n" % r.data
+    if errors:
+        correct = readers[-1]
+        print "\nCorrect data:\n%s\n" % correct.data
+        for r in readers[1:]:
+            if len(r.data) != len(correct.data):
+                print "\nWrong data:\n%s\n" % r.data
 
