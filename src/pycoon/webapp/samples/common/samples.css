@@ -1,13 +1,11 @@
-h1, h2, h3, dl, dt, dd, p {
-    font-family: "trebuchet ms", "verdana", sans-serif;
-}
+@import url("/default.css");
 
 .group {
     float: left;
     width: 45%;
     padding: 0.5em;
     border: 1px dashed gray;
-    margin: 0.5em;
+    margin: 0.5em 0.5em 1em 0.5em;
 }
 
 .sample {

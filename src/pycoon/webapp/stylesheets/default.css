@@ -1,0 +1,13 @@
+h1, h2, h3, dl, dt, dd, p, address {
+    font-family: "trebuchet ms", "verdana", sans-serif;
+}
+
+address {
+    font-size: 80%;
+    font-style: normal;
+    background: #eee;
+    padding: 0.5em 0.5em 3em 0.5em;
+    border-top: 1px dashed gray;
+    margin-top: 2em;
+}
+
