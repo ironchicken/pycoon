@@ -17,6 +17,9 @@ setup(
     },
     include_package_data = True,
     zip_safe = False,
+    extras_require = {
+        "fmt_textile": ["textile >= 2.0.11"],
+    },
     
     # Metadata for upload to PyPI
     author = "Andrey Nordin, Richard Lewis",
