@@ -1,7 +1,8 @@
 <samples name="Pycoon Samples">
   <group name="Blocks Samples">
     <note>It's a paragraph.</note>
-    <sample name="mgmt_statusgen" href="blocks/mgmt_statusgen/">mgmt_statusgen block samples.</sample>
+    <sample name="mgmt_statusgen" href="blocks/mgmt_statusgen/">StatusGenerator block samples.</sample>
+    <sample name="fmt_textile" href="blocks/fmt_textile/">Textile formatting block samples.</sample>
     <sample name="Pycoon as a Block" href="blocks/pycoon/">Here Pycoon is used as a block. So it's samples are available via block samples URI.</sample>
     <sample name="Foo Block" href="blocks/foo/">Foo block samples.</sample>
   </group>  

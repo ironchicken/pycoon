@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<map:sitemap xmlns:map="http://apache.org/cocoon/sitemap/1.0" xmlns:py="http://pycoon.org/ns/pysitemap/0.1/">
+  <map:components>
+    <map:generators default="file">
+      <map:generator name="textile" logger="sitemap.generator.textile" py:src="pycoon.blocks.fmt_textile.TextileGenerator">
+        <encoding>utf-8</encoding>
+      </map:generator>
+    </map:generators>
+  </map:components>
+  <map:pipelines>
+    <map:pipeline>
+      <map:match pattern="">
+        <map:generate src="samples.xml"/>
+        <map:transform src="rawegg:pycoon:/webapp/samples/common/samples2xhtml.xsl"/>
+        <map:serialize type="xhtml"/>
+      </map:match>
+      <map:match pattern="*">
+        <map:select type="request-parameter">
+          <map:parameter name="parameter-name" value="format"/>
+          <map:when test="textile">
+            <map:read src="{1}.textile" mime-type="text/plain; charset=utf-8"/>
+          </map:when>
+          <map:otherwise>
+            <map:generate src="{1}.textile" type="textile"/>
+            <map:serialize type="xhtml"/>
+          </map:otherwise>
+        </map:select>
+      </map:match>
+    </map:pipeline>
+  </map:pipelines>
+</map:sitemap>
+

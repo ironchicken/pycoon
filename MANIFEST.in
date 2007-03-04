@@ -1,3 +1,5 @@
 include src/pycoon/pycoon.xconf
 recursive-include src/pycoon/webapp *
+recursive-include src/pycoon/blocks/fmt_textile/webapp *
+recursive-include src/pycoon/blocks/mgmt_statusgen/webapp *
 

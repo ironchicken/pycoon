@@ -1,0 +1,11 @@
+<samples name="fmt_textile Samples" xmlns:h="http://www.w3.org/1999/xhtml">
+  <group name="Basic Samples">
+    <note>Some basic Textile samples. fmt_textile block includes currently the only class <h:code>TextileGenerator</h:code>, that produces a valid XHTML ElementTree infoset from a <h:code>Source</h:code> formatted in Textile.</note>
+    <sample name='Rendered "Hello World"' href="hello-world">The Hello World sample.</sample>
+    <sample name='"Hello World" in Textile' href="hello-world?format=textile">The Hello World sample in raw Textile markup.</sample>
+  </group>
+  <group name="More Complicated Samples">
+    <sample name="More Textile features" href="somewhat-complicated">More Textile features are shown in action.</sample>
+  </group>
+</samples>
+
