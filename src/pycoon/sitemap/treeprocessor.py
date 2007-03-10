@@ -27,10 +27,19 @@ class TreeProcessor(Node):
         self.checkReload = True
     
     def configure(self, element):
-        self.checkReload = (element.get("check-reload", "yes") == "yes")
-        self.uri = element.get("file", "sitemap.xmap")
+        sitemap = element.find("sitemap")
+        self.checkReload = (sitemap.get("check-reload", "yes") == "yes")
+        self.uri = sitemap.get("file", "sitemap.xmap")
         self.source = SourceResolver().resolveUri(self.uri, self.contextPath)
-        self.log = logging.getLogger(element.get("logger"))
+        self.log = logging.getLogger(sitemap.get("logger"))
+
+        self.parentComponentManager = ComponentManager()
+        elems = element.findall("input-modules/component-instance")
+        def getClassAndElement(e):
+            return (self.parentComponentManager.classLoader.getClass(e.get("{%(py)s}class" % ns)), e)
+        classes = dict([(e.get("name"), getClassAndElement(e)) for e in elems])
+        self.parentComponentManager.components["input-module"] = (classes, None, None)
+        
         self.log.debug("Tree processor is configured")
 
     def process(self, env):
@@ -98,7 +107,6 @@ class TreeProcessor(Node):
             child.uri = src
             child.source = SourceResolver(env).resolveUri(child.uri)
             self.children[src] = child
-        #child.componentConfigurations = self.componentConfigurations
         child.parentComponentManager = self.componentManager
         return child
         

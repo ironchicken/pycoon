@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<cocoon version="2.1">
+<cocoon version="2.1" xmlns:py="http://pycoon.org/ns/pysitemap/0.1/">
   <sitemap file="webapp/sitemap.xmap" check-reload="yes" logger="sitemap.processor"/>
+  <input-modules>
+    <component-instance name="request-param" py:class="pycoon.variables.RequestParameterModule" class="org.apache.cocoon.components.modules.input.RequestParameterModule" logger="core.modules.input"/>
+    <component-instance name="global" py:class="pycoon.variables.GlobalInputModule" class="org.apache.cocoon.components.modules.input.GlobalInputModule" logger="core.modules.input"/>
+  </input-modules>
   <logging disable="NOTSET">
     <loggers>
       <logger name="" level="INFO"/>

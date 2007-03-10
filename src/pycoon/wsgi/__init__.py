@@ -156,9 +156,8 @@ class Pycoon:
             return response
         
     def createTreeProcessor(self):
-        sitemap = self.xconf.find("sitemap")
         processor = TreeProcessor(os.path.dirname(self.contextPath))
-        processor.configure(sitemap)
+        processor.configure(self.xconf)
         processor.log.debug("Shared processor is created")
         return processor
         

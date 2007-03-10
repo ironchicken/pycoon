@@ -21,6 +21,7 @@ class ComponentManager:
             "{%(map)s}act" % ns: ({}, "{%(map)s}action", "{%(map)s}actions" % ns),
             "{%(map)s}pipeline" % ns: ({}, "{%(map)s}pipe", "{%(map)s}pipes" % ns),
             "{%(map)s}aggregate" % ns: ({"default": (self.classLoader.getClass("pycoon.components.cocoon.ContentAggregator"), None)}, None, None),
+            "input-module": ({}, None, None),
         }
 
     def configure(self, element):
