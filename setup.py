@@ -6,7 +6,7 @@ __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 from setuptools import setup, find_packages
 setup(
     name = "pycoon",
-    version = "0.2a4",
+    version = "0.2a5",
     packages = find_packages("src"),
     package_dir = {"": "src"},
     install_requires = ['lxml >= 1.1.1, < 1.2'],

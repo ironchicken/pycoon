@@ -3,7 +3,7 @@ Pycoon Web Development Framework
 ================================
 
 Version:
-    0.2a4
+    0.2a5
 Authors:
     Andrey Nordin <http://claimid.com/anrienord>
     Richard Lewis <http://www.richard-lewis.me.uk/>
@@ -19,6 +19,19 @@ Downloads:
     Pycoon at Cheese Shop <http://cheeseshop.python.org/pypi/pycoon/>
 
 == Release Notes ==
+
+0.2a5
+2007-04-12
+
+* Created basic framework for adding samples
+* Added support for customizable InputModules
+* Created some static and dynamic UML diagrams for developers
+* Added HTTP redirect support via <map:redirect>
+* Added If-Modified-Since HTTP header support to ResourceReader
+* Added fmt_textile built-in block
+* Added mgmt_statusgen built-in block
+* Added ResourceExistsSelector
+* Minor enhancements and bugfixes (#20, #21, #22 and others)
 
 0.2a4
 2007-01-14
