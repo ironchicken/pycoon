@@ -4,11 +4,21 @@
 from lxml import etree
 from StringIO import StringIO
 
+from yaro import Yaro
+
+@Yaro
+def hello_world(req):
+    req.res.headers["Content-Type"] = "text/plain"
+    req.res.headers["X-Pycoon-Version"] = "0.3 pre-alpha"
+    data = "Hello World!\n"
+    data += "\n".join("%s: %s" % (k, v.value) for k, v in req.cookie.items())
+    return data
+
 class EnvironApp(object):
     def __init__(self, glob, **loc): pass
         
     def __call__(self, environ, start_response):
-        start_response('200 OK', [("content-type", "text/plain")])
+        start_response('200 OK', [("Content-Type", "text/plain")])
         return ["\n".join("%s: %s" % (k, v) for k, v in environ.items())]
 
 class Application(object):
@@ -21,7 +31,7 @@ class Application(object):
         data = source.read()
         xml = etree.fromstring(data)
         
-        start_response('200 OK', [("content-type", "application/xml")])
+        start_response('200 OK', [("Content-Type", "application/xml")])
         
         if "wsgi.file_wrapper" in environ:
             return environ['wsgi.file_wrapper'](EtreeIO(xml))
@@ -37,7 +47,7 @@ class EtreeMiddleware(object):
         environ["wsgi.file_wrapper"] = FileWrapper
         
         def resp(status, headers, exc_info=None):
-            headers.append(("content-type", "application/xhtml+xml"))
+            headers.append(("Content-Type", "application/xhtml+xml"))
             #headers = [(n, v) for n, v in headers if n != "content-type"]
             #headers.append(("content-type", "application/xhtml+xml"))
             return start_response(status, headers, exc_info)
@@ -58,6 +68,7 @@ class SimpleRouter(object):
             "/tag/wsgi": EtreeMiddleware(Application({}, **app_kwargs)),
             "/rss": Application({}),
             "/environ": EnvironApp({}),
+            "/yaro/hello-world": hello_world,
         }
     
     def __call__(self, environ, start_response):
@@ -68,8 +79,9 @@ class SimpleRouter(object):
             return self.table[path](environ, start_response)
         else:
             status = "404 Not Found"
-            start_response(status, [("content-type", "text/html")])
-            return ["<h1>%s</h1><p>Resource %s not found.</p>" % (status, path)]
+            start_response(status, [("Content-Type", "text/html")])
+            links = "<ul>%s</ul>" % "".join(['<li><a href="%s">%s</a></li>' % (p, p) for p in self.table])
+            return ["<h1>%s</h1><p>Resource %s not found.</p><p>See also:</p>%s" % (status, path, links)]
         
 class EtreeIO(object):
     def __init__(self, elem):
