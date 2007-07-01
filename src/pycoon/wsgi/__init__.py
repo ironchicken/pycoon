@@ -196,7 +196,8 @@ class WsgiLoggingHandler(logging.Handler):
         logging.Handler.__init__(self, level)
     
     def emit(self, record):
-        s = "[%s] %s [%s]: %s\n" % (record.levelname, record.name, threading.currentThread().getName(), record.getMessage().encode("utf-8"))
+        msg = record.getMessage()
+        s = "[%s] %s [%s]: %s\n" % (record.levelname, record.name, threading.currentThread().getName(), msg)
         if hasattr(threading.currentThread, "errors"):
             threading.currentThread.errors.write(s)
         else:
