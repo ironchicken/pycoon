@@ -20,7 +20,7 @@ __author__ = "Andrey Nordin <mailto:anrienord@inbox.ru>"
 
 import logging
 
-class Component:
+class Component(object):
     """The base class for all components."""
     def __init__(self):
         self.params = {}
@@ -36,40 +36,15 @@ class Component:
             self.name = element.get("name")
             self.log = logging.getLogger(element.get("logger"))
 
-class Serializer(Component):
-    """A pipeline component associated with C{<map:serialize>}    
-    that serializes a pipeline output from XML infoset to
-    string.
-    """
-    def serialize(self, env, params):
-        """Serializes an XML infoset.
-        
-        @param env: a pipeline execution
-            L{Environment<pycoon.environment.Environment>}
-        @param params: parameters specified in nested C{<map:parameter>}
-            elements.
-        """
-        raise NotImplementedError()
+class LogicComponent(Component):
+    """Processing logic component."""
+    pass
 
-class Selector(Component):
-    """A logic component associated with C{<map:select>}
-    that selects one of the sets of nested sitemap nodes.
-    """
-    def select(self, expr, objectModel, params):
-        """Matches C{expr} against some objects from C{objectModel} and
-        returns the result of matching.
-        
-        @param expr: an expression from C{test} attribute of the component's XML
-            element.
-        @param objectModel: a dictionary of objects defined in
-            L{Environment<pycoon.environment.Environment>}.
-        @param params: parameters specified in nested C{<map:parameter>}
-            elements.
-        @return: C{True} if C{expr} matches C{objectModel} in a particular way.
-        """
-        raise NotImplementedError()
+class PipelineComponent(Component):
+    """Pipeline component."""
+    pass
 
-class Generator(Component):
+class Generator(PipelineComponent):
     """A pipeline component associated with C{<map:generate>}
     that generates an XML infoset from a source.
     """
@@ -85,7 +60,7 @@ class Generator(Component):
         """
         raise NotImplementedError()
 
-class Transformer(Component):
+class Transformer(PipelineComponent):
     """A pipeline component associated with C{<map:transform>}
     that transforms an XML infoset into another one.
     """
@@ -101,7 +76,7 @@ class Transformer(Component):
         """
         raise NotImplementedError()
 
-class Reader(Component):
+class Reader(PipelineComponent):
     """A pipeline component associated with C{<map:read>}
     that reads the content of a source.
     """
@@ -117,7 +92,22 @@ class Reader(Component):
         """
         raise NotImplementedError()
 
-class Matcher(Component):
+class Serializer(PipelineComponent):
+    """A pipeline component associated with C{<map:serialize>}    
+    that serializes a pipeline output from XML infoset to
+    string.
+    """
+    def serialize(self, env, params):
+        """Serializes an XML infoset.
+        
+        @param env: a pipeline execution
+            L{Environment<pycoon.environment.Environment>}
+        @param params: parameters specified in nested C{<map:parameter>}
+            elements.
+        """
+        raise NotImplementedError()
+
+class Matcher(LogicComponent):
     """A logic component associated with C{<map:match>}
     that either selects nested sitemap nodes or doesn't select them.
     """
@@ -136,7 +126,25 @@ class Matcher(Component):
         """
         raise NotImplementedError()
 
-class Action(Component):
+class Selector(LogicComponent):
+    """A logic component associated with C{<map:select>}
+    that selects one of the sets of nested sitemap nodes.
+    """
+    def select(self, expr, objectModel, params):
+        """Matches C{expr} against some objects from C{objectModel} and
+        returns the result of matching.
+        
+        @param expr: an expression from C{test} attribute of the component's XML
+            element.
+        @param objectModel: a dictionary of objects defined in
+            L{Environment<pycoon.environment.Environment>}.
+        @param params: parameters specified in nested C{<map:parameter>}
+            elements.
+        @return: C{True} if C{expr} matches C{objectModel} in a particular way.
+        """
+        raise NotImplementedError()
+
+class Action(LogicComponent):
     """A logic component associated with C{<map:act>}
     that executes a particular action. It selects nested sitemap nodes if the
     action completed successfully, otherwise it doesn't.
