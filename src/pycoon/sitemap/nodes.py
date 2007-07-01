@@ -4,6 +4,7 @@
 __author__ = "Andrey Nordin <http://claimid.com/anrienord>"
 
 import logging
+import sys
 from pycoon import ResourceNotFoundException, ns, variables
 
 class Node:
@@ -69,6 +70,10 @@ class HandleErrorsNode(ContainerNode):
         elif resolvedWhen == "internal" and env.isExternal:
             raise exception        
         env.objectModel["throwable"] = exception
+
+        if "exc_info" not in env.objectModel:
+            env.objectModel["exc_info"] = sys.exc_info()
+        
         context = InvokeContext()
         context.processingPipeline = env.componentManager.getComponent("{%(map)s}pipeline" % ns, "default")
         if self.invokeChildren(env, context):
@@ -367,5 +372,3 @@ class RedirectNode(Node):
         else:
             env.response.status = 302
         return True
-        
-        

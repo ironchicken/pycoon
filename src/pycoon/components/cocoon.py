@@ -18,6 +18,7 @@ from pycoon.components import Component, Serializer, Selector, Matcher, Generato
 from pycoon import ns, SitemapException
 
 ns["ex"] = "http://apache.org/cocoon/exception/1.0"
+ns["ci"] = "http://apache.org/cocoon/include/1.0"
 
 mimetypes.init()
 
@@ -81,6 +82,7 @@ class ExceptionSelector(Selector):
 class WildcardUriMatcher(Matcher):
     def match(self, pattern, objectModel, params):
         uri = objectModel["request"].uri
+        # XXX: This is terrible implementation of wildcard matching
         pattern = re.sub("\*\*", "~~", pattern)
         pattern = re.sub("\*", "([^/]*)", pattern)
         pattern = re.sub("~~", "(.*)", pattern)
@@ -92,13 +94,22 @@ class WildcardUriMatcher(Matcher):
         else:
             return None
 
-class FileGenerator(Generator):        
+class FileGenerator(Generator):
     def generate(self, env, source, params):
         self.uri = source.uri
         self.log.debug('<map:generate src="%s"> process()' % source.uri)
         data = source.read()
+
         if isinstance(data, str):
-            env.response.body = etree.fromstring(data)
+            # XXX: This code isn't obvious, but etree.parse() needs fd.filename
+            # in order to resolve URIs in XSLT's document() function during
+            # etree.XSLT()() calls. Anyway, this code should be rewritten
+            fd = StringIO(data)
+            if hasattr(source, "filename"):
+                fd.filename = source.filename
+            else:
+                fd.filename = source.uri
+            env.response.body = etree.parse(fd).getroot()
         else:
             env.response.body = data
             
@@ -108,7 +119,7 @@ class FileGenerator(Generator):
 class ExceptionGenerator(Generator):
     def generate(self, env, source, params):
         self.log.debug('<map:generate type="exception"> process()')
-        type, value, trace = sys.exc_info()
+        type, value, trace = env.objectModel.get("exc_info", sys.exc_info())        
         root = Element("{%(ex)s}exception-report" % ns)
         root.set("class", type.__name__)
         if len(value.args) > 0 and value.args[0]:
@@ -119,7 +130,7 @@ class ExceptionGenerator(Generator):
         
 class TraxTransformer(Transformer):
     def configure(self, element=None):
-        Component.configure(self, element)
+        super(TraxTransformer, self).configure(element)
         self.useRequestParameters = False
         if element is not None:
             p = element.find("use-request-parameters")
@@ -130,13 +141,20 @@ class TraxTransformer(Transformer):
         self.log.debug('<map:transform src="%s"> process()' % source.uri)
         if "use-request-parameters" in params:
             self.useRequestParameters = (params["use-request-parameters"] == "true")
-        fd = StringIO(source.read())
-        if hasattr(source, "filename"):
-            fd.filename = source.filename
+            
+        data = source.read()
+        if isinstance(data, str):
+            fd = StringIO(data)
+            if hasattr(source, "filename"):
+                fd.filename = source.filename
+            else:
+                fd.filename = source.uri
+            xslt = etree.parse(fd)
+            #xslt = etree.fromstring(data)
         else:
-            fd.filename = source.uri
-        xslt = etree.parse(fd)
+            xslt = data
         transform = etree.XSLT(xslt)
+        
         doc = env.response.body
         if self.useRequestParameters:
             rparams = env.objectModel["request"].params
@@ -148,6 +166,21 @@ class TraxTransformer(Transformer):
         params = dict([(k, '"%s"' % v) for k, v in params.items()])
         self.log.debug("Stylesheet parameters:\n%s" % "\n".join(["  %s: %s" % (k, v) for k, v in params.items()]))
         env.response.body = transform(doc, **params).getroot()
+
+class CIncludeTransformer(Transformer):
+    def transform(self, env, source, params):
+        self.log.debug('<map:transform> process()')
+        doc = env.response.body
+        for i, include in enumerate(doc.findall(".//{%(ci)s}include" % ns)):
+            self.log.debug("%d. included: %s" % (i + 1, include.get("src")))
+            source = env.sourceResolver.resolveUri(include.get("src"))
+            data = source.read()
+            if isinstance(data, str):
+                xml = etree.fromstring(data).getroot()
+            else:
+                xml = data            
+            parent = include.getparent()
+            parent.replace(include, xml)
 
 class ContentAggregator(Generator):
     def __init__(self):
