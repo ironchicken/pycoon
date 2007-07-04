@@ -176,11 +176,17 @@ class CIncludeTransformer(Transformer):
             source = env.sourceResolver.resolveUri(include.get("src"))
             data = source.read()
             if isinstance(data, str):
-                xml = etree.fromstring(data).getroot()
+                xml = etree.fromstring(data)
             else:
-                xml = data            
+                xml = data
             parent = include.getparent()
-            parent.replace(include, xml)
+            
+            # XXX: A workaround to deal with #24 bug (possibly in libxml)
+            # Instead of just doing:
+            #parent.replace(include, xml)
+            # We do temporarily:
+            parent.insert(parent.index(include), xml)
+            parent.remove(include)
 
 class ContentAggregator(Generator):
     def __init__(self):
