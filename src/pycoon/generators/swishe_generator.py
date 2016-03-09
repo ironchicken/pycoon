@@ -125,7 +125,7 @@ class swishe_generator(generator):
                         p = lxml.etree.Element(str(p_name))
                         p.text = str(value)
                         hit.append(p)
-                    except:
+                    except self.sitemap.ds_mods["SwishE"].error as x:
                         # this is a Swish-e error; property didn't exist, doesn't matter
                         pass
 
