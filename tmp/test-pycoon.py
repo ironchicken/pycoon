@@ -4,10 +4,13 @@
 running
 
 Usage:
-    python test-pycoon.py <site-name> <method> <request-uri> <user-agent> <environment-type>
+    python test-pycoon.py <server-name> <doc-root> <sitemap> <config-root> <method> <request-uri> <user-agent> <environment-type>
     
 Arguments:
-    site-name           an element from the SITES.keys() list, see the source
+    server-name         a domain name
+    doc-root            the full path to the document root directory which the sitemap serves
+    sitemap             the filename of the Pycoon sitemap XML file
+    config-root         the full path to the directory in which a Pycoon server.xml configuration is located
     method              the request method: [GET|POST]
     request-uri         an HTTP URI to which the request is made
     user-agent          an element from the USER_AGENTS.keys() list, see the source
@@ -17,20 +20,7 @@ Arguments:
 """
 import sys, datetime
 
-ARGS = {"site": 1, "method": 2, "request-uri": 3, "user-agent": 4, "environment": 5}
-
-SITES = {"home": {'SERVER_NAME': "localhost.localdomain",
-                  'DOCUMENT_ROOT': "/home/richard/Documents/python/pycoon/tmp",
-                  'PycoonSitemap': "test-sitemap.xml",
-                  'PycoonConfigRoot': "/etc/pycoon"},
-        "studio": {'SERVER_NAME': "localhost.localdomain",
-                   'DOCUMENT_ROOT': "/var/www-studio",
-                   'PycoonSitemap': "sitemap.xml",
-                   'PycoonConfigRoot': "/etc/pycoon"},
-        "cursus": {'SERVER_NAME': "localhost.localdomain",
-                   'DOCUMENT_ROOT': "/var/www-cursus",
-                   'PycoonSitemap': "sitemap.xml",
-                   'PycoonConfigRoot': "/etc/pycoon"}}
+ARGS = {"SERVER_NAME": 1, "DOCUMENT_ROOT": 2, "PycoonSitemap": 3, "PycoonConfigRoot": 4, "method": 5, "request-uri": 6, "user-agent": 7, "environment": 8}
 
 USER_AGENTS = {"firefox": "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.2) Gecko/Debian-1.5.dfsg+1.5.0.2-3 Firefox/1.5.0.2",
                "msie": "Mozilla/5.0 (compatible; NT; en-US; 6.0) MSIE (Windows NT 5)",
@@ -47,7 +37,8 @@ class server(object):
 
 class request(object):
     def __init__(self, method, uri, headers_in=None):
-        self.subprocess_env = SITES[sys.argv[1]]
+        self.subprocess_env = dict([(n, sys.argv[ARGS[n]]) for n in ["SERVER_NAME", "DOCUMENT_ROOT", "PycoonSitemap", "PycoonConfigRoot"]])
+        print self.subprocess_env
         self.server = server()
         self.server.server_hostname = self.subprocess_env['SERVER_NAME']
 
@@ -123,7 +114,7 @@ if __name__ == "__main__":
     headers_in.add("User-agent", USER_AGENTS[sys.argv[ARGS["user-agent"]]])
     headers_in.add("Accept-language", "EN")
 
-    pycoon.apache._server_root = SITES[sys.argv[1]]['DOCUMENT_ROOT']
+    pycoon.apache._server_root = sys.argv[ARGS['DOCUMENT_ROOT']]
     
     r = request(sys.argv[ARGS["method"]], sys.argv[ARGS["request-uri"]], headers_in)
 
