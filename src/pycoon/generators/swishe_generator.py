@@ -119,11 +119,10 @@ class swishe_generator(generator):
                 
                 for p_name in all_properties:
                     try:
-                        e_name = properties[p_name]
                         value = r.getproperty(p_name)
                         if value is None: break
 
-                        p = lxml.etree.Element(str(properties[p_name]))
+                        p = lxml.etree.Element(str(p_name))
                         p.text = str(value)
                         hit.append(p)
                     except:
